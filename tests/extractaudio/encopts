@@ -1,0 +1,70 @@
+#!/bin/sh
+
+# Opus encoder options: -b KBPS has to produce about the requested bitrate and
+# a higher -C LEVEL has to produce a smaller file.
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+RFILES="extractaudio/call1_ulaw extractaudio/call1_g722 extractaudio/mixed_codec"
+
+# libsndfile has to be built with Opus support
+${EXTRACTAUDIO} -F ogg -D opus extractaudio/call1_ulaw encopts.probe.ogg \
+ >/dev/null 2>&1
+report "checking for Opus support in libsndfile"
+
+# Encode, then print the resulting bitrate in kbps
+eaud_kbps() {
+  rate="${1}"
+  wfile="${2}"
+  shift 2
+  ${EXTRACTAUDIO} -r ${rate} -F ogg -D opus "${@}" ${wfile} \
+   2>${wfile}.rlog >${wfile}.tout || return 1
+  nsamples=`sed -n 's|.*written: \([0-9]*\)$|\1|p' ${wfile}.rlog`
+  bsize=`wc -c < ${wfile}`
+  echo "${bsize} ${nsamples} ${rate}" | awk '{printf("%.1f\n", \
+   $1 * 8 / ($2 / $3) / 1000)}'
+}
+
+for rfile in ${RFILES}
+do
+  bfile="`basename ${rfile}`"
+  for rate in 8000 16000
+  do
+    for tkind in mono stereo
+    do
+      if [ ${tkind} = "mono" ]
+      then
+        CH_ARGS=""
+        BRATES="24 64"
+      else
+        CH_ARGS="-s"
+        BRATES="24 128"
+      fi
+      for brate in ${BRATES}
+      do
+        wfile="${bfile}.${tkind}.encopts.r${rate}.b${brate}.ogg"
+        kbps=`eaud_kbps ${rate} ${wfile} ${CH_ARGS} -b ${brate} ${rfile}`
+        report "${EXTRACTAUDIO} -r ${rate} ${CH_ARGS} -b ${brate} ${rfile}"
+        echo "${kbps} ${brate}" | awk '{exit !($1 > $2 * 0.75 && \
+         $1 < $2 * 1.25)}'
+        report "${wfile}: ${kbps} kbps for -b ${brate}"
+      done
+    done
+  done
+
+  psize=""
+  for clevel in 0.0 0.5 1.0
+  do
+    wfile="${bfile}.mono.encopts.r16000.C${clevel}.ogg"
+    eaud_kbps 16000 ${wfile} -C ${clevel} ${rfile} >/dev/null
+    report "${EXTRACTAUDIO} -r 16000 -C ${clevel} ${rfile}"
+    csize=`wc -c < ${wfile}`
+    if [ -n "${psize}" ]
+    then
+      test ${csize} -lt ${psize}
+      report "${wfile}: ${csize} bytes, less than ${psize} at lower -C"
+    fi
+    psize=${csize}
+  done
+done

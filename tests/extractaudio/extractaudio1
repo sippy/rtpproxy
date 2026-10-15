@@ -8,54 +8,143 @@ BASEDIR="`dirname "${0}"`/.."
 
 . "${BASEDIR}/extractaudio/common.sub"
 
+CONFS="r8k r16k r16k_nosync"
 TKINDS="mono stereo"
-OFMTS_mono="wav raw w64"
-OFMTS_stereo="wav w64"
 
-for tkind in ${TKINDS}
-do
-  if [ ${tkind} = "mono" ]
+eaud_eargs() {
+  afile="extractaudio/`basename ${1}`.args"
+  if [ -e "${afile}" ]
   then
-    EXTRACTAUDIO_ARGS=""
-    OFMTS="${OFMTS_mono}"
-    CHFMT="m"
+    "${afile}" "${1}"
   else
-    EXTRACTAUDIO_ARGS="-s"
-    OFMTS="${OFMTS_stereo}"
-    CHFMT="s"
+    echo "${1}"
   fi
-  for rfile in ${extractaudio_RFILES}
+}
+
+for conf in ${CONFS}
+do
+  case ${conf} in
+  r8k)
+    # default output rate: full output / data format matrix
+    RATE_ARGS=""
+    RTAG=""
+    OFMTS_mono="wav raw w64"
+    OFMTS_stereo="wav w64"
+    DFMTS_FIXED=""
+    ;;
+  r16k)
+    # G.722 legs are decoded at their native rate, narrowband legs are
+    # upsampled.
+    RATE_ARGS="-r 16000"
+    RTAG="r16k."
+    OFMTS_mono="wav raw w64"
+    OFMTS_stereo="wav w64"
+    DFMTS_FIXED="pcm_16"
+    ;;
+  r16k_nosync)
+    RATE_ARGS="-r 16000 -n"
+    RTAG="r16kn."
+    OFMTS_mono="wav"
+    OFMTS_stereo="wav"
+    DFMTS_FIXED="pcm_16"
+    ;;
+  esac
+  for tkind in ${TKINDS}
   do
-    bfile="`basename ${rfile}`"
-    ofile="extractaudio/${bfile}.output"
-    for ofmt in ${OFMTS}
+    if [ ${tkind} = "mono" ]
+    then
+      EXTRACTAUDIO_ARGS="${RATE_ARGS}"
+      OFMTS="${OFMTS_mono}"
+      CHFMT="m"
+    else
+      EXTRACTAUDIO_ARGS="${RATE_ARGS} -s"
+      OFMTS="${OFMTS_stereo}"
+      CHFMT="s"
+    fi
+    for rfile in ${extractaudio_RFILES}
     do
-      DFMTS=`cat extractaudio/extractaudio.${CHFMT}.${ofmt}.dfmts`
-      for dfmt in ${DFMTS}
+      bfile="`basename ${rfile}`"
+      ofile="extractaudio/${bfile}.output"
+      EXTRACTAUDIO_EARGS=`eaud_eargs "${rfile}"`
+      for ofmt in ${OFMTS}
       do
-        wfile="${bfile}.${tkind}.${dfmt}.${ofmt}"
-        sfile="${bfile}.${tkind}.${dfmt}.${ofmt}.tout"
-        logfile="${bfile}.${tkind}.${dfmt}.${ofmt}.rlog"
-        if [ -e "${wfile}" ]
+        if [ -n "${DFMTS_FIXED}" ]
         then
-          rm "${wfile}"
-        fi
-        afile="extractaudio/${bfile}.args"
-        if [ -e "${afile}" ]
-        then
-          EXTRACTAUDIO_EARGS=`"${afile}" "${rfile}"`
+          DFMTS="${DFMTS_FIXED}"
         else
-          EXTRACTAUDIO_EARGS="${rfile}"
+          DFMTS=`cat extractaudio/extractaudio.${CHFMT}.${ofmt}.dfmts`
         fi
-        ${EXTRACTAUDIO} -F ${ofmt} -D ${dfmt} ${EXTRACTAUDIO_ARGS} \
-         ${EXTRACTAUDIO_EARGS} ${wfile} 2>${logfile} >${sfile}
-        report "${EXTRACTAUDIO} ${rfile}"
-        test -s ${wfile}
-        report "${rfile} -> ${wfile}"
-        sha256_verify ${wfile} extractaudio/extractaudio.checksums
-        ${DIFF} "${ofile}" "${sfile}"
-        report "checking RTP stats for the ${rfile}"
+        for dfmt in ${DFMTS}
+        do
+          wfile="${bfile}.${tkind}.${RTAG}${dfmt}.${ofmt}"
+          sfile="${wfile}.tout"
+          logfile="${wfile}.rlog"
+          if [ -e "${wfile}" ]
+          then
+            rm "${wfile}"
+          fi
+          ${EXTRACTAUDIO} -F ${ofmt} -D ${dfmt} ${EXTRACTAUDIO_ARGS} \
+           ${EXTRACTAUDIO_EARGS} ${wfile} 2>${logfile} >${sfile}
+          report "${EXTRACTAUDIO} ${EXTRACTAUDIO_ARGS} ${rfile}"
+          test -s ${wfile}
+          report "${rfile} -> ${wfile}"
+          sha256_verify ${wfile} extractaudio/extractaudio.checksums
+          ${DIFF} "${ofile}" "${sfile}"
+          report "checking RTP stats for the ${rfile}"
+        done
       done
     done
   done
+done
+
+# Upsampling must not move narrowband audio: in each channel of the 16 kHz
+# output every even sample has to be the 8 kHz sample. A channel may start one
+# 16 kHz sample later, as the start offset is rounded at the output rate.
+nb_match() {
+  od -An -v -td2 "${1}" > "${1}.txt" &&
+  od -An -v -td2 "${2}" > "${2}.txt" &&
+  awk 'NR == FNR {for (k = 1; k <= NF; k++) {nb[n++] = $k}; next}
+    {for (k = 1; k <= NF; k++) {wb[m++] = $k}}
+    END {
+      n /= 2; m /= 2
+      if (m != 2 * n && m != 2 * n + 1)
+        exit 1
+      for (c = 0; c < 2; c++) {
+        for (d = 0; d < 2; d++) {
+          for (i = 0; i < n; i++)
+            if (nb[2 * i + c] != wb[2 * (2 * i + d) + c])
+              break
+          if (i == n)
+            break
+        }
+        if (d == 2)
+          exit 1
+      }
+    }' "${1}.txt" "${2}.txt"
+}
+
+for rfile in ${extractaudio_RFILES}
+do
+  bfile="`basename ${rfile}`"
+  case ${bfile} in
+  *g722*|mixed_codec)
+    continue
+    ;;
+  esac
+  EXTRACTAUDIO_EARGS=`eaud_eargs "${rfile}"`
+  for rtag in r8k r16k
+  do
+    wfile="${bfile}.stereo.nbcheck.${rtag}.raw"
+    if [ ${rtag} = "r8k" ]
+    then
+      RATE_ARGS=""
+    else
+      RATE_ARGS="-r 16000"
+    fi
+    ${EXTRACTAUDIO} -F raw -D pcm_16 -s ${RATE_ARGS} ${EXTRACTAUDIO_EARGS} \
+     ${wfile} 2>${wfile}.rlog >${wfile}.tout
+    report "${EXTRACTAUDIO} -s ${RATE_ARGS} ${rfile} -> ${wfile}"
+  done
+  nb_match "${bfile}.stereo.nbcheck.r8k.raw" "${bfile}.stereo.nbcheck.r16k.raw"
+  report "checking that 16 kHz output of ${rfile} is aligned with 8 kHz"
 done
