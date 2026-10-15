@@ -49,8 +49,10 @@
 
 /* static char i[] = "0"; */
 
+static unsigned int upsample2_flush(struct decoder_stream *, int16_t *);
+
 void *
-decoder_new(struct session *sp, int dflags)
+decoder_new(struct session *sp, int dflags, int orate)
 {
     struct decoder_stream *dp;
 
@@ -73,6 +75,7 @@ decoder_new(struct session *sp, int dflags)
     dp->dticks = 0;
     dp->lpt = RTP_PCMU;
     dp->dflags = dflags;
+    dp->rmult = orate / 8000;
     /* dp->f = fopen(i, "w"); */
     /* i[0]++; */
 
@@ -85,6 +88,11 @@ decoder_get(struct decoder_stream *dp)
     unsigned int cticks, t;
     int j;
 
+    if (dp->oblen == 0 && dp->pp == NULL) {
+        /* Drain the upsampler before reporting EOF */
+        dp->oblen = upsample2_flush(dp, dp->obuf);
+        dp->obp = dp->obuf;
+    }
     if (dp->oblen == 0) {
         if (dp->pp == NULL)
             return DECODER_EOF;
@@ -100,39 +108,40 @@ decoder_get(struct decoder_stream *dp)
         }
         if (dp->nticks < cticks) {
             t = cticks - dp->nticks;
-            if (t > 4000)
-                t = 4000;
+            if (t > DECODER_MAX_GAP)
+                t = DECODER_MAX_GAP;
             if ((dp->dflags & D_FLAG_NOSYNC) != 0) {
                 dp->nticks += t;
                 dp->dticks += t;
                 return (DECODER_SKIP);
             }
-            j = generate_silence(dp, dp->obuf, t);
-            if (j <= 0)
+            j = output_silence(dp, t);
+            if (j < 0)
                 return DECODER_ERROR;
             dp->nticks += t;
             dp->dticks += t;
+            if (j == 0)
+                return decoder_get(dp);
             dp->oblen = j / 2;
             dp->obp = dp->obuf;
         } else if ((dp->pp->pkt->time - dp->stime - (double)dp->dticks / 8000.0) > 0.2) {
             t = (((dp->pp->pkt->time - dp->stime) * 8000) - dp->dticks) / 2;
-            if (t > 4000)
-                t = 4000;
+            if (t > DECODER_MAX_GAP)
+                t = DECODER_MAX_GAP;
             if ((dp->dflags & D_FLAG_NOSYNC) != 0) {
                 dp->dticks += t;
                 return (DECODER_SKIP);
             }
-            j = generate_silence(dp, dp->obuf, t);
-            if (j <= 0)
+            j = output_silence(dp, t);
+            if (j < 0)
                 return DECODER_ERROR;
             dp->dticks += t;
+            if (j == 0)
+                return decoder_get(dp);
             dp->oblen = j / 2;
             dp->obp = dp->obuf;
         } else {
-            j = decode_frame(dp, dp->obuf, RPLOAD(dp->pp), RPLEN(dp->pp), \
-              sizeof(dp->obuf));
-            if (j > 0)
-                dp->lpt = dp->pp->rpkt->pt;
+            j = output_frame(dp);
             dp->pp = MYQ_NEXT(dp->pp);
             if (j <= 0)
                 return decoder_get(dp);
@@ -207,16 +216,18 @@ decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf,
 #ifdef ENABLE_G722
     case RTP_G722:
         if (dp->g722_ctx == NULL)
-            dp->g722_ctx = g722_decoder_new(64000, G722_SAMPLE_RATE_8000);
+            dp->g722_ctx = g722_decoder_new(64000,
+              dp->rmult == 2 ? 0 : G722_SAMPLE_RATE_8000);
         if (dp->g722_ctx == NULL)
             return -1;
-        if (obytes_max < (ibytes * 2)) {
-            ibytes = obytes_max / 2;
+        /* One RTP tick per byte; rmult output samples per tick */
+        if (obytes_max < (ibytes * 2 * dp->rmult)) {
+            ibytes = obytes_max / (2 * dp->rmult);
         }
         g722_decode(dp->g722_ctx, ibuf, ibytes, obuf);
         dp->nticks += ibytes;
         dp->dticks += ibytes;
-        return ibytes * 2;
+        return ibytes * 2 * dp->rmult;
 #endif
 
 #ifdef ENABLE_GSM
@@ -279,7 +290,7 @@ generate_silence(struct decoder_stream *dp, int16_t *obuf, unsigned int iticks)
         for (obytes = 0; iticks >= 80; iticks -= 80) {
             bp = G729_DECODE(dp->g729_ctx, NULL, 0);
             memcpy(obuf, bp, 160);
-            obuf += 160;
+            obuf += 80;
             obytes += 160;
         }
         if (iticks > 0) {
@@ -297,4 +308,123 @@ generate_silence(struct decoder_stream *dp, int16_t *obuf, unsigned int iticks)
     default:
         return -1;
     }
+}
+
+/*
+ * 2x upsampler for narrowband (8 KHz) decoder output. Even output samples are
+ * the input samples, odd ones the midpoint of a 16-tap Blackman-windowed sinc
+ * half-band interpolator (flat to 3 KHz, -1.6 dB at 3.4 KHz).
+ *
+ * The interpolator needs US_HALF input samples of look-ahead. To keep the
+ * output aligned with native 16 KHz (G.722) output, each narrowband run starts
+ * from a clear history and drops the first 2 * US_HALF output samples, and
+ * upsample2_flush() emits the held back samples when the run ends. A run of
+ * N input samples thus yields exactly 2 * N output samples with no delay.
+ */
+static const int32_t us_coef[US_HALF] = {
+    20570, -6124, 2918, -1457, 684, -282, 93, -18
+};
+
+/* Returns number of output samples, which is less than 2 * n at run start */
+static unsigned int
+upsample2(struct decoder_stream *dp, int16_t *out, const int16_t *in,
+  unsigned int n)
+{
+    int16_t *h = dp->us_hist;
+    unsigned int i, k, no;
+    int32_t mid;
+
+    if (dp->us_active == 0) {
+        memset(h, 0, sizeof(dp->us_hist));
+        dp->us_skip = 2 * US_HALF;
+        dp->us_active = 1;
+    }
+    for (i = no = 0; i < n; i++) {
+        memmove(h, h + 1, (2 * US_HALF - 1) * sizeof(h[0]));
+        h[2 * US_HALF - 1] = in[i];
+        if (dp->us_skip > 0) {
+            dp->us_skip -= 2;
+            continue;
+        }
+        mid = 0;
+        for (k = 0; k < US_HALF; k++)
+            mid += us_coef[k] * ((int32_t)h[US_HALF - 1 - k] +
+              (int32_t)h[US_HALF + k]);
+        mid = (mid + (1 << 14)) >> 15;
+        if (mid > INT16_MAX)
+            mid = INT16_MAX;
+        else if (mid < INT16_MIN)
+            mid = INT16_MIN;
+        out[no++] = h[US_HALF - 1];
+        out[no++] = (int16_t)mid;
+    }
+    return no;
+}
+
+/* End the current narrowband run, if any; returns number of output samples */
+static unsigned int
+upsample2_flush(struct decoder_stream *dp, int16_t *out)
+{
+    static const int16_t zeros[US_HALF];
+    unsigned int no;
+
+    if (dp->us_active == 0)
+        return 0;
+    no = upsample2(dp, out, zeros, US_HALF);
+    dp->us_active = 0;
+    return no;
+}
+
+/*
+ * Decode the current packet into dp->obuf at the output rate and update
+ * dp->lpt. Returns number of bytes in dp->obuf, which may be 0, or < 0.
+ */
+int
+output_frame(struct decoder_stream *dp)
+{
+    unsigned int n;
+    int j;
+
+    if (dp->rmult == 1 || dp->pp->rpkt->pt == RTP_G722) {
+        n = upsample2_flush(dp, dp->obuf);
+        /*
+         * Decode at most DECODER_MAX_TICKS per packet at any output rate, so
+         * oversized packets are cut at the same point at 8 and 16 KHz.
+         */
+        j = decode_frame(dp, dp->obuf + n, RPLOAD(dp->pp), RPLEN(dp->pp),
+          (DECODER_MAX_TICKS * dp->rmult - n) * sizeof(dp->obuf[0]));
+        if (j > 0)
+            dp->lpt = dp->pp->rpkt->pt;
+        if (j < 0)
+            return (n > 0) ? (int)(n * sizeof(dp->obuf[0])) : j;
+        return j + (int)(n * sizeof(dp->obuf[0]));
+    }
+    j = decode_frame(dp, dp->nbuf, RPLOAD(dp->pp), RPLEN(dp->pp),
+      sizeof(dp->nbuf));
+    if (j <= 0)
+        return j;
+    dp->lpt = dp->pp->rpkt->pt;
+    return upsample2(dp, dp->obuf, dp->nbuf, j / 2) * 2;
+}
+
+/*
+ * Fill dp->obuf with iticks RTP ticks of silence at the output rate. Returns
+ * number of bytes in dp->obuf, which may be 0, or < 0.
+ */
+int
+output_silence(struct decoder_stream *dp, unsigned int iticks)
+{
+    int j;
+
+    if (dp->rmult == 1)
+        return generate_silence(dp, dp->obuf, iticks);
+    if (dp->lpt == RTP_G722) {
+        /* No narrowband run can be active after a G.722 frame */
+        memset(dp->obuf, 0, iticks * 2 * dp->rmult);
+        return iticks * 2 * dp->rmult;
+    }
+    j = generate_silence(dp, dp->nbuf, iticks);
+    if (j <= 0)
+        return j;
+    return upsample2(dp, dp->obuf, dp->nbuf, j / 2) * 2;
 }
