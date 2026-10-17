@@ -40,3 +40,10 @@ extractaudio_debug_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
 extractaudio_debug_LDFLAGS = $(extractaudio_LDFLAGS)
 
 DEFS=   -DWITHOUT_RTPPLOG $(CC_WFLAGS) @DEFS@
+
+dist_man_MANS=	extractaudio.1
+
+if BUILD_DOCS
+extractaudio.1: $(top_srcdir)/doc/extractaudio.xml
+	${XSLTPROC} ${XSLTPROC_FLAGS} http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(top_srcdir)/doc/extractaudio.xml
+endif

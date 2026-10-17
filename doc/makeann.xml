@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- Use the following command to generate makeann.1: -->
+<!-- xsltproc /usr/local/share/xsl/docbook/manpages/docbook.xsl makeann.xml -->
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!-- Please adjust the date whenever revising the manpage. -->
+<!ENTITY dhdate "<date>October 17, 2026</date>">
+<!ENTITY dhsection "<manvolnum>1</manvolnum>">
+<!ENTITY dhucpackage "<refentrytitle>makeann</refentrytitle>">
+<!ENTITY dhpackage "makeann">
+<!ENTITY sobomax_firstname "Maksym">
+<!ENTITY sobomax_surname "Sobolyev">
+<!ENTITY sobomax_email "sobomax@sippysoft.com">
+<!ENTITY sobomax_emtag "<email>&sobomax_email;</email>">
+]>
+<refentry>
+  <refentryinfo>
+    <author>
+      <firstname>&sobomax_firstname;</firstname>
+
+      <surname>&sobomax_surname;</surname>
+
+      &sobomax_emtag;
+    </author>
+
+    <copyright>
+      <year>2003-2026</year>
+
+      <holder>&sobomax_firstname; &sobomax_surname;</holder>
+    </copyright>
+
+    <copyright>
+      <year>2006-2026</year>
+
+      <holder>Sippy Software, Inc.</holder>
+    </copyright>
+
+    &dhdate;
+  </refentryinfo>
+
+  <refmeta>
+    &dhucpackage;
+
+    &dhsection;
+
+    <refmiscinfo class="source">rtpproxy</refmiscinfo>
+
+    <refmiscinfo class="manual">RTPproxy Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>&dhpackage;</refname>
+
+    <refpurpose>prepare audio prompts for playback by rtpproxy</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+
+      <arg choice="opt"><option>-l</option> <replaceable>limit</replaceable>
+      <arg choice="opt"><option>-L</option></arg></arg>
+
+      <arg choice="plain"><replaceable>infile</replaceable></arg>
+
+      <arg choice="opt"><replaceable>outfile_template</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><command>&dhpackage;</command> encodes an audio prompt into every
+    codec that
+    <citerefentry><refentrytitle>rtpproxy</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+    can play it out in, using the <command>P</command> (play) command.</para>
+
+    <para><replaceable>infile</replaceable> has to contain raw signed 16-bit
+    little-endian mono samples at 8 kHz, with no header. Such a file can be
+    produced, for example, with <command>sox</command>:</para>
+
+    <screen>sox prompt.wav -t raw -r 8000 -c 1 -b 16 -e signed-integer \
+    -L prompt.sln</screen>
+
+    <para>For each codec, the encoded prompt is written into a file named
+    <replaceable>outfile_template</replaceable>.<replaceable>pt</replaceable>,
+    where <replaceable>pt</replaceable> is the RTP payload type of the
+    codec. If <replaceable>outfile_template</replaceable> is not given,
+    <replaceable>infile</replaceable> is used instead. The following files
+    are produced:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><filename><replaceable>outfile_template</replaceable>.0</filename></term>
+
+        <listitem>
+          <para>G.711 u-law.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><filename><replaceable>outfile_template</replaceable>.3</filename></term>
+
+        <listitem>
+          <para>GSM 06.10, if GSM support has been compiled in.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><filename><replaceable>outfile_template</replaceable>.8</filename></term>
+
+        <listitem>
+          <para>G.711 A-law.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><filename><replaceable>outfile_template</replaceable>.9</filename></term>
+
+        <listitem>
+          <para>G.722 at 64 kbit/s, if G.722 support has been compiled
+          in.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><filename><replaceable>outfile_template</replaceable>.18</filename></term>
+
+        <listitem>
+          <para>G.729, if G.729 support has been compiled in.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>To play the prompt, give <replaceable>outfile_template</replaceable>
+    as the prompt name to the rtpproxy <command>P</command> command. rtpproxy
+    tries the payload types listed in the command (or those of the session,
+    if <literal>session</literal> is given instead) in order and plays the
+    first one for which the file exists. Since rtpproxy changes its working
+    directory to <filename>/</filename> when it daemonizes (unless started
+    with <option>-D</option>), the prompt name should normally be an
+    absolute path.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <variablelist>
+      <varlistentry>
+        <term><option>-l</option> <replaceable>limit</replaceable></term>
+
+        <listitem>
+          <para>Encode at most <replaceable>limit</replaceable> samples
+          (8000 samples per second) of the input.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-L</option></term>
+
+        <listitem>
+          <para>Loop mode: repeat the input as many times as needed to
+          produce exactly <replaceable>limit</replaceable> samples of
+          output. Requires <option>-l</option>.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>EXIT STATUS</title>
+
+    <para><command>&dhpackage;</command> exits 0 on success, and 1 if an
+    error occurs.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>EXAMPLES</title>
+
+    <para>Prepare <filename>ringback.sln</filename> for playback as
+    <literal>ringback</literal>, producing <filename>ringback.0</filename>,
+    <filename>ringback.8</filename> and so on:</para>
+
+    <screen>makeann ringback.sln ringback</screen>
+
+    <para>Make a 30 seconds long prompt out of a shorter one:</para>
+
+    <screen>makeann -l 240000 -L beep.sln beep30</screen>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <para><citerefentry><refentrytitle>rtpproxy</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>extractaudio</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>sox</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
+  </refsect1>
+
+  <refsect1>
+    <title>LICENSE</title>
+
+    <para>All components of the rtpproxy are licensed under the BSD 2-Clause
+    License. See <filename>LICENSE</filename> file in the top of source tree
+    for details.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>AVAILABILITY</title>
+
+    <para>The latest version of this program and its components can be found
+    at <ulink
+    url="http://www.rtpproxy.org/">http://www.rtpproxy.org/</ulink>.</para>
+  </refsect1>
+</refentry>

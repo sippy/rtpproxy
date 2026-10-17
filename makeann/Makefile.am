@@ -26,3 +26,10 @@ makeann_debug_CFLAGS = $(NOPT_CFLAGS) $(LTO_FLAG) $(RTPP_MEMDEB_CFLAGS)
 makeann_debug_LDFLAGS = $(makeann_LDFLAGS)
 
 DEFS=	-Wall @DEFS@
+
+dist_man_MANS=	makeann.1
+
+if BUILD_DOCS
+makeann.1: $(top_srcdir)/doc/makeann.xml
+	${XSLTPROC} ${XSLTPROC_FLAGS} http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $(top_srcdir)/doc/makeann.xml
+endif

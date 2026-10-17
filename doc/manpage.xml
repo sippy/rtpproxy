@@ -727,6 +727,13 @@
   </refsect1>
 
   <refsect1>
+    <title>SEE ALSO</title>
+
+    <para><citerefentry><refentrytitle>extractaudio</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>makeann</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
+  </refsect1>
+
+  <refsect1>
     <title>LICENSE</title>
 
     <para>All components of the rtpproxy are licensed under the BSD 2-Clause

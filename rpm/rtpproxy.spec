@@ -51,6 +51,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc AUTHORS COPYING README 
 %{_mandir}/man8/*
+%{_mandir}/man1/*
 %attr(755,root,root) %{_bindir}/rtpproxy
 %attr(755,root,root) %{_bindir}/makeann
 %config %attr(755,root,root) /etc/rc.d/init.d/*

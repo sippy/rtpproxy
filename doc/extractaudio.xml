@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- Use the following command to generate extractaudio.1: -->
+<!-- xsltproc /usr/local/share/xsl/docbook/manpages/docbook.xsl extractaudio.xml -->
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!-- Please adjust the date whenever revising the manpage. -->
+<!ENTITY dhdate "<date>October 17, 2026</date>">
+<!ENTITY dhsection "<manvolnum>1</manvolnum>">
+<!ENTITY dhucpackage "<refentrytitle>extractaudio</refentrytitle>">
+<!ENTITY dhpackage "extractaudio">
+<!ENTITY sobomax_firstname "Maksym">
+<!ENTITY sobomax_surname "Sobolyev">
+<!ENTITY sobomax_email "sobomax@sippysoft.com">
+<!ENTITY sobomax_emtag "<email>&sobomax_email;</email>">
+]>
+<refentry>
+  <refentryinfo>
+    <author>
+      <firstname>&sobomax_firstname;</firstname>
+
+      <surname>&sobomax_surname;</surname>
+
+      &sobomax_emtag;
+    </author>
+
+    <copyright>
+      <year>2004-2026</year>
+
+      <holder>&sobomax_firstname; &sobomax_surname;</holder>
+    </copyright>
+
+    <copyright>
+      <year>2006-2026</year>
+
+      <holder>Sippy Software, Inc.</holder>
+    </copyright>
+
+    &dhdate;
+  </refentryinfo>
+
+  <refmeta>
+    &dhucpackage;
+
+    &dhsection;
+
+    <refmiscinfo class="source">rtpproxy</refmiscinfo>
+
+    <refmiscinfo class="manual">RTPproxy Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>&dhpackage;</refname>
+
+    <refpurpose>convert RTP session recordings made by rtpproxy into audio
+    files</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+
+      <arg choice="opt"><option>-idsne</option></arg>
+
+      <arg choice="opt"><option>-F</option>
+      <replaceable>file_fmt</replaceable></arg>
+
+      <arg choice="opt"><option>-D</option>
+      <replaceable>data_fmt</replaceable></arg>
+
+      <arg choice="opt"><option>-r</option>
+      <replaceable>rate</replaceable></arg>
+
+      <group choice="opt">
+        <arg choice="plain"><option>-b</option>
+        <replaceable>kbps</replaceable></arg>
+
+        <arg choice="plain"><option>-C</option>
+        <replaceable>level</replaceable></arg>
+      </group>
+
+      <arg choice="plain"><replaceable>recname</replaceable></arg>
+
+      <arg choice="plain"><replaceable>outfile</replaceable></arg>
+
+      <arg choice="opt" rep="repeat"><replaceable>link</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+
+      <arg choice="opt"><option>-idsne</option></arg>
+
+      <arg choice="opt"><option>-F</option>
+      <replaceable>file_fmt</replaceable></arg>
+
+      <arg choice="opt"><option>-D</option>
+      <replaceable>data_fmt</replaceable></arg>
+
+      <arg choice="opt"><option>-r</option>
+      <replaceable>rate</replaceable></arg>
+
+      <group choice="opt">
+        <arg choice="plain"><option>-b</option>
+        <replaceable>kbps</replaceable></arg>
+
+        <arg choice="plain"><option>-C</option>
+        <replaceable>level</replaceable></arg>
+      </group>
+
+      <arg choice="opt"><option>-A</option>
+      <replaceable>answer_cap</replaceable></arg>
+
+      <arg choice="opt"><option>-B</option>
+      <replaceable>originate_cap</replaceable></arg>
+
+      <arg choice="opt"><option>--alice-crypto</option>
+      <replaceable>cspec</replaceable></arg>
+
+      <arg choice="opt"><option>--bob-crypto</option>
+      <replaceable>cspec</replaceable></arg>
+
+      <arg choice="plain"><replaceable>outfile</replaceable></arg>
+
+      <arg choice="opt" rep="repeat"><replaceable>link</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+
+      <arg choice="plain"><option>-S</option></arg>
+
+      <arg choice="plain"><replaceable>recname</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+
+      <arg choice="plain"><option>-S</option></arg>
+
+      <arg choice="opt"><option>-A</option>
+      <replaceable>answer_cap</replaceable></arg>
+
+      <arg choice="opt"><option>-B</option>
+      <replaceable>originate_cap</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><command>&dhpackage;</command> reads RTP streams recorded by
+    <citerefentry><refentrytitle>rtpproxy</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+    decodes them and writes the resulting audio into
+    <replaceable>outfile</replaceable> using the libsndfile library.</para>
+
+    <para>A call is recorded by rtpproxy as two captures, one per direction:
+    <replaceable>recname</replaceable><filename>.a.rtp</filename> for the
+    answering side and <replaceable>recname</replaceable><filename>.o.rtp</filename>
+    for the originating side, where <replaceable>recname</replaceable> is
+    <filename><replaceable>rec_dir</replaceable>/<replaceable>call_id</replaceable>=<replaceable>tag</replaceable></filename>.
+    In the first form, <command>&dhpackage;</command> takes
+    <replaceable>recname</replaceable> and loads both captures. In the second
+    form, the captures are given explicitly with the <option>-A</option>
+    and/or <option>-B</option> options, which also allows processing of just
+    one side, or of captures with arbitrary names. RTCP captures
+    (<filename>.rtcp</filename>) are not used.</para>
+
+    <para>Both the native rtpproxy recording format and the pcap format
+    (as produced by <command>rtpproxy -P</command>) are supported; the
+    format is detected automatically. Pcap files must be in version 2.4
+    format, with the Ethernet or BSD loopback link type. A single-file pcap
+    recording containing both directions can be given with
+    <option>-A</option>, in which case all of it is treated as coming from
+    the answering side.</para>
+
+    <para>Each SSRC found in a capture is decoded as a separate stream.
+    Streams are aligned using the packet arrival times: gaps in the
+    received audio are filled with silence, and RTP timestamps that run off
+    the arrival times by more than a second are re-synchronized. Streams of
+    the same side are mixed together. In mono output (the default) both
+    sides are then mixed together as well, in stereo output
+    (<option>-s</option>) the answering side goes into the first (left)
+    channel and the originating side into the second (right) one.</para>
+
+    <para>The following payload types are decoded:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>G.711 u-law (0) and A-law (8);</para>
+      </listitem>
+
+      <listitem>
+        <para>GSM 06.10 (3), G.722 (9) and G.729 (18), if the respective
+        codec support has been compiled in;</para>
+      </listitem>
+
+      <listitem>
+        <para>comfort noise (13) and telephone events (100, 101) are
+        played out as silence.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Statistics of each stream (packet counts, losses, duplicates,
+    jitter) and, when done, the number of samples decoded for each side and
+    written into the output file are reported on the standard error.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <variablelist>
+      <varlistentry>
+        <term><option>-A</option> <replaceable>answer_cap</replaceable></term>
+
+        <listitem>
+          <para>Load the answering side capture from
+          <replaceable>answer_cap</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-B</option> <replaceable>originate_cap</replaceable></term>
+
+        <listitem>
+          <para>Load the originating side capture from
+          <replaceable>originate_cap</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--alice-crypto</option> <replaceable>cspec</replaceable></term>
+
+        <term><option>--bob-crypto</option> <replaceable>cspec</replaceable></term>
+
+        <listitem>
+          <para>Decrypt SRTP in the answering (<option>--alice-crypto</option>)
+          or the originating (<option>--bob-crypto</option>) side capture.
+          <replaceable>cspec</replaceable> has the form
+          <replaceable>suite</replaceable>:<replaceable>key</replaceable>,
+          where <replaceable>key</replaceable> is the base64-encoded master
+          key and salt, as in the <literal>inline:</literal> parameter of
+          the SDP <literal>a=crypto</literal> attribute. The supported
+          suites are <literal>AES_CM_128_HMAC_SHA1_32</literal>,
+          <literal>AES_CM_128_HMAC_SHA1_80</literal>,
+          <literal>AES_192_CM_HMAC_SHA1_32</literal>,
+          <literal>AES_192_CM_HMAC_SHA1_80</literal>,
+          <literal>AES_256_CM_HMAC_SHA1_32</literal> and
+          <literal>AES_256_CM_HMAC_SHA1_80</literal>, plus
+          <literal>AEAD_AES_128_GCM</literal>,
+          <literal>AEAD_AES_128_GCM_8</literal>,
+          <literal>AEAD_AES_256_GCM</literal> and
+          <literal>AEAD_AES_256_GCM_8</literal> when built with libsrtp2.
+          Suite names are case-insensitive. Packets that fail to decrypt
+          are skipped. These options are only available if SRTP support has
+          been compiled in.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-b</option> <replaceable>kbps</replaceable></term>
+
+        <listitem>
+          <para>Opus bitrate in kbit/s, from 6 to 256 per channel. Requires
+          <option>-D opus</option>. Mutually exclusive with
+          <option>-C</option>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-C</option> <replaceable>level</replaceable></term>
+
+        <listitem>
+          <para>Compression level, from 0.0 (lowest compression, best
+          quality) to 1.0 (highest compression), for the output formats
+          that support it, such as FLAC, Vorbis and Opus. It is an error
+          to specify it for a format that does not. Mutually exclusive with
+          <option>-b</option>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-D</option> <replaceable>data_fmt</replaceable></term>
+
+        <listitem>
+          <para>Output data format (encoding), one of
+          <literal>pcm_s8</literal>, <literal>pcm_16</literal>,
+          <literal>pcm_24</literal>, <literal>pcm_32</literal>,
+          <literal>pcm_u8</literal>, <literal>float</literal>,
+          <literal>double</literal>, <literal>ulaw</literal>,
+          <literal>alaw</literal>, <literal>ima_adpcm</literal>,
+          <literal>ms_adpcm</literal>, <literal>gsm610</literal>,
+          <literal>vox_adpcm</literal>, <literal>g721_32</literal>,
+          <literal>g723_24</literal>, <literal>g723_40</literal>,
+          <literal>dwvw_12</literal>, <literal>dwvw_16</literal>,
+          <literal>dwvw_24</literal>, <literal>dwvw_n</literal>,
+          <literal>dpcm_8</literal>, <literal>dpcm_16</literal>,
+          <literal>vorbis</literal> or <literal>opus</literal>. The default
+          is <literal>gsm610</literal> for mono 8 kHz output and
+          <literal>ms_adpcm</literal> otherwise. <literal>gsm610</literal>,
+          <literal>g721_32</literal>, <literal>g723_24</literal> and
+          <literal>g723_40</literal> only support 8 kHz. Not every data
+          format can be used with every file format, see the libsndfile
+          documentation.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-d</option></term>
+
+        <listitem>
+          <para>Delete the input captures when done.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-e</option></term>
+
+        <listitem>
+          <para>Fail if any of the input captures cannot be loaded. By
+          default it is enough for one of them to be loaded
+          successfully.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-F</option> <replaceable>file_fmt</replaceable></term>
+
+        <listitem>
+          <para>Output file format, one of <literal>wav</literal>
+          (default), <literal>aiff</literal>, <literal>au</literal>,
+          <literal>raw</literal>, <literal>paf</literal>,
+          <literal>svx</literal>, <literal>nist</literal>,
+          <literal>voc</literal>, <literal>ircam</literal>,
+          <literal>w64</literal>, <literal>mat4</literal>,
+          <literal>mat5</literal>, <literal>pvf</literal>,
+          <literal>xi</literal>, <literal>htk</literal>,
+          <literal>sds</literal>, <literal>avr</literal>,
+          <literal>wavex</literal>, <literal>sd2</literal>,
+          <literal>flac</literal>, <literal>caf</literal>,
+          <literal>wve</literal>, <literal>ogg</literal>,
+          <literal>mpc2k</literal> or <literal>rf64</literal>.</para>
+
+          <para>Format names are case-insensitive for both
+          <option>-F</option> and <option>-D</option>; an unknown name
+          makes <command>&dhpackage;</command> print the list of supported
+          ones. The FLAC, Ogg, Vorbis and Opus formats are only available
+          if libsndfile has been built with support for them.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-i</option></term>
+
+        <listitem>
+          <para>Run at idle priority.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-n</option></term>
+
+        <listitem>
+          <para>Do not synchronize streams: gaps in the received audio are
+          not filled with silence, so the audio of each stream is played
+          out back to back.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-r</option> <replaceable>rate</replaceable></term>
+
+        <listitem>
+          <para>Output sample rate, either <literal>8000</literal>
+          (default) or <literal>16000</literal>. At 16 kHz, G.722 is
+          decoded at its native rate, while narrowband codecs are upsampled,
+          so that streams using different codecs stay aligned in one
+          file.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-S</option></term>
+
+        <listitem>
+          <para>Scan only: for each of the captures, print its name
+          followed by the number of RTP packets in it (-1 if it cannot be
+          read), and exit without producing any output file.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-s</option></term>
+
+        <listitem>
+          <para>Produce stereo output, with the answering side in the
+          first channel and the originating side in the second.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><replaceable>link</replaceable></term>
+
+        <listitem>
+          <para>Additional names to hard link <replaceable>outfile</replaceable>
+          to once it has been written.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>EXIT STATUS</title>
+
+    <para><command>&dhpackage;</command> exits 0 on success, 2 if the output
+    file cannot be created, and 1 on any other error.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>EXAMPLES</title>
+
+    <para>Convert a recording into a mono WAV file:</para>
+
+    <screen>extractaudio /var/spool/rtpproxy/call1=tag1 call1.wav</screen>
+
+    <para>Convert a recording into a stereo 16 kHz Opus file at
+    64 kbit/s:</para>
+
+    <screen>extractaudio -s -r 16000 -F ogg -D opus -b 64 \
+    /var/spool/rtpproxy/call1=tag1 call1.opus</screen>
+
+    <para>Convert SRTP pcap captures of both sides:</para>
+
+    <screen>extractaudio -A call1.a.pcap -B call1.o.pcap \
+    --alice-crypto AES_CM_128_HMAC_SHA1_80:<replaceable>base64_key</replaceable> \
+    --bob-crypto AES_CM_128_HMAC_SHA1_80:<replaceable>base64_key</replaceable> \
+    call1.wav</screen>
+
+    <para>Count the packets recorded for each side:</para>
+
+    <screen>extractaudio -S /var/spool/rtpproxy/call1=tag1</screen>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <para><citerefentry><refentrytitle>rtpproxy</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+    <citerefentry><refentrytitle>makeann</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
+  </refsect1>
+
+  <refsect1>
+    <title>LICENSE</title>
+
+    <para>All components of the rtpproxy are licensed under the BSD 2-Clause
+    License. See <filename>LICENSE</filename> file in the top of source tree
+    for details.</para>
+  </refsect1>
+
+  <refsect1>
+    <title>AVAILABILITY</title>
+
+    <para>The latest version of this program and its components can be found
+    at <ulink
+    url="http://www.rtpproxy.org/">http://www.rtpproxy.org/</ulink>.</para>
+  </refsect1>
+</refentry>
