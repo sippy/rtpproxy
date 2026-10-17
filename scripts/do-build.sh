@@ -46,6 +46,8 @@ fi
 
 ${APT_GET} install -y libgsm1-dev libpcap-dev cmake libunwind-dev tcpdump curl \
  gdb tcpreplay ffmpeg
+# libsndfile only enables Ogg/Vorbis/FLAC/Opus when their headers are found
+${APT_GET} install -y pkg-config libogg-dev libvorbis-dev libflac-dev libopus-dev
 OPWD="`pwd`"
 mkdir /tmp/deps
 cd /tmp/deps
@@ -75,6 +77,8 @@ wget https://ftp2.osuosl.org/pub/blfs/conglomeration/libsndfile/libsndfile-${SND
 xzcat libsndfile-${SNDFILE_VER}.tar.xz | ${TAR_CMD} -xv -f -
 cd libsndfile-${SNDFILE_VER}
 ./configure
+# extractaudio tests need Opus output
+grep -q '^#define HAVE_EXTERNAL_XIPH_LIBS 1$' src/config.h
 make
 ${SUDO} make install
 cd ${OPWD}
