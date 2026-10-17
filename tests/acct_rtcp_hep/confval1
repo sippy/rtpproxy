@@ -3,9 +3,13 @@
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
-for i in 1 2 3 4 5 6 7
+# broken9.conf has an unknown key for a module that takes no parameters
+for i in 1 2 3 4 5 6 7 9
 do
   cfile="acct_rtcp_hep/broken${i}.conf"
   ${RTPPROXY} -f --config ${cfile} -s stdio: < /dev/null
-  reportifnotfail "rtcp_hep module configuration validation"
+  RC=${?}
+  # The configuration must be rejected with an error, not by crashing
+  [ ${RC} -ne 0 -a ${RC} -lt 128 ]
+  report "rtcp_hep module configuration validation: ${cfile} (rc=${RC})"
 done
