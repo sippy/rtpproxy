@@ -185,6 +185,25 @@ load_adhoc(struct rtpp_loader *loader, struct channels *channels,
         default:
             return -1;
         }
+#if ENABLE_SRTP || ENABLE_SRTP2
+        if (crypto != NULL) {
+            int rtp_pkt_len;
+
+            /*
+             * Decrypt in place and update the record length, the mapping
+             * is private and writable. The position of the next record
+             * has been already computed by the eaud_adhoc_dissect().
+             */
+            rtp_pkt_len = eaud_crypto_decrypt(crypto, ad_data.pkt,
+              ad_data.ahp->plen);
+            if (rtp_pkt_len <= 0) {
+                warnx("decryption failed");
+                continue;
+            }
+            assert(rtp_pkt_len <= ad_data.ahp->plen);
+            ad_data.ahp->plen = rtp_pkt_len;
+        }
+#endif
         pack = malloc(sizeof(*pack));
         if (pack == NULL) {
             warn("malloc() failed");
