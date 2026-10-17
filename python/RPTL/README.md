@@ -3,218 +3,252 @@
 ## Table of Contents
 
 1. [Introduction](#introduction)
-2. [Purpose](#purpose)
-3. [Language Description](#language-description)
+2. [Language Description](#language-description)
+   - [Script Structure](#script-structure)
    - [Sockets](#sockets)
    - [Commands](#commands)
    - [Variables and Output](#variables-and-output)
-   - [Functions and Transformations](#functions-and-transformations)
-   - [Built-in Functions](#built-in-functions)
-4. [RPTL Implementation](#rptl-implementation)
-5. [Example](#example)
-6. [More Examples](#examples)
+   - [Transformation Functions](#transformation-functions)
+   - [Built-ins](#built-ins)
+   - [External Commands](#external-commands)
+3. [Running RPTL Scripts](#running-rptl-scripts)
+4. [Example](#example)
+5. [More Examples](#more-examples)
 
 ## Introduction
 
-RTPProxy Testing Language (RPTL) is a domain-specific language designed to
-facilitate the testing and evaluation of RTP packet forwarding and processing
-services such as RTPProxy. RPTL provides a concise and readable syntax for
-defining communication sockets, executing commands, and analyzing the output.
-By using RPTL, developers can quickly create and execute test scripts to ensure
-the performance, reliability, and functionality of their RTP packet forwarding
-and processing services.
+RTPProxy Testing Language (RPTL) is a domain-specific language for writing
+tests for RTP packet forwarding and processing services such as RTPProxy.
+A script defines control sockets, sends raw RTPProxy commands over them,
+checks the replies, and drives external tools such as traffic generators
+and recording analyzers.
 
-## Purpose
-
-The main purpose of RPTL is to streamline the testing process of RTP packet
-forwarding and processing services. It allows developers to easily create and
-modify test scripts without having to deal with the complexities of low-level
-programming languages. This language is tailored specifically for testing
-scenarios, focusing on aspects crucial for RTP packet forwarding and processing
-services, such as IPv4 and IPv6 support, handling codecs, testing encryption,
-recording, stream forking, and monitoring statistics.
+Since a script can start its own rtpproxy instances and pass whatever ports
+they allocate on to subsequent commands and tools, tests written in RPTL do
+not need any pre-determined ports and can safely run in parallel.
 
 ## Language Description
 
-RPTL is designed with simplicity and readability in mind, making it easy to
-understand and write test scripts. The language is composed of two main parts:
-socket definitions and command execution.
+### Script Structure
+
+A script is a sequence of statements, one per line:
+
+```
+# comment
+socket NAME: ADDRESS [PARAMS ...] [-> LOGFILE]
+NAME: ACTION [-> OUTPUT]
+```
+
+Statements are executed strictly in order. A command sent to rtpproxy is
+not followed by the next statement until its reply has been received.
+Any failure (an error from the rtpproxy client, a failed check, a non-zero
+exit code of an external command, a timeout) stops the script and fails it.
+
+Lines starting with `#` are comments. The sequence `->` separates an action
+from its output specification, so it cannot appear inside the action itself.
 
 ### Sockets
 
-Sockets in RPTL represent named communication endpoints used to connect to the
-RTP packet forwarding and processing services being tested. Each socket
-definition consists of a name (e.g., "gena"), a communication socket
-(e.g., "cunix:/tmp/forwarding3.sock") to connect to the RTPProxy instance, and
-an optional log file (e.g., "gena.rout") for recording activity.
-
-Example:
+A socket is a named control connection to an rtpproxy instance, optionally
+logging every reply received into `LOGFILE`:
 
 ```
 socket gena: cunix:/tmp/forwarding3.sock -> gena.rout
 ```
 
-In this example, a socket named "gena" is defined to connect to the RTPProxy
-instance using the communication socket "cunix:/tmp/forwarding3.sock", and the
-activity is logged to the file "gena.rout".
+`ADDRESS` is anything accepted by the sippy `Rtp_proxy_client`, e.g.
+`unix:/path`, `cunix:/path`, `udp:host:port` or `tcp:host:port`.
+
+The special address `stdio:` makes RPTL start a managed rtpproxy instance
+of its own, connected via a socket pair, with `PARAMS` passed as extra
+command line arguments:
+
+```
+.eval: ../src/rtpproxy_debug -> RTPPROXY_BIN
+.eval: alice.rlog -> RTPPROXY_STDERR
+.eval: -d dbug -p /dev/null -l 127.0.0.1 -> RTPPROXY_ARGS
+socket alice: stdio: %%RTPPROXY_ARGS%% -> alice.rout
+```
+
+The binary is taken from the `RTPPROXY_BIN` variable (`rtpproxy` if not set)
+and is invoked as `RTPPROXY_BIN -f -s stdio: PARAMS...`. If `RTPPROXY_STDERR`
+is set, rtpproxy stderr is written into that file, otherwise it is inherited
+from the RPTL runner. Both variables are looked up when the socket statement
+is executed, so they can be changed between sockets. `PARAMS` are split
+shell-style after variable expansion, so one variable can carry several
+arguments.
+
+A managed instance runs until its socket is closed with `.close:` or the
+script ends. Closing the socket makes rtpproxy exit on its own; if it has
+not done so within 5 seconds it is terminated. A non-zero exit code of a
+managed instance (e.g. a memory leak detected by a debug build) fails the
+script.
+
+Defining a socket with a name that is already in use shuts down the old one
+first.
 
 ### Commands
 
-Commands in RPTL define a sequence of raw RTPProxy commands to be sent to the
-associated RTPProxy instance or executed locally. These commands can include
-creating or destroying sessions, starting or stopping the streaming of RTP
-packets, setting up encryption and decryption of streams, and recording or
-forking streams. Commands are associated with a specific socket and may include
-output specifications for processing results.
-
-Example:
+A command sends `ACTION`, after variable expansion, to the rtpproxy behind
+the named socket:
 
 ```
 gena: Uc%%CODEC%% %%CALLID_A%% 127.0.0.1 %%TRASH_PORT%% %%FT%%
 ```
 
-In this example, a command "U" is sent to the RTPProxy using the "gena" socket,
-creating a session on 127.0.0.1 with codecs defined by the CODEC environment
-variable, Call-ID by CALLID_A, port number by TRASH_PORT, and from-tag by FT.
+Here a "U" command is sent over the "gena" socket, with the codec, Call-ID,
+port and from-tag taken from the CODEC, CALLID_A, TRASH_PORT and FT
+variables. Several rtpproxy commands can be combined into one action with
+`&&` in the usual way, the reply then contains the results separated by
+`&&` as well.
+
+Names starting with a dot (`.eval:`, `.exec:` and so on) are built-ins,
+which are executed by the RPTL runner itself, see [Built-ins](#built-ins).
 
 ### Variables and Output
 
-RPTL allows the use of variables to store and reuse information throughout the
-script. Variables can be set explicitly using the `.eval:` directive or by
-capturing the output of a command. To use the value of a variable in a command,
-enclose the variable name with double percentage signs (%%). The variable will
-be replaced with its value when the command is executed.
+Variables are referenced as `%%NAME%%` anywhere in an action, a socket
+address, socket parameters or a socket log file name, and are replaced with
+their values when the statement is executed. Referencing an undefined
+variable fails the script. Expansion is not recursive: a value containing
+`%%` is inserted as is.
 
-Example:
+Variables are set with `.eval:`, from the command line (`-D NAME=VALUE`, see
+[Running RPTL Scripts](#running-rptl-scripts)), or by capturing the result
+of a command with `-> NAME`:
 
 ```
 .eval: 38322 -> TRASH_PORT
-gena: Uc%%CODEC%% %%CALLID_A%% 127.0.0.1 %%TRASH_PORT%% %%FT%%
-```
-
-In this example, the variable TRASH_PORT is set to the value 38322. When the
-"gena" command is executed, the %%TRASH_PORT%% placeholder is replaced with the
-value of the TRASH_PORT variable (38322).
-
-Output specifications can be added to commands to capture the result of a
-command into a variable for later use or inspection. To do this, add `->` and
-the variable name after the command.
-
-Example:
-
-```
 gena: Lz60 %%CALLID_A%% 127.0.0.1 %%TRASH_PORT%% %%FT%% %%TT%% -> PORTA
 ```
 
-In this example, the "L" command is executed, and the resulting output is
-captured into the PORTA variable.
+Instead of a variable name, the output can be passed to one of the
+transformation functions below, which can check it and/or split it into
+several variables.
 
-Variables can be helpful for dynamically building commands based on previous
-results or for storing intermediate values for later inspection upon script
-completion.
-
-### Functions and Transformations
-
-RPTL allows the use of functions to transform and manipulate variables and
-command outputs. Functions are applied to variables or command outputs by
-appending the function name and its arguments within parentheses.
-
-Example:
+### Transformation Functions
 
 ```
 fwd: U %%CALLID_F%% 127.0.0.1 %%PORTA%% %%FT%% && M4:1 S -> str_split(&&, PORT1_IPv4, DTLS_PARAMS)
 .eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+.eval: %%PORT1_IPv4%% -> validate_port(_)
 ```
 
-In this example, the `str_split` function is used to split the output of the
-"fwd" command at each occurrence of the specified delimiter `&&`. The resulting
-values are assigned to the PORT1_IPv4 and DTLS_PARAMS variables. The
-`str_split` function is then used again to split the DTLS_PARAMS variable at
-each space, assigning the resulting values to the DTLS_MODE, DTLS_DIGALG, and
-DTLS_DIGSUM variables.
+| Function | Description |
+|----------|-------------|
+| `str_split(SEP, VAR1, VAR2, ...)` | Split the value at `SEP` and assign the pieces, with surrounding whitespace stripped, to `VAR1`, `VAR2`, ... in order. Fails if there are fewer pieces than variables; anything left after the last variable is dropped, so `str_split(\n, FIRST)` takes the first line. `SEP` is taken verbatim (`str_split( , ...)` splits at spaces), may not contain `,` or `)`, and can use backslash escapes such as `\n`. |
+| `str_compare(VAR)` | Fail unless the value is exactly equal to the value of `VAR`. |
+| `validate_port(VAR)` | Fail unless the value is an integer in the 1-65535 range, then assign it to `VAR`. `_` is commonly used when the value is not needed. |
 
-Functions can be helpful for processing and manipulating command outputs or
-variables for use in subsequent commands or for inspecting results upon script
-completion.
-
-Remember to consider the specific syntax of the function when using it, as the
-format may vary between functions.
-
-### Built-in Functions
-
-RPTL includes some built-in functions that can be executed locally, allowing
-the test script to interact with the system or perform additional processing.
-
-Example:
+To compare a result against a constant, put the constant into a variable
+first:
 
 ```
-.sleep: 1
+.eval: 0 -> RES_OK
+alice: R call_ab_alice alice_to alice_from -> str_compare(RES_OK)
 ```
 
-In this example, the `.sleep:` built-in function causes the script to pause
-execution for 1 second before continuing. This can be useful for simulating
-various network conditions or for allowing time for RTP streams to be
-established, modified, or terminated.
+### Built-ins
 
-Built-in functions provide a way to incorporate simple interactions and
-processing tasks within the RPTL script, without the need for external tools or
-scripts.
+| Built-in | Description |
+|----------|-------------|
+| `.eval: VALUE -> OUTPUT` | Assign `VALUE` to a variable or pass it to a function. |
+| `.echo: TEXT` | Print `TEXT` to stderr. |
+| `.sleep: SECONDS` | Pause the script; fractional values are allowed. |
+| `.include: FILE` | Execute statements from `FILE` at this point. A relative `FILE` is resolved against the directory of the script containing the `.include:`. The file is read when the statement is reached, so its name can contain variables; included statements share all variables and sockets with the rest of the script. |
+| `.close: SOCKET` | Shut down `SOCKET`. For a `stdio:` socket this waits for the managed rtpproxy to exit and fails if its exit code is non-zero, which is useful to make it flush and close its recordings before they are examined. |
+| `.exec:`, `.spawn:`, `.readline:`, `.wait:`, `.kill:` | Run external commands, see below. |
+
+### External Commands
+
+Scripts can run external programs, e.g. to generate traffic into the ports
+allocated by rtpproxy, or to examine recordings it has produced. Command
+lines are executed via `/bin/sh -c` after variable expansion, so shell
+syntax (environment assignments, redirections, `$((...))`, etc.) is
+available. Each process runs in its own process group with stdin connected
+to `/dev/null` and stderr inherited from the RPTL runner.
+
+| Built-in | Description |
+|----------|-------------|
+| `.exec: CMDLINE [-> OUTPUT]` | Run `CMDLINE` and wait for it to exit. A non-zero exit code fails the script. Its stdout, with leading and trailing whitespace stripped, is the result; without `-> OUTPUT` it is printed to stderr. |
+| `.spawn: CMDLINE -> NAME` | Start `CMDLINE` in background under handle `NAME` and continue right away. The `NAME` variable is set to its PID. |
+| `.readline: NAME [TIMEOUT] [-> OUTPUT]` | Wait for the next line printed by the spawned process `NAME`. Output is buffered from the moment the process is started, so no lines are lost. Fails if the process exits without printing another line, or on timeout. |
+| `.wait: NAME [TIMEOUT] [-> OUTPUT]` | Wait for the spawned process `NAME` to exit and release its handle, so `NAME` can be reused. A non-zero exit code fails the script unless it is captured with `-> OUTPUT` (a negative value means it was killed by that signal). Fails on timeout. |
+| `.kill: NAME [SIGNAL]` | Send `SIGNAL` (name such as `TERM`, `SIGUSR1`, or number; `TERM` by default) to the process group of `NAME`. Does nothing if it has already exited; use `.wait:` afterwards to collect it. |
+
+`TIMEOUT` is in seconds; without it `.readline:` and `.wait:` wait forever.
+
+Every spawned process must be collected with `.wait:`. Processes still
+running when the script ends, or when it fails, are terminated, and if the
+script has otherwise succeeded it fails.
+
+The shell stays the parent of the command line unless told otherwise, so
+for a process that is going to be signalled, start it with `exec` to make
+sure that its own exit code is the one reported:
+
+```
+.spawn: exec python3 udp_sink.py 127.0.0.1 -> SINK
+.readline: SINK 10 -> validate_port(SINK_PORT)
+...
+.kill: SINK
+.wait: SINK 10
+```
+
+`.exec:` is also handy for simple calculations:
+
+```
+.exec: expr %%PORT_A%% + 1 -> PORT_A_RTCP
+```
 
 ## Running RPTL Scripts
 
-The RPTL implementation includes a Python script named `rptl_run.py` that allows
-you to execute RPTL test scripts. The script takes a single command-line
-parameter `-s` to specify the path to the RPTL script file that you want to run.
-Upon completion, the script displays the set of internal variables used during
-the test.
-
-### Usage
-
-To run an RPTL script, execute the `rptl_run.py` script with the `-s` parameter
-followed by the path to the script file:
-
-```bash
-python rptl_run.py -s /path/to/your/script.rptl
+```
+python3 rptl_run.py -s script.rptl [-D NAME=VALUE ...] [-S sippy_path]
 ```
 
-Upon completion, the script will output the internal variables used during the
-test. This output can help you verify the correctness of the test script and
-analyze the results.
+| Option | Description |
+|--------|-------------|
+| `-s script.rptl` | Script to run. |
+| `-D NAME=VALUE` | Define variable `NAME` before the script starts. Can be repeated. Useful to pass paths and other parameters from a wrapper shell script. |
+| `-S sippy_path` | Directory to load the sippy library from instead of the default module search path. |
+
+RPTL requires the `parsimonious` and `sippy` Python modules.
+
+On success the runner prints all variables to stdout and exits with code 0.
+On failure it prints the failed statement as written and as expanded to
+stderr, followed by the error, and exits with a non-zero code.
 
 ## Example
 
-Here's an example of a complete RPTL script that demonstrates defining sockets,
-executing commands, and working with variables and output:
+Start an rtpproxy, create a session, replay a capture into the port it has
+allocated and check the stats:
 
 ```
-socket gena: cunix:/tmp/forwarding3.sock -> gena.rout
+.eval: ../src/rtpproxy_debug -> RTPPROXY_BIN
+.eval: rtpa_nsent=300 rtpa_nrcvd=300 -> STATS_EXP
+socket rtpp: stdio: -d dbug -T2 -W2 -> rtpp.rout
 
-gena: Uc%%CODEC%% %%CALLID_A%% 127.0.0.1 %%TRASH_PORT%% %%FT%%
-gena: Lz60 %%CALLID_A%% 127.0.0.1 %%TRASH_PORT%% %%FT%% %%TT%% -> PORTA
+rtpp: U call1 127.0.0.1 12345 from_tag_1 -> validate_port(PORT_A)
+rtpp: L call1 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(PORT_O)
 
-.sleep: 1
+.exec: tcprewrite --dstipmap=0.0.0.0/0:127.0.0.1 --portmap=2280:%%PORT_O%% -i in.pcap -o out.pcap
+.spawn: exec udpreplay out.pcap -> REPLAY
+.wait: REPLAY 60
+.sleep: 0.5
 
-gena: P%%NTIMES%% %%CALLID_A%% forwarding1 session %%FT%% %%TT%%
-
-.sleep: 25
-
-gena: Qv %%CALLID_F%% %%FT%% %%TT%% %%G_STATS%% -> G_STATS
+rtpp: Qv call1 to_tag_1 from_tag_1 rtpa_nsent rtpa_nrcvd -> str_compare(STATS_EXP)
+.close: rtpp
 ```
-
-In this script, a socket is defined, several commands are executed, and the
-are captured in variables for further use or inspection.
 
 ## More Examples
 
-For more practical insight into using RPTL, refer to the
-[examples](./examples) directory in the  repository. Here, you will find a set
-of scripts demonstrating the capabilities  and use-cases of RPTL.
-
-One particular example is the [dtls.rptl](./examples/dtls.rptl) script, which
-simulates various RTP generation, forwarding, and encryption scenarios using
-RTPProxy's command-line interface.
-
-The script demonstrates the dynamic modification of session parameters, the
-collection of transmission statistics, and the setting of secure and non-secure
-sessions. For a detailed understanding of the script, visit the
-[README](./examples/README.md) in the examples directory.
+- [tests/recording/basic](../../tests/recording/basic) runs a set of
+  recording tests, one script per sub-test
+  (`tests/recording/basic.*.rptl`), sharing common setup and replay steps
+  via `.include:` and using `.exec:`/`.spawn:` to replay traffic, receive
+  remote recordings and verify recorded files.
+- [tests/recording/src_srs.rptl](../../tests/recording/src_srs.rptl) chains
+  four managed rtpproxy instances together, with DTLS and recording.
+- [examples/dtls.rptl](./examples/dtls.rptl) talks to externally started
+  rtpproxy instances over Unix domain sockets to exercise forwarding and DTLS
+  encryption, see its [README](./examples/README.md).
