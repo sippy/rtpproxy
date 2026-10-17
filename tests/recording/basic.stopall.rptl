@@ -1,0 +1,20 @@
+# Record both directions into a single pcap file (Rs), stop all recording
+# of the session (Na) half way.
+
+.include: basic.setup.rptl
+
+rtpp: Rs %%CALLID%% from_tag_1 -> str_compare(RES_OK)
+rtpp: Rs %%CALLID%% to_tag_1 -> str_compare(RES_E50)
+rtpp: Rs %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+
+.include: basic.replay1.rptl
+
+rtpp: Na %%CALLID%% from_tag_1 -> str_compare(RES_OK)
+rtpp: Na %%CALLID%% to_tag_1 -> str_compare(RES_E50)
+rtpp: Na %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
+
+.include: basic.replay2.rptl
+
+.eval: %%REC_BASE%%.pcap -> EA_FILE
+.eval: 602 -> EA_NPKTS
+.include: basic.eaudio.rptl

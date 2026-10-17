@@ -1,0 +1,20 @@
+# Record both directions into a single pcap file with explicitly
+# specified name (Cs).
+
+.include: basic.setup.rptl
+
+.eval: %%CALLID%%=from_tag_1.pcap -> REC_NAME
+rtpp: Cs %%CALLID%% %%REC_NAME%% from_tag_1 -> str_compare(RES_OK)
+rtpp: Cs %%CALLID%% %%REC_NAME%% to_tag_1 -> str_compare(RES_E50)
+rtpp: Cs %%CALLID%% %%REC_NAME%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+
+.include: basic.replay1.rptl
+
+rtpp: N %%CALLID%% from_tag_1 -> str_compare(RES_OK)
+rtpp: N %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+
+.include: basic.replay2.rptl
+
+.eval: %%RECORD_DIR%%/%%REC_NAME%% -> EA_FILE
+.eval: 602 -> EA_NPKTS
+.include: basic.eaudio.rptl

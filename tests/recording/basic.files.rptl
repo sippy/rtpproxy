@@ -1,0 +1,27 @@
+# Record each stream into its own file (R).
+
+.include: basic.setup.rptl
+
+rtpp: R %%CALLID%% from_tag_1 -> str_compare(RES_OK)
+rtpp: R %%CALLID%% to_tag_1 -> str_compare(RES_E50)
+rtpp: R %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+
+.include: basic.replay1.rptl
+
+rtpp: N %%CALLID%% from_tag_1 -> str_compare(RES_OK)
+rtpp: N %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+
+.include: basic.replay2.rptl
+
+.eval: %%REC_BASE%%.a.rtcp -> EA_FILE
+.eval: 0 -> EA_NPKTS
+.include: basic.eaudio.rptl
+.eval: %%REC_BASE%%.a.rtp -> EA_FILE
+.eval: 302 -> EA_NPKTS
+.include: basic.eaudio.rptl
+.eval: %%REC_BASE%%.o.rtcp -> EA_FILE
+.eval: 0 -> EA_NPKTS
+.include: basic.eaudio.rptl
+.eval: %%REC_BASE%%.o.rtp -> EA_FILE
+.eval: 300 -> EA_NPKTS
+.include: basic.eaudio.rptl

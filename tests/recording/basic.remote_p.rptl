@@ -1,0 +1,28 @@
+# Stream recording to a remote UDP destination (C), use a dedicated
+# rtpproxy-allocated source port for one of the directions (Cp).
+#
+# Expects PYINT and UDP_SINK to be defined.
+
+.include: basic.setup.rptl
+
+.spawn: exec %%PYINT%% %%UDP_SINK%% 127.0.0.1 %%WORK_BASE%%.tlog -> SINK
+.readline: SINK 10 -> validate_port(SINK_PORT)
+
+rtpp: C %%CALLID%% udp:127.0.0.1:%%SINK_PORT%% from_tag_1 -> str_compare(RES_OK)
+rtpp: C %%CALLID%% udp:127.0.0.1:%%SINK_PORT%% to_tag_1 -> str_compare(RES_E50)
+rtpp: Cp %%CALLID%% udp:127.0.0.1:%%SINK_PORT%% to_tag_1 from_tag_1 -> str_split( , PORT_REC, HOST_REC)
+.eval: %%PORT_REC%% -> validate_port(_)
+.eval: 127.0.0.1 -> HOST_REC_EXP
+.eval: %%HOST_REC%% -> str_compare(HOST_REC_EXP)
+
+.include: basic.replay1.rptl
+
+rtpp: N %%CALLID%% from_tag_1 -> str_compare(RES_OK)
+rtpp: N %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+
+.include: basic.replay2.rptl
+
+.eval: 109564 -> RECSIZE
+.kill: SINK
+.readline: SINK 10 -> str_compare(RECSIZE)
+.wait: SINK 10

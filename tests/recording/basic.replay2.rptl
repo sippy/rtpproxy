@@ -1,0 +1,19 @@
+# Second phase of the recording/basic sub-tests: refresh the session, replay
+# the rest of the traffic, verify stats and shut down the rtpproxy, so that
+# all recordings are flushed and closed.
+
+rtpp: L %%CALLID%% 127.0.0.1 56780 to_tag_1 from_tag_1 -> str_compare(PORT_A)
+rtpp: L %%CALLID%% 127.0.0.1 9876 from_tag_1 to_tag_1 -> str_compare(PORT_O)
+
+.spawn: exec udpreplay -r 2 -n 159 %%WORK_BASE%%.2.a.pcap -> REPLAY_A
+.spawn: exec udpreplay -r 2 -n 163 %%WORK_BASE%%.2.o.pcap -> REPLAY_O
+.wait: REPLAY_A 60
+.wait: REPLAY_O 60
+.sleep: 0.5
+
+.eval: rtpa_nsent=463 rtpa_nrcvd=462 rtpa_ndups=0 rtpa_nlost=1 rtpa_perrs=0 -> STATS_EXP
+rtpp: Qv %%CALLID%% from_tag_1 to_tag_1 %%STATS_KEYS%% -> str_compare(STATS_EXP)
+.eval: rtpa_nsent=461 rtpa_nrcvd=461 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0 -> STATS_EXP
+rtpp: Qv %%CALLID%% to_tag_1 from_tag_1 %%STATS_KEYS%% -> str_compare(STATS_EXP)
+
+.close: rtpp

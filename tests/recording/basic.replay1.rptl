@@ -1,0 +1,24 @@
+# First phase of the recording/basic sub-tests: rewrite the captured traffic
+# to go to the ports allocated by the rtpproxy, replay the first portion of
+# it in both directions, wait for the replay to finish and verify stats.
+#
+# Expects PCAP_DIR1 and PCAP_DIR2 to be defined.
+
+.exec: expr %%PORT_A%% + 1 -> PORT_A_RTCP
+.exec: expr %%PORT_O%% + 1 -> PORT_O_RTCP
+.eval: tcprewrite --dstipmap=0.0.0.0/0:127.0.0.1 -> TCPREWRITE
+.exec: %%TCPREWRITE%% --portmap=2280:%%PORT_A%% --portmap=2281:%%PORT_A_RTCP%% -i %%PCAP_DIR1%%/srtp1.a.rtp -o %%WORK_BASE%%.1.a.pcap
+.exec: %%TCPREWRITE%% --portmap=2240:%%PORT_O%% --portmap=2241:%%PORT_O_RTCP%% -i %%PCAP_DIR1%%/srtp1.o.rtp -o %%WORK_BASE%%.1.o.pcap
+.exec: %%TCPREWRITE%% --portmap=2006:%%PORT_A%% --portmap=2007:%%PORT_A_RTCP%% -i %%PCAP_DIR2%%/rtcp.a.pcap -o %%WORK_BASE%%.2.a.pcap
+.exec: %%TCPREWRITE%% --portmap=2008:%%PORT_O%% --portmap=2009:%%PORT_O_RTCP%% -i %%PCAP_DIR2%%/rtcp.o.pcap -o %%WORK_BASE%%.2.o.pcap
+
+.spawn: exec udpreplay -r 2 -n 302 %%WORK_BASE%%.1.a.pcap -> REPLAY_A
+.spawn: exec udpreplay -r 2 -n 300 %%WORK_BASE%%.1.o.pcap -> REPLAY_O
+.wait: REPLAY_A 60
+.wait: REPLAY_O 60
+.sleep: 0.5
+
+.eval: rtpa_nsent=300 rtpa_nrcvd=300 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0 -> STATS_EXP
+rtpp: Qv %%CALLID%% from_tag_1 to_tag_1 %%STATS_KEYS%% -> str_compare(STATS_EXP)
+.eval: rtpa_nsent=302 rtpa_nrcvd=302 rtpa_ndups=0 rtpa_nlost=0 rtpa_perrs=0 -> STATS_EXP
+rtpp: Qv %%CALLID%% to_tag_1 from_tag_1 %%STATS_KEYS%% -> str_compare(STATS_EXP)
