@@ -842,14 +842,15 @@ rtpp_packetport_ismapped(const void *ptr)
 {
     long pagesz;
     uintptr_t page_u;
-    char vec;
+    unsigned char vec;
 
     pagesz = sysconf(_SC_PAGESIZE);
     if (pagesz <= 0) {
         return (0);
     }
     page_u = (uintptr_t)ptr - ((uintptr_t)ptr % (uintptr_t)pagesz);
-    return (mincore((void *)page_u, (size_t)pagesz, &vec) == 0);
+    /* The vector is char * on BSDs and macOS, unsigned char * on Linux */
+    return (mincore((void *)page_u, (size_t)pagesz, (void *)&vec) == 0);
 }
 
 static int
