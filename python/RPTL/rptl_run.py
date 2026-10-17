@@ -1,7 +1,8 @@
-import sys, getopt, shlex
-from time import sleep
+import sys, os, getopt, shlex, signal
+from collections import deque
+from threading import Thread
 from socket import socketpair, AF_UNIX
-from subprocess import Popen, TimeoutExpired
+from subprocess import Popen, TimeoutExpired, DEVNULL, PIPE
 
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import Node, NodeVisitor
@@ -12,15 +13,16 @@ from sippy.Rtp_proxy.Client.Worker.internal import RTPPLWorker_internal
 grammar = Grammar(
     r"""
     program = ws? stmt (ws stmt)* ws?
-    stmt = socket / command
+    stmt = comment / socket / command
+    comment = ~r"#[^\r\n]*"
     socket = "socket" ws name ":" ws address (ws1 socket_params)? (ws1 arr ws logfile)?
     command = name ":" ws action (ws output_spec)?
     name = ~r"[.]?\w+"
     output_spec = arr ws (trans_spec / var_name)
     var_name = ~r"\w+"
     trans_spec = func_name obra func_arg (comm ws func_arg)* cbra
-    func_arg = ~"[^,)]+"
-    func_name = ~"\w+"
+    func_arg = ~r"[^,)]+"
+    func_name = ~r"\w+"
     socket_params = param (ws1 param)*
     param = ~r"(?!->)\S+"
     address = ~r"\S+"
@@ -111,8 +113,10 @@ class StdioRtpProxyClient(Rtp_proxy_client_stream):
             super().shutdown()
         finally:
             if self.proc is not None:
-                proc_rc = self.proc.poll()
-                if proc_rc is None:
+                try:
+                    # EOF on the control socket makes rtpproxy exit by itself
+                    proc_rc = self.proc.wait(timeout = 5.0)
+                except TimeoutExpired:
                     self.proc.terminate()
                     try:
                         proc_rc = self.proc.wait(timeout = 2.0)
@@ -126,6 +130,61 @@ class StdioRtpProxyClient(Rtp_proxy_client_stream):
         if proc_rc is not None and proc_rc != 0:
             raise RuntimeError(
               F'managed rtpproxy instance "{self.instance_name}" exited with return code {proc_rc}')
+
+class ManagedProcess():
+    # External command run via "/bin/sh -c" in its own process group, its
+    # stdout is collected line by line and delivered to the main thread
+    name: str
+    cmdline: str
+    lines: deque
+    rc = None
+    on_update = None
+
+    def __init__(self, name, cmdline):
+        self.name = name
+        self.cmdline = cmdline
+        self.lines = deque()
+        self.proc = Popen(['/bin/sh', '-c', cmdline], stdin = DEVNULL,
+          stdout = PIPE, close_fds = True, start_new_session = True)
+        self.pid = self.proc.pid
+        self._reader = Thread(target = self._read_output, daemon = True)
+        self._reader.start()
+
+    def _read_output(self):
+        from sippy.Core.EventDispatcher import ED2
+        for line in self.proc.stdout:
+            line = line.decode(errors = 'replace').rstrip('\r\n')
+            ED2.callFromThread(self._got_line, line)
+        self.proc.stdout.close()
+        rc = self.proc.wait()
+        ED2.callFromThread(self._got_exit, rc)
+
+    def _got_line(self, line):
+        self.lines.append(line)
+        self._notify()
+
+    def _got_exit(self, rc):
+        self.rc = rc
+        self._notify()
+
+    def _notify(self):
+        if self.on_update is not None:
+            self.on_update()
+
+    def signal(self, signum):
+        if self.proc.returncode is not None:
+            return
+        try:
+            os.killpg(self.pid, signum)
+        except ProcessLookupError:
+            pass
+
+    def stop(self):
+        self.signal(signal.SIGTERM)
+        self._reader.join(2.0)
+        if self._reader.is_alive():
+            self.signal(signal.SIGKILL)
+            self._reader.join()
 
 class TransFunction():
     name: str
@@ -142,6 +201,8 @@ class TransFunction():
 
     def str_split(self, srun, res):
         spat, *evars = self.args
+        if '\\' in spat:
+            spat = spat.encode().decode('unicode_escape')
         res = res.split(spat, len(evars))
         for i, var in enumerate(evars):
             srun.variables[var] = res[i].strip()
@@ -165,23 +226,58 @@ class ExceptionInfo():
 class ScriptRunner():
     i_command = 0
     sockets: dict
+    procs: dict
     commands: list
     variables: dict
     internal_ops: dict
     ex_info: ExceptionInfo = None
+    cur_cmd = None
+    cur_command = None
 
-    def __init__(self, commands):
+    def __init__(self, commands, variables = None):
+        from sippy.Time.Timeout import Timeout
         self.sockets = {}
+        self.procs = {}
         self.commands = commands
-        self.variables = {}
+        self.variables = dict(variables) if variables is not None else {}
         self.internal_ops = {
           '.eval':self.handle_eval,
           '.sleep':self.handle_sleep,
           '.echo':self.handle_echo,
+          '.include':self.handle_include,
+          '.exec':self.handle_exec,
+          '.spawn':self.handle_spawn,
+          '.readline':self.handle_readline,
+          '.wait':self.handle_wait,
+          '.kill':self.handle_kill,
+          '.close':self.handle_close,
         }
-        self.issue_next_cmd()
+        # Start once the event loop is running, so that breakLoop() works
+        Timeout(self.issue_next_cmd, 0.0)
+
+    def fail(self, ex):
+        from sippy.Core.EventDispatcher import ED2
+        if self.ex_info is not None:
+            return
+        ei = ExceptionInfo()
+        ei.exception = ex
+        ei.cmd = self.cur_cmd
+        ei.command = self.cur_command
+        self.ex_info = ei
+        ED2.breakLoop()
+
+    def guarded(self, func, *args):
+        if self.ex_info is not None:
+            return
+        try:
+            func(*args)
+        except Exception as ex:
+            self.fail(ex)
 
     def issue_next_cmd(self):
+        self.guarded(self._issue_next_cmd)
+
+    def _issue_next_cmd(self):
         from sippy.Core.EventDispatcher import ED2
         while True:
             if self.i_command == len(self.commands):
@@ -189,19 +285,25 @@ class ScriptRunner():
                 return
             cmd = self.commands[self.i_command]
             self.i_command += 1
+            self.cur_cmd = cmd
+            self.cur_command = None
             if isinstance(cmd, SocketSpec):
                 address = self.expand_vars(cmd.address)
                 params = []
                 for raw_param in cmd.params:
                     params.extend(shlex.split(self.expand_vars(raw_param)))
+                outfile = self.expand_vars(cmd.outfile) if cmd.outfile else None
                 if cmd.name in self.sockets:
                     self.sockets[cmd.name].shutdown()
-                self.sockets[cmd.name] = CommandRunner(cmd.name, address, cmd.outfile,
+                self.sockets[cmd.name] = CommandRunner(cmd.name, address, outfile,
                   params, self.variables)
                 continue
             break
         command = self.expand_vars(cmd.action)
+        self.cur_command = command
         if cmd.socket_name.startswith('.'):
+            if cmd.socket_name not in self.internal_ops:
+                raise Exception(F'{cmd.socket_name}: unknown built-in')
             self.internal_ops[cmd.socket_name](cmd, command)
             return
         socket = self.sockets[cmd.socket_name]
@@ -209,31 +311,17 @@ class ScriptRunner():
 
     def got_result(self, result, cmd, command, socket, ex=None):
         if result is None or ex is not None:
-            from sippy.Core.EventDispatcher import ED2
-            ei = ExceptionInfo()
             if ex is None:
-                ei.exception = Exception(F'None returned by the proxy "{cmd.socket_name}@{socket.spath}" when executing "{cmd.action}"')
-            else:
-                ei.exception = ex
-            ei.cmd = cmd
-            ei.command = command
-            self.ex_info = ei
-            ED2.breakLoop()
+                ex = Exception(F'None returned by the proxy "{cmd.socket_name}@{socket.spath}" when executing "{cmd.action}"')
+            self.fail(ex)
             return
-        try:
-            socket.log(result)
-            if cmd.output_var != None:
-                self.setvar(cmd.output_var, result)
-            self.issue_next_cmd()
-        except Exception as ex:
-            from sippy.Core.EventDispatcher import ED2
-            ei = ExceptionInfo()
-            ei.exception = ex
-            ei.cmd = cmd
-            ei.command = command
-            self.ex_info = ei
-            ED2.breakLoop()
-            return
+        self.guarded(self._got_result, result, cmd, socket)
+
+    def _got_result(self, result, cmd, socket):
+        socket.log(result)
+        if cmd.output_var != None:
+            self.setvar(cmd.output_var, result)
+        self.issue_next_cmd()
 
     def expand_vars(self, command):
         orig_command = command
@@ -261,6 +349,139 @@ class ScriptRunner():
         from sippy.Time.Timeout import Timeout
         Timeout(self.issue_next_cmd, float(command))
 
+    def handle_include(self, cmd, command):
+        # Paths are relative to the directory of the including script
+        spath = os.path.join(cmd.srcdir, command.strip())
+        self.commands[self.i_command:self.i_command] = load_script(spath)
+        self.issue_next_cmd()
+
+    def _wait_proc(self, mp, check, timeout, what):
+        # Call check() each time the process produces a line or exits, until
+        # it returns True; fail if timeout expires first. Note that check()
+        # proceeds to the next command, which may start waiting on the same
+        # process again, so the handler is re-armed only if check() says so.
+        from sippy.Time.Timeout import Timeout
+        if check():
+            return
+        tmo = None
+        def on_update():
+            mp.on_update = None
+            done = True
+            try:
+                done = check()
+            finally:
+                if not done:
+                    mp.on_update = updater
+                elif tmo is not None:
+                    tmo.cancel()
+        def on_timeout():
+            mp.on_update = None
+            self.fail(TimeoutError(F'timeout waiting for {what} of "{mp.cmdline}"'))
+        updater = lambda: self.guarded(on_update)
+        mp.on_update = updater
+        if timeout is not None:
+            tmo = Timeout(on_timeout, timeout)
+
+    def _getproc(self, name):
+        if name not in self.procs:
+            raise Exception(F'{name}: no such spawned process')
+        return self.procs[name]
+
+    def _parse_proc_args(self, command):
+        args = command.split()
+        if len(args) not in (1, 2):
+            raise Exception(F'"{command}": NAME [TIMEOUT] expected')
+        timeout = float(args[1]) if len(args) == 2 else None
+        return (self._getproc(args[0]), timeout)
+
+    def handle_exec(self, cmd, command):
+        mp = ManagedProcess(None, command)
+        def check():
+            if mp.rc is None:
+                return False
+            if mp.rc != 0:
+                for line in mp.lines:
+                    sys.stderr.write(line + '\n')
+                raise Exception(F'"{command}" exited with return code {mp.rc}')
+            output = '\n'.join(mp.lines).strip()
+            if cmd.output_var is None:
+                if output:
+                    sys.stderr.write(output + '\n')
+                    sys.stderr.flush()
+            else:
+                self.setvar(cmd.output_var, output)
+            self.issue_next_cmd()
+            return True
+        self._wait_proc(mp, check, None, 'completion')
+
+    def handle_spawn(self, cmd, command):
+        name = cmd.output_var
+        if not isinstance(name, str):
+            raise Exception('.spawn requires "-> NAME" to be specified')
+        if name in self.procs:
+            raise Exception(F'{name}: process has been spawned already')
+        mp = ManagedProcess(name, command)
+        self.procs[name] = mp
+        self.variables[name] = str(mp.pid)
+        self.issue_next_cmd()
+
+    def handle_readline(self, cmd, command):
+        mp, timeout = self._parse_proc_args(command)
+        def check():
+            if len(mp.lines) == 0:
+                if mp.rc is not None:
+                    raise Exception(F'{mp.name}: exited with return code {mp.rc} before printing a line')
+                return False
+            line = mp.lines.popleft()
+            if cmd.output_var is not None:
+                self.setvar(cmd.output_var, line)
+            self.issue_next_cmd()
+            return True
+        self._wait_proc(mp, check, timeout, 'output')
+
+    def handle_wait(self, cmd, command):
+        mp, timeout = self._parse_proc_args(command)
+        def check():
+            if mp.rc is None:
+                return False
+            del self.procs[mp.name]
+            if cmd.output_var is not None:
+                self.setvar(cmd.output_var, str(mp.rc))
+            elif mp.rc != 0:
+                raise Exception(F'{mp.name}: "{mp.cmdline}" exited with return code {mp.rc}')
+            self.issue_next_cmd()
+            return True
+        self._wait_proc(mp, check, timeout, 'exit')
+
+    def handle_kill(self, cmd, command):
+        args = command.split()
+        if len(args) not in (1, 2):
+            raise Exception(F'"{command}": NAME [SIGNAL] expected')
+        mp = self._getproc(args[0])
+        signum = signal.SIGTERM
+        if len(args) == 2:
+            sname = args[1].upper()
+            if sname.isdigit():
+                signum = int(sname)
+            else:
+                signum = signal.Signals[sname if sname.startswith('SIG') else 'SIG' + sname]
+        mp.signal(signum)
+        self.issue_next_cmd()
+
+    def handle_close(self, cmd, command):
+        name = command.strip()
+        if name not in self.sockets:
+            raise Exception(F'{name}: no such socket')
+        self.sockets.pop(name).shutdown()
+        self.issue_next_cmd()
+
+    def stop_procs(self):
+        leftover = sorted(self.procs.keys())
+        for mp in self.procs.values():
+            mp.stop()
+        self.procs = {}
+        return leftover
+
     def setvar(self, output_var, value):
         if not isinstance(output_var, TransFunction):
             self.variables[output_var] = value
@@ -279,6 +500,10 @@ class Command():
     socket_name: str
     action: str
     output_var: str = None
+    srcdir: str = '.'
+
+    def __str__(self):
+        return F'{self.socket_name}: {self.action}'
 
 class SocketSpec():
     name: str
@@ -292,10 +517,14 @@ class SocketSpec():
         self.params = params
         self.outfile = outfile
 
+    def __str__(self):
+        return F'socket {self.name}: {self.address}'
+
 # Define a class to visit the nodes in the parse tree
 class DSLVisitor(NodeVisitor):
-    def __init__(self):
+    def __init__(self, srcdir = '.'):
         self.rules = []
+        self.srcdir = srcdir
 
     def visit_socket(self, node, children):
         _, _, name, _, _, address, params_group, log_group = children
@@ -335,6 +564,7 @@ class DSLVisitor(NodeVisitor):
         socket_name, _, _, action, rest = children
         cmd.socket_name = socket_name.text
         cmd.action = action.text
+        cmd.srcdir = self.srcdir
         #print('visit_command', type(rest))
         #print(f"rest: {rest}")
 
@@ -368,10 +598,15 @@ def parse_dsl(dsl_code):
     return grammar.parse(dsl_code)
 
 # Define a function to visit the nodes in the parse tree and execute the DSL commands
-def execute_dsl(parse_tree):
-    visitor = DSLVisitor()
+def execute_dsl(parse_tree, srcdir = '.'):
+    visitor = DSLVisitor(srcdir)
     visitor.visit(parse_tree)
     return visitor.rules
+
+def load_script(spath):
+    with open(spath) as f:
+        dsl_text = f.read()
+    return execute_dsl(parse_dsl(dsl_text), os.path.dirname(spath))
 
 test_dsl = """socket ALICE: /tmp/abc.sock
 socket BOB: udp:192.168.221.1:38282
@@ -394,24 +629,31 @@ CHARLIE: U[...] -> PORT_O"""
 #ALICE: U %%CALLID%% 127.0.0.1 12345 from_tag_1 -| str_split(aa, PORT, FOO)
 
 def usage(rc = 0):
-    sys.stderr.write('usage: rptl_run.py [-s script.rptl] [-S sippy_path]\n')
+    sys.stderr.write('usage: rptl_run.py [-s script.rptl] [-S sippy_path] [-D NAME=VALUE ...]\n')
     sys.stderr.flush()
     sys.exit(rc)
 
 if __name__ == '__main__':
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 's:S:h')
+        opts, args = getopt.getopt(sys.argv[1:], 's:S:D:h')
     except getopt.GetoptError:
         usage(2)
 
-    dsl_text = test_dsl
+    spath = None
     sippy_path = None
+    variables = {}
     for o, a in opts:
         if o == '-s':
             spath = a.strip()
-            dsl_text = open(spath).read()
+            continue
         if o == '-S':
             sippy_path = a.strip()
+            continue
+        if o == '-D':
+            name, sep, value = a.partition('=')
+            if not sep or not name:
+                usage(2)
+            variables[name] = value
             continue
         if o == '-h':
             usage(0)
@@ -419,23 +661,25 @@ if __name__ == '__main__':
     if sippy_path != None:
         sys.path.insert(0, sippy_path)
 
-    tree = parse_dsl(dsl_text)
-    #print(tree)
-    rs = execute_dsl(tree)
-    #for r in rs:
-    #    print(F'socket = "socket = {ss[r.socket_name]}", action = "{r.action}", output_var = "{r.output_var}"')
+    if spath is not None:
+        rs = load_script(spath)
+    else:
+        rs = execute_dsl(parse_dsl(test_dsl))
 
     from sippy.Core.EventDispatcher import ED2
 
-    srun = ScriptRunner(rs)
+    srun = ScriptRunner(rs, variables)
     try:
         ED2.loop()
     finally:
+        leftover = srun.stop_procs()
         for socket in srun.sockets.values():
             socket.shutdown()
     if srun.ex_info:
-        m = F'Failed action: "{srun.ex_info.cmd.action}"\n\texpanded: "{srun.ex_info.command}"\n'
+        m = F'Failed action: "{srun.ex_info.cmd}"\n\texpanded: "{srun.ex_info.command}"\n'
         sys.stderr.write(m)
         sys.stderr.flush()
         raise srun.ex_info.exception
+    if leftover:
+        raise Exception(F'spawned process(es) {", ".join(leftover)} not waited for')
     print(srun.variables)
