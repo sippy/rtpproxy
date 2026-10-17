@@ -19,6 +19,10 @@ static void host2bindaddr_fin(void *pub) {
     fprintf(stderr, "Method rtpp_bindaddrs@%p::host2 (host2bindaddr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void host2bindaddr_str_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_bindaddrs@%p::host2_str (host2bindaddr_str) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static void label2bindaddr_fin(void *pub) {
     fprintf(stderr, "Method rtpp_bindaddrs@%p::label2 (label2bindaddr) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
@@ -27,19 +31,27 @@ static void local4remote_fin(void *pub) {
     fprintf(stderr, "Method rtpp_bindaddrs@%p::local4remote (local4remote) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void local4remote_str_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_bindaddrs@%p::local4remote_str (local4remote_str) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 static const struct rtpp_bindaddrs_smethods rtpp_bindaddrs_smethods_fin = {
     .addr2 = (addr2bindaddr_t)&addr2bindaddr_fin,
     .foraf = (bindaddr4af_t)&bindaddr4af_fin,
     .host2 = (host2bindaddr_t)&host2bindaddr_fin,
+    .host2_str = (host2bindaddr_str_t)&host2bindaddr_str_fin,
     .label2 = (label2bindaddr_t)&label2bindaddr_fin,
     .local4remote = (local4remote_t)&local4remote_fin,
+    .local4remote_str = (local4remote_str_t)&local4remote_str_fin,
 };
 void rtpp_bindaddrs_fin(struct rtpp_bindaddrs *pub) {
     RTPP_DBG_ASSERT(pub->smethods->addr2 != (addr2bindaddr_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->foraf != (bindaddr4af_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->host2 != (host2bindaddr_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->host2_str != (host2bindaddr_str_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->label2 != (label2bindaddr_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods->local4remote != (local4remote_t)NULL);
+    RTPP_DBG_ASSERT(pub->smethods->local4remote_str != (local4remote_str_t)NULL);
     RTPP_DBG_ASSERT(pub->smethods != &rtpp_bindaddrs_smethods_fin &&
       pub->smethods != NULL);
     pub->smethods = &rtpp_bindaddrs_smethods_fin;
@@ -69,8 +81,10 @@ rtpp_bindaddrs_fintest()
         .addr2 = (addr2bindaddr_t)((void *)0x1),
         .foraf = (bindaddr4af_t)((void *)0x1),
         .host2 = (host2bindaddr_t)((void *)0x1),
+        .host2_str = (host2bindaddr_str_t)((void *)0x1),
         .label2 = (label2bindaddr_t)((void *)0x1),
         .local4remote = (local4remote_t)((void *)0x1),
+        .local4remote_str = (local4remote_str_t)((void *)0x1),
     };
     tp->pub.smethods = &dummy;
     RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_bindaddrs_fin,
@@ -79,9 +93,11 @@ rtpp_bindaddrs_fintest()
     CALL_TFIN(&tp->pub, addr2);
     CALL_TFIN(&tp->pub, foraf);
     CALL_TFIN(&tp->pub, host2);
+    CALL_TFIN(&tp->pub, host2_str);
     CALL_TFIN(&tp->pub, label2);
     CALL_TFIN(&tp->pub, local4remote);
-    assert((_naborts - naborts_s) == 5);
+    CALL_TFIN(&tp->pub, local4remote_str);
+    assert((_naborts - naborts_s) == 7);
 }
 DATA_SET(rtpp_fintests, rtpp_bindaddrs_fintest);
 #endif /* RTPP_FINTEST */

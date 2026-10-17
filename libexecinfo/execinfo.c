@@ -176,7 +176,6 @@ void
 backtrace_symbols_fd(void *const *buffer, int size, int fd)
 {
     int i, len, offset;
-    char *buf;
     Dl_info info;
 
     if (size > STACKTRAVERSE_MAX_LEVELS)
@@ -199,22 +198,19 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd)
                   5 +                      /* "> at " */
                   strlen(info.dli_fname) + /* "filename" */
                   2;                       /* "\n\0" */
-            buf = alloca(len);
-            if (buf == NULL)
-                return;
+            char buf[len];
             snprintf(buf, len, "#%d\t%p in <%s+%d> at %s\n", i,
               buffer[i], info.dli_sname, offset, info.dli_fname);
+            write(fd, buf, strlen(buf));
         } else {
             len = 1 + get_d10(i) + 1 +     /* "#0 " */
                   2 +                      /* "0x" */
                   (sizeof(void *) * 2) +   /* "01234567" */
                   2;                       /* "\n\0" */
-            buf = alloca(len);
-            if (buf == NULL)
-                return;
+            char buf[len];
             snprintf(buf, len, "#%d\t%p\n", i, buffer[i]);
+            write(fd, buf, strlen(buf));
         }
-        write(fd, buf, strlen(buf));
     }
 }
 

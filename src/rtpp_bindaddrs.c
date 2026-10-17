@@ -162,6 +162,17 @@ host2bindaddr(struct rtpp_bindaddrs *pub, const char *host, int pf,
 }
 
 static const struct rtpp_bindaddr *
+host2bindaddr_str(struct rtpp_bindaddrs *pub, const rtpp_str_t *host, int pf,
+  int ai_flags, const char **ep, const struct rtpp_bindaddr_params *params)
+{
+    char hbuf[host->len + 1];
+
+    memcpy(hbuf, host->s, host->len);
+    hbuf[host->len] = '\0';
+    return (host2bindaddr(pub, hbuf, pf, ai_flags, ep, params));
+}
+
+static const struct rtpp_bindaddr *
 bindaddr4af(struct rtpp_bindaddrs *pub, int af)
 {
     struct bindaddr_list *bl;
@@ -219,12 +230,26 @@ rtpp_bindaddrs_local4remote(struct rtpp_bindaddrs *pub, const struct rtpp_cfg *c
     return (rval);
 }
 
+static const struct rtpp_bindaddr *
+rtpp_bindaddrs_local4remote_str(struct rtpp_bindaddrs *pub,
+  const struct rtpp_cfg *cfsp, struct rtpp_log *log, int pf,
+  const rtpp_str_t *host, const char *port)
+{
+    char hbuf[host->len + 1];
+
+    memcpy(hbuf, host->s, host->len);
+    hbuf[host->len] = '\0';
+    return (rtpp_bindaddrs_local4remote(pub, cfsp, log, pf, hbuf, port));
+}
+
 DEFINE_SMETHODS(rtpp_bindaddrs,
     .addr2 = &addr2bindaddr,
     .label2 = &label2bindaddr,
     .host2 = &host2bindaddr,
+    .host2_str = &host2bindaddr_str,
     .foraf = &bindaddr4af,
     .local4remote = &rtpp_bindaddrs_local4remote,
+    .local4remote_str = &rtpp_bindaddrs_local4remote_str,
 );
 
 struct rtpp_bindaddrs *

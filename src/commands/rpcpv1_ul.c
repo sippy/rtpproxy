@@ -219,13 +219,14 @@ static const rtpp_str_t rtpp_ula_rtq = rtpp_str_i(RTPP_ULA_RTQ_PREFIX);
   (strlen(ips) >= IPSTR_MIN_LENv6 && strlen(ips) <= IPSTR_MAX_LENv6))
 
 static int
-ul_opts_parse_packetport_i(const char *addr, struct rtpp_packetport_int **ppip)
+ul_opts_parse_packetport_i(const rtpp_str_t *addr,
+  struct rtpp_packetport_int **ppip)
 {
     char *ep;
     uintptr_t pktpp_u;
 
-    pktpp_u = (uintptr_t)strtoumax(addr, &ep, 0);
-    if (addr[0] == '\0' || *ep != '\0' || pktpp_u == 0) {
+    pktpp_u = (uintptr_t)strtoumax(addr->s, &ep, 0);
+    if (addr->len == 0 || ep != addr->s + addr->len || pktpp_u == 0) {
         return (-1);
     }
     *ppip = rtpp_packetport_get_int((struct rtpp_packetport *)pktpp_u);
@@ -236,17 +237,14 @@ ul_opts_parse_packetport_i(const char *addr, struct rtpp_packetport_int **ppip)
 }
 
 static int
-ul_opts_parse_packetport(const char *addr, const rtpp_str_t *port,
+ul_opts_parse_packetport(const rtpp_str_t *addr, const rtpp_str_t *port,
   struct rtpp_packetport_ref *ppref)
 {
     char *ep;
-    uintptr_t pktpp_u;
     uintmax_t rport;
 
-    pktpp_u = (uintptr_t)strtoumax(addr, &ep, 0);
-    if (addr[0] == '\0' || *ep != '\0' || pktpp_u == 0 || port == NULL) {
+    if (port == NULL)
         return (-1);
-    }
     rport = strtoumax(port->s, &ep, 10);
     if (port->s[0] == '\0' || *ep != '\0' || rport == 0 || rport > UINT_MAX) {
         return (-1);
@@ -263,7 +261,6 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
   struct rtpp_command *cmd, struct rtpp_command_ul_pcmd *pcmd, int *ecodep)
 {
     int len, tpf, n, i, ai_flags, use_label;
-    char *hostname;
     const char *cp, *t;
     rtpp_str_const_t notify_tag;
     const char *errmsg;
@@ -370,7 +367,7 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
             break;
 
         case 'l':
-        case 'L':
+        case 'L': {
             use_label = (cp[1] != '{') ? 0 : 1;
             if (use_label) {
                 len = extractlabel(cp + 1, &t, &cp);
@@ -382,28 +379,29 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
                 *ecodep = ECODE_PARSE_15;
                 goto err_undo_1;
             }
-            hostname = alloca(len + 1);
-            memcpy(hostname, t, len);
-            hostname[len] = '\0';
+            const rtpp_str_t lhost = {.s = t, .len = len};
             if (use_label) {
                 if (rtpp_is_lib && len > rtpp_ula_rtq.len &&
-                  memcmp(hostname, rtpp_ula_rtq.s, rtpp_ula_rtq.len) == 0) {
-                    if (ul_opts_parse_packetport_i(hostname + rtpp_ula_rtq.len,
+                  memcmp(t, rtpp_ula_rtq.s, rtpp_ula_rtq.len) == 0) {
+                    const rtpp_str_t pp = {.s = t + rtpp_ula_rtq.len,
+                      .len = len - rtpp_ula_rtq.len};
+                    if (ul_opts_parse_packetport_i(&pp,
                       &ulop->lpacketport) != 0) {
                         RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
-                          "invalid local packetport address: %s", hostname);
+                          "invalid local packetport address: %.*s",
+                          FMTSTR(&lhost));
                         *ecodep = ECODE_INVLARG_1;
                         goto err_undo_1;
                     }
                     break;
                 }
                 const rtpp_str_const_t label = (rtpp_str_const_t){
-                  .s = hostname, .len = len};
+                  .s = t, .len = len};
                 ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, label2,
                   &label);
                 if (ulop->local_addr == NULL) {
                     RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
-                      "address label not found: %s", hostname);
+                      "address label not found: %.*s", FMTSTR(&lhost));
                     *ecodep = ECODE_INVLARG_1;
                     goto err_undo_1;
                 }
@@ -411,35 +409,35 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
             }
             ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
             ai_flags |= cfsp->no_resolve ? AI_NUMERICHOST : 0;
-            ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, host2, hostname,
-              tpf, ai_flags, &errmsg, NULL);
+            ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, host2_str,
+              &lhost, tpf, ai_flags, &errmsg, NULL);
             if (ulop->local_addr == NULL) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR,
-                  "invalid local address: %s: %s", hostname, errmsg);
+                  "invalid local address: %.*s: %s", FMTSTR(&lhost), errmsg);
                 *ecodep = ECODE_INVLARG_1;
                 goto err_undo_1;
             }
             cp--;
-            break;
+            break; }
 
         case 'r':
         case 'R':
+          {
             len = extractaddr(cp + 1, &t, &cp, &tpf);
             if (len == -1) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "command syntax error");
                 *ecodep = ECODE_PARSE_16;
                 goto err_undo_1;
             }
-            hostname = alloca(len + 1);
-            memcpy(hostname, t, len);
-            hostname[len] = '\0';
-            ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, local4remote, cfsp,
-              cmd->glog, tpf, hostname, SERVICE);
+            const rtpp_str_t rhost = {.s = t, .len = len};
+            ulop->local_addr = CALL_SMETHOD(cfsp->bindaddrs_cf, local4remote_str, cfsp,
+              cmd->glog, tpf, &rhost, SERVICE);
             if (ulop->local_addr == NULL) {
                 *ecodep = ECODE_INVLARG_2;
                 goto err_undo_1;
             }
             cp--;
+          }
             break;
 
         case 'n':
@@ -473,8 +471,10 @@ rtpp_command_ul_opts_parse_inner(const struct rtpp_cfg *cfsp,
     if (rtpp_is_lib && ulop->addr != NULL &&
       ulop->addr->len > rtpp_ula_rtq.len) {
         if (memcmp(ulop->addr->s, rtpp_ula_rtq.s, rtpp_ula_rtq.len) == 0) {
-            if (ul_opts_parse_packetport(ulop->addr->s + rtpp_ula_rtq.len,
-              ulop->port, &ulop->packetport) != 0) {
+            const rtpp_str_t pp = {.s = ulop->addr->s + rtpp_ula_rtq.len,
+              .len = ulop->addr->len - rtpp_ula_rtq.len};
+            if (ul_opts_parse_packetport(&pp, ulop->port,
+              &ulop->packetport) != 0) {
                 RTPP_LOG(cmd->glog, RTPP_LOG_ERR, "invalid packetport address: %.*s",
                   FMTSTR(ulop->addr));
                 *ecodep = ECODE_INVLARG_7;
