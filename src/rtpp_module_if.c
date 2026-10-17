@@ -110,7 +110,8 @@ static int rtpp_mif_load(struct rtpp_module_if *, const struct rtpp_cfg *, struc
 static int rtpp_mif_start(struct rtpp_module_if *, const struct rtpp_cfg *);
 static void rtpp_mif_do_acct(struct rtpp_module_if *, struct rtpp_acct *);
 static void rtpp_mif_do_acct_rtcp(struct rtpp_module_if *, struct rtpp_acct_rtcp *);
-static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf **);
+static int rtpp_mif_get_mconf(struct rtpp_module_if *, struct rtpp_module_conf **,
+  int);
 static int rtpp_mif_ul_subc_handle(const struct after_success_h_args *,
   const struct rtpp_subc_ctx *);
 static int rtpp_mif_construct(struct rtpp_module_if *self, const struct rtpp_cfg *);
@@ -539,7 +540,8 @@ rtpp_mif_start(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
 }
 
 static int
-rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
+rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp,
+  int noconf)
 {
     struct rtpp_module_if_priv *pvt;
     struct rtpp_module_conf *rval;
@@ -552,6 +554,12 @@ rtpp_mif_get_mconf(struct rtpp_module_if *self, struct rtpp_module_conf **mcpp)
     }
     rval = pvt->mi.proc.get_mconf();
     if (rval == NULL) {
+        return (-1);
+    }
+    if (noconf != 0 && rval->allow_noconf == 0) {
+        RTPP_LOG(pvt->mi.log, RTPP_LOG_ERR, "module %s requires configuration",
+          pvt->mi.descr.name);
+        RTPP_OBJ_DECREF(rval);
         return (-1);
     }
     RTPP_OBJ_BORROW_s(&(pvt->pub), rval);

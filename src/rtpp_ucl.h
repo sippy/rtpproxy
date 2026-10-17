@@ -51,6 +51,8 @@ struct rtpp_module_conf {
     struct rtpp_refcnt *rcnt;
     void *conf_data;
     const conf_helper_map *conf_map;
+    /* All parameters are optional, can be loaded without configuration */
+    int allow_noconf;
 };
 
 bool rtpp_ucl_set_unknown(struct rtpp_log *, const ucl_object_t *top,

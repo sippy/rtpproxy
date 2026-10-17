@@ -33,6 +33,7 @@
 #include <inttypes.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,6 +63,9 @@
 #include "rtpp_linker_set.h"
 #include "rtpp_str.h"
 #include "rtpp_sbuf.h"
+#include "ucl.h"
+#include "rtpp_ucl.h"
+#include "rtpp_refcnt.h"
 
 #define SSRC_STRLEN 11
 
@@ -75,6 +79,7 @@ struct rtpp_module_priv {
    int fd;
    pid_t pid;
    struct stat stt;
+   const char *cwd_orig;
    char fname[MAXPATHLEN + 1];
    double next_hupd_ts;
    char node_id[_POSIX_HOST_NAME_MAX + 1];
@@ -89,10 +94,24 @@ struct rtpp_module_priv {
 
 #define HNAME_REFRESH_IVAL	1.0
 
+#define DEFAULT_FNAME		"rtpproxy_acct.csv"
+
+struct acct_csv_conf {
+    char *logfile;
+};
+
+struct rtpp_module_conf_pvt {
+    struct acct_csv_conf conf;
+    struct rtpp_module_conf pub;
+};
+
 static struct rtpp_module_priv *rtpp_acct_csv_ctor(const struct rtpp_cfg *,
   struct rtpp_minfo *);
 static void rtpp_acct_csv_dtor(struct rtpp_module_priv *);
 static void rtpp_acct_csv_do(struct rtpp_module_priv *, struct rtpp_acct *);
+static struct rtpp_module_conf *rtpp_acct_csv_get_mconf(void);
+static int rtpp_acct_csv_config(struct rtpp_module_priv *,
+  struct rtpp_module_conf *);
 static off_t rtpp_acct_csv_lockf(int);
 static void rtpp_acct_csv_unlockf(int, off_t);
 
@@ -112,6 +131,8 @@ const struct rtpp_minfo RTPP_MOD_SELF = {
     .descr.module_id = 1,
     .proc.ctor = rtpp_acct_csv_ctor,
     .proc.dtor = rtpp_acct_csv_dtor,
+    .proc.get_mconf = rtpp_acct_csv_get_mconf,
+    .proc.config = rtpp_acct_csv_config,
 #ifdef RTPP_CHECK_LEAKS
     .memdeb_p = &MEMDEB_SYM,
 #endif
@@ -258,35 +279,108 @@ rtpp_acct_csv_ctor(const struct rtpp_cfg *cfsp, struct rtpp_minfo *mself)
         goto e1;
     }
     pvt->pid = getpid();
-    if (cfsp->cwd_orig == NULL) {
-        snprintf(pvt->fname, sizeof(pvt->fname), "%s", "rtpproxy_acct.csv");
-    } else {
-        snprintf(pvt->fname, sizeof(pvt->fname), "%s/%s", cfsp->cwd_orig,
-          "rtpproxy_acct.csv");
-    }
+    pvt->cwd_orig = cfsp->cwd_orig;
     if (gethostname(pvt->node_id, sizeof(pvt->node_id)) != 0) {
         strcpy(pvt->node_id, "UNKNOWN");
     }
     pvt->fd = -1;
     pvt->mself = mself;
-    if (rtpp_acct_csv_open(pvt) == -1) {
-        goto e2;
-    }
     return (pvt);
 
-e2:
-    rtpp_sbuf_dtor(pvt->sbuf);
 e1:
     mod_free(pvt);
 e0:
     return (NULL);
 }
 
+static int
+rtpp_acct_csv_config(struct rtpp_module_priv *pvt,
+  struct rtpp_module_conf *mcpub)
+{
+    const char *fname = DEFAULT_FNAME;
+    int len;
+
+    if (mcpub != NULL) {
+        struct rtpp_module_conf_pvt *mcpvt;
+
+        PUB2PVT(mcpub, mcpvt);
+        if (mcpvt->conf.logfile != NULL)
+            fname = mcpvt->conf.logfile;
+    }
+    /* Relative names are relative to the directory we have been started in */
+    if (fname[0] == '/' || pvt->cwd_orig == NULL) {
+        len = snprintf(pvt->fname, sizeof(pvt->fname), "%s", fname);
+    } else {
+        len = snprintf(pvt->fname, sizeof(pvt->fname), "%s/%s",
+          pvt->cwd_orig, fname);
+    }
+    if (len < 0 || len >= (int)sizeof(pvt->fname)) {
+        RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "logfile name is too long: %s",
+          fname);
+        return (-1);
+    }
+    if (rtpp_acct_csv_open(pvt) == -1) {
+        return (-1);
+    }
+    return (0);
+}
+
+static bool
+conf_set_logfile(struct rtpp_log *log, const ucl_object_t *top,
+  const ucl_object_t *obj, struct acct_csv_conf *target)
+{
+    const char *val;
+
+    val = ucl_object_tostring_forced(obj);
+    if (val == NULL || val[0] == '\0') {
+        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; empty value for "
+          "%s in section '%s'", ucl_object_key(obj), ucl_object_key(top));
+        return (false);
+    }
+    if (target->logfile != NULL)
+        mod_free(target->logfile);
+    target->logfile = mod_strdup(val);
+    if (target->logfile == NULL)
+        return (false);
+    return (true);
+}
+
+static const conf_helper_map acct_csv_conf_map[] = {
+    { "load", NULL },
+    { "logfile", (conf_helper_t)conf_set_logfile },
+    { NULL, (conf_helper_t)rtpp_ucl_set_unknown },
+    { NULL, NULL }
+};
+
+static void
+mconf_dtor(struct acct_csv_conf *confp)
+{
+
+    if (confp->logfile != NULL)
+        mod_free(confp->logfile);
+}
+
+static struct rtpp_module_conf *
+rtpp_acct_csv_get_mconf(void)
+{
+    struct rtpp_module_conf_pvt *cp;
+
+    cp = mod_rzmalloc(sizeof(*cp), PVT_RCOFFS(cp));
+    if (cp == NULL)
+        return (NULL);
+    cp->pub.conf_data = &cp->conf;
+    cp->pub.conf_map = acct_csv_conf_map;
+    cp->pub.allow_noconf = 1;
+    RTPP_OBJ_DTOR_ATTACH_s(&(cp->pub), mconf_dtor, &cp->conf);
+    return (&cp->pub);
+}
+
 static void
 rtpp_acct_csv_dtor(struct rtpp_module_priv *pvt)
 {
 
-    close(pvt->fd);
+    if (pvt->fd != -1)
+        close(pvt->fd);
     rtpp_sbuf_dtor(pvt->sbuf);
     mod_free(pvt);
     return;

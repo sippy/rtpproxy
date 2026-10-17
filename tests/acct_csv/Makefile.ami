@@ -1,0 +1,5 @@
+acct_csv_EXTRA_DIST = acct_csv
+acct_csv_CLEANFILES = acct_csv.wdir/*.conf acct_csv.wdir/*.csv acct_csv.wdir/*.rlog
+TESTS += acct_csv/basic
+CLEANFILES += ${acct_csv_CLEANFILES}
+EXTRA_DIST += ${acct_csv_EXTRA_DIST}

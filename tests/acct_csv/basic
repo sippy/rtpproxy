@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# Tests the logfile parameter of the acct_csv module, and that the module
+# can still be loaded without configuration via --dso.
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+MODULE="`readlink -f -- "${TOP_BUILDDIR}/modules/acct_csv/.libs/rtpp_acct_csv_debug.so"`"
+CDIR="`pwd`"
+WDIR="${CDIR}/acct_csv.wdir"
+
+# Run rtpproxy in directory ${1} with the remaining arguments, creating
+# and deleting a single session
+run_rtpproxy() {
+  rdir="${WDIR}/${1}"
+  shift
+  mkdir "${rdir}" || return 1
+  printf 'U acct_csv_test 127.0.0.1 12345 from_tag\nD acct_csv_test from_tag\n' | \
+   (cd "${rdir}" && ${RTPPROXY} -f -s stdio: -d dbug "${@}") > /dev/null \
+   2> "${rdir}.rlog"
+}
+
+# The file has to contain the header and a single record
+check_csv() {
+  [ -s "${1}" ] && [ `wc -l < "${1}"` -eq 2 ] && \
+   head -n 1 "${1}" | grep -q '^rec_ver,'
+}
+
+# Write configuration file ${1} with the logfile parameter set to ${2}
+write_conf() {
+  cat > "${1}" <<EOC
+modules {
+    acct_csv {
+        load = "${MODULE}"
+        logfile = "${2}"
+    }
+}
+EOC
+}
+
+rm -rf "${WDIR}"
+mkdir "${WDIR}"
+report "creating ${WDIR}"
+
+write_conf "${WDIR}/abs.conf" "${WDIR}/abs.csv"
+run_rtpproxy abs --config "${WDIR}/abs.conf"
+report "rtpproxy with an absolute logfile"
+check_csv "${WDIR}/abs.csv"
+report "accounting record written into the absolute logfile"
+[ ! -e "${WDIR}/abs/rtpproxy_acct.csv" ]
+report "default file is not created when logfile is set"
+
+write_conf "${WDIR}/rel.conf" "rel.csv"
+run_rtpproxy rel --config "${WDIR}/rel.conf"
+report "rtpproxy with a relative logfile"
+check_csv "${WDIR}/rel/rel.csv"
+report "accounting record written relative to the starting directory"
+
+run_rtpproxy dso --dso "${MODULE}"
+report "rtpproxy with the module loaded via --dso"
+check_csv "${WDIR}/dso/rtpproxy_acct.csv"
+report "accounting record written into the default file"
+
+write_conf "${WDIR}/empty.conf" ""
+run_rtpproxy empty --config "${WDIR}/empty.conf"
+RC=${?}
+[ ${RC} -ne 0 -a ${RC} -lt 128 ]
+report "empty logfile is rejected (rc=${RC})"
+
+rm -rf "${WDIR}"

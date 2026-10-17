@@ -27,7 +27,7 @@
 
 #pragma once
 
-#define MODULE_API_REVISION 12
+#define MODULE_API_REVISION 13
 
 struct rtpp_cfg;
 struct rtpp_module_priv;

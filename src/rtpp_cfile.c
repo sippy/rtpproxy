@@ -202,7 +202,7 @@ parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
             RTPP_LOG(csp->glog, RTPP_LOG_ERR, "%p->load() method has failed: %s", mif, cp);
             goto e1;
         }
-        if (CALL_METHOD(mif, get_mconf, &mcp) < 0) {
+        if (CALL_METHOD(mif, get_mconf, &mcp, 0) < 0) {
             RTPP_LOG(csp->glog, RTPP_LOG_ERR, "%p->get_mconf() method has failed: %s", mif, cp);
             goto e1;
         }

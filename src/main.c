@@ -436,13 +436,12 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
             if (CALL_METHOD(mif, load, cfsp, cfsp->glog) != 0) {
                 IC_ERRX(1, "%p: dymanic module load has failed", mif);
             }
-            if (CALL_METHOD(mif, get_mconf, &mcp) != 0) {
-                IC_ERRX(1, "%p->get_mconf() method has failed: %s", mif, cp);
+            if (CALL_METHOD(mif, get_mconf, &mcp, 1) != 0) {
+                IC_ERRX(1, "%s: dymanic module cannot be loaded via --dso "
+                  "option", cp);
             }
             if (mcp != NULL) {
                  RTPP_OBJ_DECREF(mcp);
-                 IC_ERRX(1, "%s: dymanic module requires configuration, cannot be "
-                   "loaded via --dso option", cp);
             }
             CALL_METHOD(cfsp->modules_cf, insert, mif);
 #else
