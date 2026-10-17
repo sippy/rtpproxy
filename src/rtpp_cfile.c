@@ -228,8 +228,8 @@ parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
         continue;
 e1:
         ecode = -1;
-        RTPP_OBJ_DECREF(mif);
         CALL_METHOD(mif, kaput);
+        RTPP_OBJ_DECREF(mif);
         goto e0;
     }
 e0:
