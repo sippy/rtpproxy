@@ -100,7 +100,8 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	libucl/libucl1 \
 @ENABLE_BASIC_TESTS_TRUE@	libexecinfo/libexecinfo1 \
 @ENABLE_BASIC_TESTS_TRUE@	acct_rtcp_hep/confval1 \
-@ENABLE_BASIC_TESTS_TRUE@	acct_rtcp_hep/basic catch_dtmf/basic \
+@ENABLE_BASIC_TESTS_TRUE@	acct_rtcp_hep/basic acct_csv/basic \
+@ENABLE_BASIC_TESTS_TRUE@	catch_dtmf/basic \
 @ENABLE_BASIC_TESTS_TRUE@	rtp_analyze/rtp_analyze1 \
 @ENABLE_BASIC_TESTS_TRUE@	rtp_analyze/truncated \
 @ENABLE_BASIC_TESTS_TRUE@	extractaudio/badargs \
@@ -127,6 +128,7 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	${libucl_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${libexecinfo_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${acct_rtcp_hep_CLEANFILES} \
+@ENABLE_BASIC_TESTS_TRUE@	${acct_csv_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${catch_dtmf_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${rtp_analyze_CLEANFILES} \
 @ENABLE_BASIC_TESTS_TRUE@	${extractaudio_CLEANFILES} \
@@ -143,6 +145,7 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	${libucl_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${libexecinfo_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${acct_rtcp_hep_EXTRA_DIST} \
+@ENABLE_BASIC_TESTS_TRUE@	${acct_csv_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${catch_dtmf_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${rtp_analyze_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${extractaudio_EXTRA_DIST} \
@@ -228,6 +231,7 @@ am__tty_colors = { \
   fi; \
 }
 am__DIST_COMMON = $(srcdir)/Makefile.in \
+	$(srcdir)/acct_csv/Makefile.ami \
 	$(srcdir)/acct_rtcp_hep/Makefile.ami \
 	$(srcdir)/autosrc/Makefile.ami \
 	$(srcdir)/basic_versions/Makefile.ami \
@@ -412,6 +416,8 @@ EXTRA_DIST = $(am__append_3) $(am__append_6) $(am__append_9) \
 @ENABLE_BASIC_TESTS_TRUE@libexecinfo_CLEANFILES = 
 @ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_EXTRA_DIST = acct_rtcp_hep
 @ENABLE_BASIC_TESTS_TRUE@acct_rtcp_hep_CLEANFILES = acct_rtcp_hep.*
+@ENABLE_BASIC_TESTS_TRUE@acct_csv_EXTRA_DIST = acct_csv
+@ENABLE_BASIC_TESTS_TRUE@acct_csv_CLEANFILES = acct_csv.wdir/*.conf acct_csv.wdir/*.csv acct_csv.wdir/*.rlog
 @ENABLE_BASIC_TESTS_TRUE@catch_dtmf_EXTRA_DIST = catch_dtmf
 @ENABLE_BASIC_TESTS_TRUE@catch_dtmf_CLEANFILES = catch_dtmf.*
 @ENABLE_BASIC_TESTS_TRUE@rtp_analyze_EXTRA_DIST = rtp_analyze
@@ -469,7 +475,7 @@ TESTS_ENVIRONMENT = \
 all: all-am
 
 .SUFFIXES:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/catch_dtmf/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/dtls_gw/Makefile.ami $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/acct_csv/Makefile.ami $(srcdir)/catch_dtmf/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/dtls_gw/Makefile.ami $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -489,7 +495,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__maybe_remake_depfiles);; \
 	esac;
-$(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/catch_dtmf/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/dtls_gw/Makefile.ami $(am__empty):
+$(srcdir)/autosrc/Makefile.ami $(srcdir)/recording/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/unittests/Makefile.ami $(srcdir)/libucl/Makefile.ami $(srcdir)/libexecinfo/Makefile.ami $(srcdir)/acct_rtcp_hep/Makefile.ami $(srcdir)/acct_csv/Makefile.ami $(srcdir)/catch_dtmf/Makefile.ami $(srcdir)/rtp_analyze/Makefile.ami $(srcdir)/extractaudio/Makefile.ami $(srcdir)/startstop/Makefile.ami $(srcdir)/basic_versions/Makefile.ami $(srcdir)/command_parser/Makefile.ami $(srcdir)/forwarding/Makefile.ami $(srcdir)/session_timeouts/Makefile.ami $(srcdir)/playback/Makefile.ami $(srcdir)/makeann/Makefile.ami $(srcdir)/memdeb/Makefile.ami $(srcdir)/dtls_gw/Makefile.ami $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh

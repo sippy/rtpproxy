@@ -1,0 +1,366 @@
+'\" t
+.\"     Title: extractaudio
+.\"    Author: Maksym Sobolyev <sobomax@sippysoft.com>
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: October 17, 2026
+.\"    Manual: RTPproxy Manual
+.\"    Source: rtpproxy
+.\"  Language: English
+.\"
+.TH "EXTRACTAUDIO" "1" "October 17, 2026" "rtpproxy" "RTPproxy Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+extractaudio \- convert RTP session recordings made by rtpproxy into audio files
+.SH "SYNOPSIS"
+.HP \w'\fBextractaudio\fR\ 'u
+\fBextractaudio\fR [\fB\-idsne\fR] [\fB\-F\fR\ \fIfile_fmt\fR] [\fB\-D\fR\ \fIdata_fmt\fR] [\fB\-r\fR\ \fIrate\fR] [\fB\-b\fR\ \fIkbps\fR | \fB\-C\fR\ \fIlevel\fR] \fIrecname\fR \fIoutfile\fR [\fIlink\fR...]
+.HP \w'\fBextractaudio\fR\ 'u
+\fBextractaudio\fR [\fB\-idsne\fR] [\fB\-F\fR\ \fIfile_fmt\fR] [\fB\-D\fR\ \fIdata_fmt\fR] [\fB\-r\fR\ \fIrate\fR] [\fB\-b\fR\ \fIkbps\fR | \fB\-C\fR\ \fIlevel\fR] [\fB\-A\fR\ \fIanswer_cap\fR] [\fB\-B\fR\ \fIoriginate_cap\fR] [\fB\-\-alice\-crypto\fR\ \fIcspec\fR] [\fB\-\-bob\-crypto\fR\ \fIcspec\fR] \fIoutfile\fR [\fIlink\fR...]
+.HP \w'\fBextractaudio\fR\ 'u
+\fBextractaudio\fR \fB\-S\fR \fIrecname\fR
+.HP \w'\fBextractaudio\fR\ 'u
+\fBextractaudio\fR \fB\-S\fR [\fB\-A\fR\ \fIanswer_cap\fR] [\fB\-B\fR\ \fIoriginate_cap\fR]
+.SH "DESCRIPTION"
+.PP
+\fBextractaudio\fR
+reads RTP streams recorded by
+\fBrtpproxy\fR(8), decodes them and writes the resulting audio into
+\fIoutfile\fR
+using the libsndfile library\&.
+.PP
+A call is recorded by rtpproxy as two captures, one per direction:
+\fIrecname\fR\&.a\&.rtp
+for the answering side and
+\fIrecname\fR\&.o\&.rtp
+for the originating side, where
+\fIrecname\fR
+is
+\fIrec_dir\fR/\fIcall_id\fR=\fItag\fR\&. In the first form,
+\fBextractaudio\fR
+takes
+\fIrecname\fR
+and loads both captures\&. In the second form, the captures are given explicitly with the
+\fB\-A\fR
+and/or
+\fB\-B\fR
+options, which also allows processing of just one side, or of captures with arbitrary names\&. RTCP captures (\&.rtcp) are not used\&.
+.PP
+Both the native rtpproxy recording format and the pcap format (as produced by
+\fBrtpproxy \-P\fR) are supported; the format is detected automatically\&. Pcap files must be in version 2\&.4 format, with the Ethernet or BSD loopback link type\&. A single\-file pcap recording containing both directions can be given with
+\fB\-A\fR, in which case all of it is treated as coming from the answering side\&.
+.PP
+Each SSRC found in a capture is decoded as a separate stream\&. Streams are aligned using the packet arrival times: gaps in the received audio are filled with silence, and RTP timestamps that run off the arrival times by more than a second are re\-synchronized\&. Streams of the same side are mixed together\&. In mono output (the default) both sides are then mixed together as well, in stereo output (\fB\-s\fR) the answering side goes into the first (left) channel and the originating side into the second (right) one\&.
+.PP
+The following payload types are decoded:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+G\&.711 u\-law (0) and A\-law (8);
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+GSM 06\&.10 (3), G\&.722 (9) and G\&.729 (18), if the respective codec support has been compiled in;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+comfort noise (13) and telephone events (100, 101) are played out as silence\&.
+.RE
+.PP
+Statistics of each stream (packet counts, losses, duplicates, jitter) and, when done, the number of samples decoded for each side and written into the output file are reported on the standard error\&.
+.SH "OPTIONS"
+.PP
+\fB\-A\fR \fIanswer_cap\fR
+.RS 4
+Load the answering side capture from
+\fIanswer_cap\fR\&.
+.RE
+.PP
+\fB\-B\fR \fIoriginate_cap\fR
+.RS 4
+Load the originating side capture from
+\fIoriginate_cap\fR\&.
+.RE
+.PP
+\fB\-\-alice\-crypto\fR \fIcspec\fR, \fB\-\-bob\-crypto\fR \fIcspec\fR
+.RS 4
+Decrypt SRTP in the answering (\fB\-\-alice\-crypto\fR) or the originating (\fB\-\-bob\-crypto\fR) side capture\&.
+\fIcspec\fR
+has the form
+\fIsuite\fR:\fIkey\fR, where
+\fIkey\fR
+is the base64\-encoded master key and salt, as in the
+inline:
+parameter of the SDP
+a=crypto
+attribute\&. The supported suites are
+AES_CM_128_HMAC_SHA1_32,
+AES_CM_128_HMAC_SHA1_80,
+AES_192_CM_HMAC_SHA1_32,
+AES_192_CM_HMAC_SHA1_80,
+AES_256_CM_HMAC_SHA1_32
+and
+AES_256_CM_HMAC_SHA1_80, plus
+AEAD_AES_128_GCM,
+AEAD_AES_128_GCM_8,
+AEAD_AES_256_GCM
+and
+AEAD_AES_256_GCM_8
+when built with libsrtp2\&. Suite names are case\-insensitive\&. Packets that fail to decrypt are skipped\&. These options are only available if SRTP support has been compiled in\&.
+.RE
+.PP
+\fB\-b\fR \fIkbps\fR
+.RS 4
+Opus bitrate in kbit/s, from 6 to 256 per channel\&. Requires
+\fB\-D opus\fR\&. Mutually exclusive with
+\fB\-C\fR\&.
+.RE
+.PP
+\fB\-C\fR \fIlevel\fR
+.RS 4
+Compression level, from 0\&.0 (lowest compression, best quality) to 1\&.0 (highest compression), for the output formats that support it, such as FLAC, Vorbis and Opus\&. It is an error to specify it for a format that does not\&. Mutually exclusive with
+\fB\-b\fR\&.
+.RE
+.PP
+\fB\-D\fR \fIdata_fmt\fR
+.RS 4
+Output data format (encoding), one of
+pcm_s8,
+pcm_16,
+pcm_24,
+pcm_32,
+pcm_u8,
+float,
+double,
+ulaw,
+alaw,
+ima_adpcm,
+ms_adpcm,
+gsm610,
+vox_adpcm,
+g721_32,
+g723_24,
+g723_40,
+dwvw_12,
+dwvw_16,
+dwvw_24,
+dwvw_n,
+dpcm_8,
+dpcm_16,
+vorbis
+or
+opus\&. The default is
+gsm610
+for mono 8 kHz output and
+ms_adpcm
+otherwise\&.
+gsm610,
+g721_32,
+g723_24
+and
+g723_40
+only support 8 kHz\&. Not every data format can be used with every file format, see the libsndfile documentation\&.
+.RE
+.PP
+\fB\-d\fR
+.RS 4
+Delete the input captures when done\&.
+.RE
+.PP
+\fB\-e\fR
+.RS 4
+Fail if any of the input captures cannot be loaded\&. By default it is enough for one of them to be loaded successfully\&.
+.RE
+.PP
+\fB\-F\fR \fIfile_fmt\fR
+.RS 4
+Output file format, one of
+wav
+(default),
+aiff,
+au,
+raw,
+paf,
+svx,
+nist,
+voc,
+ircam,
+w64,
+mat4,
+mat5,
+pvf,
+xi,
+htk,
+sds,
+avr,
+wavex,
+sd2,
+flac,
+caf,
+wve,
+ogg,
+mpc2k
+or
+rf64\&.
+.sp
+Format names are case\-insensitive for both
+\fB\-F\fR
+and
+\fB\-D\fR; an unknown name makes
+\fBextractaudio\fR
+print the list of supported ones\&. The FLAC, Ogg, Vorbis and Opus formats are only available if libsndfile has been built with support for them\&.
+.RE
+.PP
+\fB\-i\fR
+.RS 4
+Run at idle priority\&.
+.RE
+.PP
+\fB\-n\fR
+.RS 4
+Do not synchronize streams: gaps in the received audio are not filled with silence, so the audio of each stream is played out back to back\&.
+.RE
+.PP
+\fB\-r\fR \fIrate\fR
+.RS 4
+Output sample rate, either
+8000
+(default) or
+16000\&. At 16 kHz, G\&.722 is decoded at its native rate, while narrowband codecs are upsampled, so that streams using different codecs stay aligned in one file\&.
+.RE
+.PP
+\fB\-S\fR
+.RS 4
+Scan only: for each of the captures, print its name followed by the number of RTP packets in it (\-1 if it cannot be read), and exit without producing any output file\&.
+.RE
+.PP
+\fB\-s\fR
+.RS 4
+Produce stereo output, with the answering side in the first channel and the originating side in the second\&.
+.RE
+.PP
+\fIlink\fR
+.RS 4
+Additional names to hard link
+\fIoutfile\fR
+to once it has been written\&.
+.RE
+.SH "EXIT STATUS"
+.PP
+\fBextractaudio\fR
+exits 0 on success, 2 if the output file cannot be created, and 1 on any other error\&.
+.SH "EXAMPLES"
+.PP
+Convert a recording into a mono WAV file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+extractaudio /var/spool/rtpproxy/call1=tag1 call1\&.wav
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Convert a recording into a stereo 16 kHz Opus file at 64 kbit/s:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+extractaudio \-s \-r 16000 \-F ogg \-D opus \-b 64 \e
+    /var/spool/rtpproxy/call1=tag1 call1\&.opus
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Convert SRTP pcap captures of both sides:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+extractaudio \-A call1\&.a\&.pcap \-B call1\&.o\&.pcap \e
+    \-\-alice\-crypto AES_CM_128_HMAC_SHA1_80:\fIbase64_key\fR \e
+    \-\-bob\-crypto AES_CM_128_HMAC_SHA1_80:\fIbase64_key\fR \e
+    call1\&.wav
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Count the packets recorded for each side:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+extractaudio \-S /var/spool/rtpproxy/call1=tag1
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.PP
+\fBrtpproxy\fR(8),
+\fBmakeann\fR(1)
+.SH "LICENSE"
+.PP
+All components of the rtpproxy are licensed under the BSD 2\-Clause License\&. See
+LICENSE
+file in the top of source tree for details\&.
+.SH "AVAILABILITY"
+.PP
+The latest version of this program and its components can be found at
+\m[blue]\fBhttp://www\&.rtpproxy\&.org/\fR\m[]\&.
+.SH "AUTHOR"
+.PP
+\fBMaksym Sobolyev\fR <\&sobomax@sippysoft\&.com\&>
+.RS 4
+Author.
+.RE
+.SH "COPYRIGHT"
+.br
+Copyright \(co 2004-2026 Maksym Sobolyev
+.br
+Copyright \(co 2006-2026 Sippy Software, Inc.
+.br

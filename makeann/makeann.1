@@ -1,0 +1,179 @@
+'\" t
+.\"     Title: makeann
+.\"    Author: Maksym Sobolyev <sobomax@sippysoft.com>
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: October 17, 2026
+.\"    Manual: RTPproxy Manual
+.\"    Source: rtpproxy
+.\"  Language: English
+.\"
+.TH "MAKEANN" "1" "October 17, 2026" "rtpproxy" "RTPproxy Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+makeann \- prepare audio prompts for playback by rtpproxy
+.SH "SYNOPSIS"
+.HP \w'\fBmakeann\fR\ 'u
+\fBmakeann\fR [\fB\-l\fR\ \fIlimit\fR\ [\fB\-L\fR]] \fIinfile\fR [\fIoutfile_template\fR]
+.SH "DESCRIPTION"
+.PP
+\fBmakeann\fR
+encodes an audio prompt into every codec that
+\fBrtpproxy\fR(8)
+can play it out in, using the
+\fBP\fR
+(play) command\&.
+.PP
+\fIinfile\fR
+has to contain raw signed 16\-bit little\-endian mono samples at 8 kHz, with no header\&. Such a file can be produced, for example, with
+\fBsox\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+sox prompt\&.wav \-t raw \-r 8000 \-c 1 \-b 16 \-e signed\-integer \e
+    \-L prompt\&.sln
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+For each codec, the encoded prompt is written into a file named
+\fIoutfile_template\fR\&.\fIpt\fR, where
+\fIpt\fR
+is the RTP payload type of the codec\&. If
+\fIoutfile_template\fR
+is not given,
+\fIinfile\fR
+is used instead\&. The following files are produced:
+.PP
+\fIoutfile_template\fR\&.0
+.RS 4
+G\&.711 u\-law\&.
+.RE
+.PP
+\fIoutfile_template\fR\&.3
+.RS 4
+GSM 06\&.10, if GSM support has been compiled in\&.
+.RE
+.PP
+\fIoutfile_template\fR\&.8
+.RS 4
+G\&.711 A\-law\&.
+.RE
+.PP
+\fIoutfile_template\fR\&.9
+.RS 4
+G\&.722 at 64 kbit/s, if G\&.722 support has been compiled in\&.
+.RE
+.PP
+\fIoutfile_template\fR\&.18
+.RS 4
+G\&.729, if G\&.729 support has been compiled in\&.
+.RE
+.PP
+To play the prompt, give
+\fIoutfile_template\fR
+as the prompt name to the rtpproxy
+\fBP\fR
+command\&. rtpproxy tries the payload types listed in the command (or those of the session, if
+session
+is given instead) in order and plays the first one for which the file exists\&. Since rtpproxy changes its working directory to
+/
+when it daemonizes (unless started with
+\fB\-D\fR), the prompt name should normally be an absolute path\&.
+.SH "OPTIONS"
+.PP
+\fB\-l\fR \fIlimit\fR
+.RS 4
+Encode at most
+\fIlimit\fR
+samples (8000 samples per second) of the input\&.
+.RE
+.PP
+\fB\-L\fR
+.RS 4
+Loop mode: repeat the input as many times as needed to produce exactly
+\fIlimit\fR
+samples of output\&. Requires
+\fB\-l\fR\&.
+.RE
+.SH "EXIT STATUS"
+.PP
+\fBmakeann\fR
+exits 0 on success, and 1 if an error occurs\&.
+.SH "EXAMPLES"
+.PP
+Prepare
+ringback\&.sln
+for playback as
+ringback, producing
+ringback\&.0,
+ringback\&.8
+and so on:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+makeann ringback\&.sln ringback
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Make a 30 seconds long prompt out of a shorter one:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+makeann \-l 240000 \-L beep\&.sln beep30
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.PP
+\fBrtpproxy\fR(8),
+\fBextractaudio\fR(1),
+\fBsox\fR(1)
+.SH "LICENSE"
+.PP
+All components of the rtpproxy are licensed under the BSD 2\-Clause License\&. See
+LICENSE
+file in the top of source tree for details\&.
+.SH "AVAILABILITY"
+.PP
+The latest version of this program and its components can be found at
+\m[blue]\fBhttp://www\&.rtpproxy\&.org/\fR\m[]\&.
+.SH "AUTHOR"
+.PP
+\fBMaksym Sobolyev\fR <\&sobomax@sippysoft\&.com\&>
+.RS 4
+Author.
+.RE
+.SH "COPYRIGHT"
+.br
+Copyright \(co 2003-2026 Maksym Sobolyev
+.br
+Copyright \(co 2006-2026 Sippy Software, Inc.
+.br

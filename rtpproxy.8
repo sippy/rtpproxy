@@ -31,7 +31,9 @@
 rtpproxy \- RTP (Real\-time Transport Protocol) Proxy Server
 .SH "SYNOPSIS"
 .HP \w'\fBrtpproxy\fR\ 'u
-\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-V\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-l\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-6\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-\-maxpps\fR\ \fIpps\fR\fI[,rtcp_pps]\fR] [\fB\-\-maxpsize\fR\ \fIsize\fR\fI[,rtcp_size]\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-L\fR\ \fInofile_limit\fR] [\fB\-A\fR\ \fIadvaddr1\fR\fI[/advaddr2]\fR] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-w\fR\ \fIsock_mode\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR\fI[:log_facility]\fR] [\fB\-W\fR\ \fIsetup_ttl\fR] [\fB\-\-force_asymmetric\fR]
+\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-V\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-l\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-6\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-\-maxpps\fR\ \fIpps\fR\fI[,rtcp_pps]\fR] [\fB\-\-maxpsize\fR\ \fIsize\fR\fI[,rtcp_size]\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-L\fR\ \fInofile_limit\fR] [\fB\-A\fR\ \fIadvaddr1\fR\fI[/advaddr2]\fR] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-w\fR\ \fIsock_mode\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR\fI[:log_facility]\fR] [\fB\-W\fR\ \fIsetup_ttl\fR] [\fB\-\-force_asymmetric\fR] [\fB\-b\fR] [\fB\-c\fR\ \fIfifo|rr\fR] [\fB\-\-nice\fR\ \fIlevel\fR] [\fB\-D\fR] [\fB\-\-no_redirect\fR] [\fB\-\-config\fR\ \fIconfig_file\fR] [\fB\-\-dso\fR\ \fImodule\fR...] [\fB\-\-bridge_symmetric\fR] [\fB\-\-no_resolve\fR]
+.HP \w'\fBrtpproxy\fR\ 'u
+\fBrtpproxy\fR \fB\-C\fR
 .SH "DESCRIPTION"
 .PP
 The
@@ -397,12 +399,85 @@ parameter sets syslog(3) facility assigned to log messages\&.
 .sp
 Example: \-d WARN:LOG_LOCAL5
 .sp
-The default level in foreground mode is is DBUG, in background \- WARN and facility is LOG_DAEMON\&.
+The default level in foreground mode is DBUG, in background \- WARN and facility is LOG_DAEMON\&.
 .RE
 .PP
 \fB\-\-force_asymmetric\fR
 .RS 4
-Treat all RTP/RTCP sessions as "assymetric", i\&.e\&. disable any NAT traversal features unconditionally\&.
+Treat all RTP/RTCP sessions as "asymmetric", i\&.e\&. disable any NAT traversal features unconditionally\&.
+.RE
+.PP
+\fB\-W\fR \fIsetup_ttl\fR
+.RS 4
+Specify the inactivity timer for sessions that have not been fully set up yet, i\&.e\&. before the rtpproxy has received the matching
+\fBL\fR
+command\&. Defaults to the value of
+\fB\-T\fR\&.
+.RE
+.PP
+\fB\-b\fR
+.RS 4
+Allocate UDP ports for new sessions sequentially instead of randomly\&. Mostly intended for debugging, to make the behaviour more predictable\&.
+.RE
+.PP
+\fB\-c\fR \fIfifo|rr\fR
+.RS 4
+Switch the rtpproxy process to the
+SCHED_FIFO
+(\fIfifo\fR) or
+SCHED_RR
+(\fIrr\fR) real\-time scheduling policy, at the maximum priority for that policy\&.
+.RE
+.PP
+\fB\-\-nice\fR \fIlevel\fR
+.RS 4
+Set the scheduling priority (nice value) of the rtpproxy process to
+\fIlevel\fR\&.
+.RE
+.PP
+\fB\-D\fR
+.RS 4
+Do not change the working directory to
+/
+when switching into the background mode\&.
+.RE
+.PP
+\fB\-\-no_redirect\fR
+.RS 4
+Do not redirect the standard output and the standard error to
+/dev/null
+when switching into the background mode\&.
+.RE
+.PP
+\fB\-C\fR
+.RS 4
+Print the name of the monotonic clock used by the rtpproxy and exit\&.
+.RE
+.PP
+\fB\-\-config\fR \fIconfig_file\fR
+.RS 4
+Read the configuration of the loadable modules from
+\fIconfig_file\fR, in the UCL format\&. An example is provided in
+doc/rtpproxy\&.conf\&.sample
+in the source tree\&.
+.RE
+.PP
+\fB\-\-dso\fR \fImodule\fR
+.RS 4
+Load
+\fImodule\fR, specified as a path to the shared object of a dynamically loadable module, or as a name of a module compiled in statically\&. This option can be specified multiple times\&. Modules that require configuration cannot be loaded this way, use
+\fB\-\-config\fR
+instead\&.
+.RE
+.PP
+\fB\-\-bridge_symmetric\fR
+.RS 4
+In the bridging mode, do not treat all sessions as asymmetric, which is the default in that mode for historical reasons\&.
+.RE
+.PP
+\fB\-\-no_resolve\fR
+.RS 4
+Only accept numeric IP addresses, in the command line arguments and in the control commands, instead of resolving host names\&.
 .RE
 .SH "PRINCIPLES OF OPERATION"
 .PP
@@ -418,11 +493,11 @@ When the SIP Controller receives a non\-negative SIP reply with SDP it extracts 
 .PP
 The rtpproxy looks for an existing session based on the Call\-ID and from_tag, which it should find\&. It will then randomly choose another port and "connect" this port with the earlier allocated port, forming the proxy between both sides\&.
 .PP
-When the SIP controller recieves the new port number from the rtpproxy, the SIP controller is expected to rewrite the SDP in the SIP message body by replacing the ip:port to that of the IP address and new udp port number provided by rtpproxy\&. The SIP controller is expected to send the reply to the user agent that initiated the call\&.
+When the SIP controller receives the new port number from the rtpproxy, the SIP controller is expected to rewrite the SDP in the SIP message body by replacing the ip:port to that of the IP address and new udp port number provided by rtpproxy\&. The SIP controller is expected to send the reply to the user agent that initiated the call\&.
 .PP
-After the session has been created, the proxy listens on the ports it has allocated for that session and waits for receiving at least one UDP packet from each of the two parties participating in the call\&. Once a packet is received, the proxy fills one of two IP:port structures associated with respective stream with the source IP:port of that packet\&. When both structures are filled in, the proxy starts relaying UDP packets between the parties\&.
+After the session has been created, the proxy listens on the ports it has allocated for that session and relays UDP packets between the parties\&. Initially, packets are sent to the addresses provided by the SIP controller, i\&.e\&. taken from the SDP\&. Once a packet is received from a party, the proxy "latches" to the source IP:port of that packet and uses it as the address of that party from then on, which allows reaching parties located behind NAT\&. Latching is not done for asymmetric parties\&.
 .PP
-The rtpproxy tracks idle time for each of existing sessions (i\&.e\&. time interval within which there were no packets relayed), and automatically cleans up a sessions whose idle times exceed the idle time (60 seconds by default)\&.
+The rtpproxy tracks idle time for each of existing sessions (i\&.e\&. time interval within which there were no packets relayed), and automatically cleans up sessions whose idle times exceed the idle time (60 seconds by default)\&.
 .SH "FILES"
 .PP
 rtpproxy
@@ -430,6 +505,10 @@ rtpproxy
 makeann
 .PP
 extractaudio
+.SH "SEE ALSO"
+.PP
+\fBextractaudio\fR(1),
+\fBmakeann\fR(1)
 .SH "LICENSE"
 .PP
 All components of the rtpproxy are licensed under the BSD 2\-Clause License\&. See

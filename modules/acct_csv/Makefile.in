@@ -458,11 +458,14 @@ rtpp_genuid_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_genuid_fin.h $(RTPP_AUTOSRC_DIR)
 rtpp_bindaddrs_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_bindaddrs_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_bindaddrs_fin.c
 rtpp_packetport_AUTOSRCS = $(RTPP_AUTOSRC_DIR)/rtpp_packetport_fin.h $(RTPP_AUTOSRC_DIR)/rtpp_packetport_fin.c
 LDFLAG_SYMEXPORT = -Wl,--version-script=$(top_srcdir)/modules/Symbol.map
+UCLSRCDIR = $(top_srcdir)/external/libucl
 pkglib_LTLIBRARIES = rtpp_acct_csv.la $(am__append_2)
 noinst_LTLIBRARIES = librtpp_acct_csv.la
 rtpp_acct_csv_la_SOURCES = rtpp_acct_csv.c
 rtpp_acct_csv_la_LDFLAGS = -avoid-version -module -shared $(LTO_FLAG) $(LDFLAG_SYMEXPORT)
-rtpp_acct_csv_la_CPPFLAGS = -D_BSD_SOURCE -DRTPP_MOD_NAME="acct_csv"
+rtpp_acct_csv_la_CPPFLAGS = -D_BSD_SOURCE -DRTPP_MOD_NAME="acct_csv" \
+  -I$(UCLSRCDIR)/include
+
 rtpp_acct_csv_la_CFLAGS = $(OPT_CFLAGS) $(LTO_FLAG)
 rtpp_acct_csv_debug_la_SOURCES = ${rtpp_acct_csv_la_SOURCES}
 rtpp_acct_csv_debug_la_LIBADD = $(RTPP_MEMDEB_LD_ADD)
