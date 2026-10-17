@@ -3,7 +3,7 @@
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <book>
   <bookinfo>
-    <title>RTPProxy 3.0 Release Information</title>
+    <title>RTPProxy Release Information: Changes Since 3.2</title>
 
     <author>
       <firstname>Maksym</firstname>
@@ -14,13 +14,11 @@
         <orgname>Sippy Labs</orgname>
       </affiliation>
 
-      <email>sobomax@gmail.com</email>
+      <email>sobomax@sippysoft.com</email>
     </author>
 
-    <pubdate>21 May 2023</pubdate>
-
     <copyright>
-      <year>2023</year>
+      <year>2023-2026</year>
 
       <holder>Maksym Sobolyev &lt;sobomax@sippysoft.com&gt;</holder>
     </copyright>
@@ -29,130 +27,153 @@
   <chapter>
     <title>Introduction</title>
 
-    <section>
-      <title>Welcome to RTPProxy 3.0</title>
+    <para>This document describes changes made in the development version of
+    the RTPProxy since the latest stable release, RTPProxy 3.2.0 (March
+    2026). These changes are not part of any release yet.</para>
 
-      <para>
-      We are excited to introduce RTPProxy 3.0, the latest milestone in our
-      journey of refining the proxy system for Real-Time Transport Protocol
-      (RTP) streams. This release marks an evolutionary leap from RTPProxy 2.2,
-      released four years ago.
-
-      Our team at Sippy Labs has rearchitected major subsystems to allow
-      more parallelism, resulting in significant performance improvements.
-      Our commitment to versatility has led to enhanced support for
-      third-party extension modules and robust handling of both video and
-      encrypted calls. Another remarkable addition is the introduction of
-      a library version of RTPProxy, enabling its embedding into other
-      real-time communication software.
-
-      This document will guide you through all the new enhancements, features,
-      and improvements that make RTPProxy 3.0 an industry benchmark in the
-      real-time multimedia data streaming space.
-      </para>
-    </section>
-  </chapter>
-
-  <chapter>
-    <title>Release Highlights</title>
-
-    <section>
-      <title>Major Improvements</title>
-
-      <para>
-      With RTPProxy 3.0, we are introducing a revamped architecture that
-      boosts parallelism and improves overall performance significantly.
-      These enhancements are a result of extensive rework of our
-      processes and algorithms, leading to a more reliable, efficient, and
-      powerful system. Key changes include:
-      </para>
-
-      <itemizedlist>
-        <listitem>
-          <para>Replacing the use of poll() with epoll()/kqueue() for
-            less overhead doing RTP/RTCP sockets polling.</para>
-        </listitem>
-        <listitem>
-          <para>Moving RTCP handling into its own dedicated thread, freeing
-            up resources and optimizing performance.</para>
-        </listitem>
-        <listitem>
-          <para>Running media generation (playback) in a separate thread,
-            allowing for more streamlined operations.</para>
-        </listitem>
-        <listitem>
-          <para>Eliminating a major synchronization bottleneck that
-            previously hindered the command-processing thread from
-            reaching its full capacity.</para>
-        </listitem>
-        <listitem>
-          <para>Upgrading the hashing algorithm for handling sessions hash
-            tables to xxHash. This state-of-the-art algorithm significantly
-            outperforms the previously used Pearson implementation, leading
-            to faster and more efficient processing.</para>
-        </listitem>
-      </itemizedlist>
-
-      <para>
-      Additionally, we have worked hard to ensure compatibility and extend
-      support for third-party extension modules. Notably, the new release
-      comes with full support for handling video and encrypted calls,
-      solidifying RTPProxy's position as a comprehensive solution for
-      real-time communication needs. These improvements, along with
-      numerous others, set a new standard for RTP proxy systems.
-      </para>
-    </section>
+    <para>Release notes for the stable releases are available on the <ulink
+    url="https://github.com/sippy/rtpproxy/releases">GitHub releases
+    page</ulink>.</para>
   </chapter>
 
   <chapter>
     <title>New Features</title>
 
     <section>
-      <title>Embedding RTPProxy</title>
+      <title>RTP Flood Mitigation</title>
 
-      <para>
-      One of the most exciting new features of RTPProxy 3.0 is the
-      availability of a library version of the software. This breakthrough
-      development allows for the embedding of RTPProxy into other real-time
-      communication software, thereby expanding its utility and enabling a
-      broader range of applications. This represents a major stride in our
-      ongoing efforts to make RTPProxy as adaptable and user-friendly as
-      possible.
-      </para>
+      <para>Two new command-line options and two matching per-stream session
+      parameters allow mitigating the effects of RTP floods (reported by
+      Sandro Gauci):</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><option>--maxpps</option>=<replaceable>rtp_pps</replaceable>[,<replaceable>rtcp_pps</replaceable>]
+          and the <literal>S pps=</literal><replaceable>rtp_pps</replaceable>[,<replaceable>rtcp_pps</replaceable>]
+          session parameter set the maximum allowed rate of incoming packets
+          per second. Packets exceeding that rate are dropped early in the
+          processing.</para>
+        </listitem>
+
+        <listitem>
+          <para><option>--maxpsize</option>=<replaceable>rtp_mps</replaceable>[,<replaceable>rtcp_mps</replaceable>]
+          and the <literal>S mps=</literal><replaceable>rtp_mps</replaceable>[,<replaceable>rtcp_mps</replaceable>]
+          session parameter set the maximum allowed size of incoming packets.
+          Packets exceeding that size are discarded the same way.</para>
+        </listitem>
+      </itemizedlist>
     </section>
 
     <section>
-      <title>DTLS Gateway Module</title>
+      <title>Packet Port API for Embedding Applications</title>
 
-      <para>
-      Another significant feature introduced in RTPProxy 3.0 is the dtls_gw
-      module. This new addition allows RTPProxy to translate between encrypted
-      and non-encrypted streams. More impressively, it can perform back-to-back
-      re-encryption of already encrypted streams, which is particularly useful
-      for secure recording purposes. This feature enhances RTPProxy's ability to
-      handle encrypted calls, providing users with increased flexibility and
-      security in their real-time communication needs.
-      </para>
+      <para>Applications embedding the RTPProxy library can now plug into its
+      packet handling pipeline directly via shared memory packet rings
+      (<literal>rtpp_packetport</literal>, built on the bundled libRTQueue),
+      instead of exchanging packets over sockets. A packet port is used as
+      the remote target of a session in the special
+      <literal>RTQ:0x</literal><replaceable>pointer</replaceable>
+      <replaceable>port_tag</replaceable> format, and the flushing policy of
+      its outbound queue can be set when it is created. This API is a work in
+      progress.</para>
+    </section>
+
+    <section>
+      <title>ICE-Lite: Peer-Reflexive Candidates</title>
+
+      <para>The <literal>ice_lite</literal> module now adds the remote
+      candidate as a peer-reflexive one when it receives a STUN request from
+      an unknown candidate, instead of dropping the request.</para>
+    </section>
+
+    <section>
+      <title>extractaudio</title>
+
+      <itemizedlist>
+        <listitem>
+          <para>16 kHz output (<option>-r 16000</option>). G.722 is decoded at
+          its native rate and narrowband codecs are upsampled, so that legs
+          using different codecs stay aligned in one file.</para>
+        </listitem>
+
+        <listitem>
+          <para>Encoder options: Opus bitrate (<option>-b</option>) and
+          compression level (<option>-C</option>).</para>
+        </listitem>
+
+        <listitem>
+          <para>Support for the AES-192/256-CM and AES-GCM SRTP crypto
+          suites, in addition to AES-128-CM.</para>
+        </listitem>
+
+        <listitem>
+          <para>SRTP decryption now also works for recordings in the native
+          RTPProxy format, not just for pcap recordings.</para>
+        </listitem>
+      </itemizedlist>
     </section>
   </chapter>
 
   <chapter>
-    <title>Fixed Bugs</title>
+    <title>Performance Improvements</title>
 
-    <section>
-      <title/>
+    <itemizedlist>
+      <listitem>
+        <para>Sockets cache their session and stream, skipping the hash table
+        lookup for the second and subsequent packets.</para>
+      </listitem>
 
-      <para/>
-    </section>
+      <listitem>
+        <para>The sender of a stream is obtained via a weak reference, and
+        locking in the packet receive path has been reduced.</para>
+      </listitem>
+
+      <listitem>
+        <para>Atomic operations have been relaxed where strict ordering is
+        not needed.</para>
+      </listitem>
+    </itemizedlist>
   </chapter>
 
   <chapter>
-    <title>Configuration Changes</title>
+    <title>Documentation</title>
 
-    <section>
-      <title/>
+    <itemizedlist>
+      <listitem>
+        <para>New manual pages for <command>extractaudio</command>(1) and
+        <command>makeann</command>(1).</para>
+      </listitem>
 
-      <para/>
-    </section>
+      <listitem>
+        <para>The user manual has been updated.</para>
+      </listitem>
+    </itemizedlist>
+  </chapter>
+
+  <chapter>
+    <title>Build and Testing</title>
+
+    <itemizedlist>
+      <listitem>
+        <para>Fixed the build with the latest compilers on Ubuntu
+        24.04.</para>
+      </listitem>
+
+      <listitem>
+        <para>Production (non-debug) binaries are now built with
+        <literal>NDEBUG</literal> defined.</para>
+      </listitem>
+
+      <listitem>
+        <para>Fixed <function>alloca()</function> calls in loops reported by
+        CodeQL.</para>
+      </listitem>
+
+      <listitem>
+        <para>The RPTL test scripting language can now run external commands,
+        and the recording tests have been rewritten using it, so they no
+        longer need any pre-determined ports.</para>
+      </listitem>
+    </itemizedlist>
   </chapter>
 </book>

@@ -164,6 +164,34 @@
       <replaceable>setup_ttl</replaceable></arg>
 
       <arg choice="opt"><option>--force_asymmetric</option></arg>
+
+      <arg choice="opt"><option>-b</option></arg>
+
+      <arg choice="opt"><option>-c</option>
+      <replaceable>fifo|rr</replaceable></arg>
+
+      <arg choice="opt"><option>--nice</option>
+      <replaceable>level</replaceable></arg>
+
+      <arg choice="opt"><option>-D</option></arg>
+
+      <arg choice="opt"><option>--no_redirect</option></arg>
+
+      <arg choice="opt"><option>--config</option>
+      <replaceable>config_file</replaceable></arg>
+
+      <arg choice="opt" rep="repeat"><option>--dso</option>
+      <replaceable>module</replaceable></arg>
+
+      <arg choice="opt"><option>--bridge_symmetric</option></arg>
+
+      <arg choice="opt"><option>--no_resolve</option></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>rtpproxy</command>
+
+      <arg choice="plain"><option>-C</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -649,7 +677,7 @@
 
           <para>Example: -d WARN:LOG_LOCAL5</para>
 
-          <para>The default level in foreground mode is is DBUG, in background
+          <para>The default level in foreground mode is DBUG, in background
           - WARN and facility is LOG_DAEMON.</para>
         </listitem>
       </varlistentry>
@@ -658,8 +686,120 @@
         <term><option>--force_asymmetric</option></term>
 
         <listitem>
-          <para>Treat all RTP/RTCP sessions as "assymetric", i.e. disable any NAT
+          <para>Treat all RTP/RTCP sessions as "asymmetric", i.e. disable any NAT
           traversal features unconditionally.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-W</option> <replaceable>setup_ttl</replaceable></term>
+
+        <listitem>
+          <para>Specify the inactivity timer for sessions that have not been
+          fully set up yet, i.e. before the rtpproxy has received the matching
+          <command>L</command> command. Defaults to the value of
+          <option>-T</option>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-b</option></term>
+
+        <listitem>
+          <para>Allocate UDP ports for new sessions sequentially instead of
+          randomly. Mostly intended for debugging, to make the behaviour more
+          predictable.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-c</option> <replaceable>fifo|rr</replaceable></term>
+
+        <listitem>
+          <para>Switch the rtpproxy process to the
+          <literal>SCHED_FIFO</literal> (<replaceable>fifo</replaceable>) or
+          <literal>SCHED_RR</literal> (<replaceable>rr</replaceable>)
+          real-time scheduling policy, at the maximum priority for that
+          policy.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--nice</option> <replaceable>level</replaceable></term>
+
+        <listitem>
+          <para>Set the scheduling priority (nice value) of the rtpproxy
+          process to <replaceable>level</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-D</option></term>
+
+        <listitem>
+          <para>Do not change the working directory to <filename>/</filename>
+          when switching into the background mode.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--no_redirect</option></term>
+
+        <listitem>
+          <para>Do not redirect the standard output and the standard error to
+          <filename>/dev/null</filename> when switching into the background
+          mode.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-C</option></term>
+
+        <listitem>
+          <para>Print the name of the monotonic clock used by the rtpproxy and
+          exit.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--config</option> <replaceable>config_file</replaceable></term>
+
+        <listitem>
+          <para>Read the configuration of the loadable modules from
+          <replaceable>config_file</replaceable>, in the UCL format. An
+          example is provided in <filename>doc/rtpproxy.conf.sample</filename>
+          in the source tree.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--dso</option> <replaceable>module</replaceable></term>
+
+        <listitem>
+          <para>Load <replaceable>module</replaceable>, specified as a path to
+          the shared object of a dynamically loadable module, or as a name of
+          a module compiled in statically. This option can be specified
+          multiple times. Modules that require configuration cannot be loaded
+          this way, use <option>--config</option> instead.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--bridge_symmetric</option></term>
+
+        <listitem>
+          <para>In the bridging mode, do not treat all sessions as asymmetric,
+          which is the default in that mode for historical reasons.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--no_resolve</option></term>
+
+        <listitem>
+          <para>Only accept numeric IP addresses, in the command line
+          arguments and in the control commands, instead of resolving host
+          names.</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -696,23 +836,24 @@
     and "connect" this port with the earlier allocated port, forming the proxy
     between both sides.</para>
 
-    <para>When the SIP controller recieves the new port number from the
+    <para>When the SIP controller receives the new port number from the
     rtpproxy, the SIP controller is expected to rewrite the SDP in the SIP
     message body by replacing the ip:port to that of the IP address and new
     udp port number provided by rtpproxy. The SIP controller is expected to
     send the reply to the user agent that initiated the call.</para>
 
     <para>After the session has been created, the proxy listens on the ports
-    it has allocated for that session and waits for receiving at least one UDP
-    packet from each of the two parties participating in the call. Once a
-    packet is received, the proxy fills one of two IP:port structures
-    associated with respective stream with the source IP:port of that packet.
-    When both structures are filled in, the proxy starts relaying UDP packets
-    between the parties.</para>
+    it has allocated for that session and relays UDP packets between the
+    parties. Initially, packets are sent to the addresses provided by the SIP
+    controller, i.e. taken from the SDP. Once a packet is received from a
+    party, the proxy "latches" to the source IP:port of that packet and uses
+    it as the address of that party from then on, which allows reaching
+    parties located behind NAT. Latching is not done for asymmetric
+    parties.</para>
 
     <para>The rtpproxy tracks idle time for each of existing sessions (i.e.
     time interval within which there were no packets relayed), and
-    automatically cleans up a sessions whose idle times exceed the idle time
+    automatically cleans up sessions whose idle times exceed the idle time
     (60 seconds by default).</para>
   </refsect1>
 

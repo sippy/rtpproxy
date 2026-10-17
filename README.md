@@ -4,37 +4,37 @@
 
 ## About
 
-The RTPproxy is a extremely reliable and reasonably high-performance software
+The RTPProxy is an extremely reliable and reasonably high-performance software
 proxy for RTP streams that can work together with [OpenSIPS](https://opensips.org),
 [Kamailio](https://kamailio.org) or [Sippy B2BUA](https://github.com/sippy/b2bua).
 
-Originally created for handling NAT scenarios, back in 2004-2005, it can also act
-as a generic real time datagram relay as well as gateway Real-Time Protocol (RTP)
-sessions between IPv4 and IPv6 networks.
+Originally created for handling NAT scenarios, back in 2003, it can also act
+as a generic real time datagram relay as well as a gateway for Real-time Transport
+Protocol (RTP) sessions between IPv4 and IPv6 networks.
 
-The RTPproxy supports many advanced features and is controllable over
-multitude of Layer 4 protocols, including Unix Domain, UDP, UDPv6, TCP and TCPv6.
+The RTPProxy supports many advanced features and is controllable over
+a multitude of Layer 4 protocols, including Unix Domain, UDP, UDPv6, TCP and TCPv6.
 
 The software allows building scalable distributed SIP networks. The rtpproxy module
 included into the OpenSIPS or Kamailio SIP Proxy software allows using multiple
-RTPproxy instances running on remote machines for fault-tolerance and
+RTPProxy instances running on remote machines for fault-tolerance and
 load-balancing purposes.
 
 Advanced high-capacity clustering and load balancing is available through the
 use of [RTP Cluster](https://github.com/sippy/rtp_cluster) middleware.
 
-The software also supports MOH/pre-recorded media injection,  video relaying
-and session recording to a local file or remote UDP listener(s). As well
-as makes available array of real-time or near real-time session counters,
+The software also supports MOH/pre-recorded media injection, video relaying
+and session recording to a local file or remote UDP listener(s). It also
+makes available an array of real-time or near real-time session counters,
 both per-session and per-instance.
 
-Since version 3.1.0, full set of extensions is available allowing to create
-a WebRTC-compatible endpoints.
+Since version 3.1.0, a full set of extensions is available for creating
+WebRTC-compatible endpoints.
 
 ## News
 
-- introducing WebRTC/WSS clients support via 3 new modules: dtls_gw, ice_lite
-  and rtcp_demux.
+- RTPProxy 3.2.0 is out, see the [release notes](https://github.com/sippy/rtpproxy/releases/tag/v3.2.0);
+- WebRTC clients are supported via the dtls_gw and ice_lite modules since 3.1.0.
 
 ## How it works
 
@@ -58,18 +58,18 @@ This proxy works as follows:
   reply from the proxy, SIP Controller replaces media ip:port in the SIP
   reply to point to the proxy and forwards reply as usually;
 
-- after the session has been created, the proxy listens on the port it has
-  allocated for that session and waits for receiving at least one UDP
-  packet from each of two parties participating in the call. Once such
-  packet is received, the proxy fills one of two ip:port structures
-  associated with each call with source ip:port of that packet. When both
-  structures are filled in, the proxy starts relaying UDP packets between
-  parties;
+- after the session has been created, the proxy listens on the ports it has
+  allocated for that session and relays UDP packets between the parties.
+  Initially, packets are sent to the addresses provided by the SIP
+  Controller, i.e. taken from the SDP. Once a packet is received from a
+  party, the proxy "latches" to the source ip:port of that packet and uses
+  it as the address of that party from then on, which allows reaching
+  parties located behind NAT. Latching is not done for asymmetric parties;
 
 - the proxy tracks idle time for each of existing sessions (i.e. the time
   within which there were no packets relayed), and automatically cleans
-  up a sessions whose idle times exceed the value specified at compile
-  time (60 seconds by default).
+  up sessions whose idle times exceed the value specified on the command
+  line (60 seconds by default).
 
 ## Building from github
 
@@ -83,14 +83,14 @@ $ make
 
 ## Authors and Contributors
 
-The RTPproxy has been designed by Maxim Sobolev and now is being actively
+The RTPProxy has been designed by Maxim Sobolev and is now actively
 maintained by the [Sippy Software, Inc](http://www.sippysoft.com). With the
 great help of numerous community contributors, both private and institutional.
-Not to mention army of robots gracefully dispatched at need by CI.
+Not to mention an army of robots gracefully dispatched at need by CI.
 
-The original idea has inspired and directly influenced multitude of independent
+The original idea has inspired and directly influenced a multitude of independent
 implementations, including but not limited to the
-[Mediaproxy](https://mediaproxy.com),
+[MediaProxy](https://github.com/AGProjects/mediaproxy),
 [erlrtpproxy](https://github.com/lemenkov/erlrtpproxy), and most recently
 [RTP Engine](https://github.com/sipwise/rtpengine), each project focusing on
 its own area of the vast functionality space.
@@ -98,7 +98,7 @@ its own area of the vast functionality space.
 ## Documentation and References
 
 - [User Manual](https://www.rtpproxy.org/doc/master/user_manual.html#MAKESRC);
-- [RTPproxy Control Protocol Reference](https://github.com/sippy/rtpproxy/wiki/RTPProxy-Command-Protocol).
+- [RTPProxy Control Protocol Reference](https://github.com/sippy/rtpproxy/wiki/RTPProxy-Command-Protocol).
 
 ## Feedback & Support
 
