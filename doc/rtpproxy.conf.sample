@@ -5,7 +5,9 @@
 # automatically load the shared object that matches each module name.
 modules {
     acct_csv {
-        logfile = /var/log/rtpproxy/rtpproxy.csv
+        # Defaults to rtpproxy_acct.csv in the directory rtpproxy is started
+        # from.
+        #logfile = /var/log/rtpproxy/rtpproxy_acct.csv
     }
 
     # Forward RTCP reports to a HEP collector.

@@ -79,6 +79,16 @@
     </section>
 
     <section>
+      <title>acct_csv: logfile Parameter</title>
+
+      <para>The location of the CSV file written by the
+      <literal>acct_csv</literal> module can now be set with the new
+      <literal>logfile</literal> parameter. Since the parameter is optional,
+      the module can still be loaded with the <option>--dso</option>
+      command-line option.</para>
+    </section>
+
+    <section>
       <title>ICE-Lite: Peer-Reflexive Candidates</title>
 
       <para>The <literal>ice_lite</literal> module now adds the remote
@@ -112,6 +122,18 @@
         </listitem>
       </itemizedlist>
     </section>
+  </chapter>
+
+  <chapter>
+    <title>Fixed Bugs</title>
+
+    <itemizedlist>
+      <listitem>
+        <para>The rtpproxy crashed instead of exiting with an error when the
+        configuration of a module was rejected, e.g. because of an unknown
+        or invalid parameter.</para>
+      </listitem>
+    </itemizedlist>
   </chapter>
 
   <chapter>

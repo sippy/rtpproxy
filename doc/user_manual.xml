@@ -735,13 +735,15 @@ e.g.: -d INFO:LOG_LOCAL5
       </simplesect>
     </section>
 
-    <section>
+    <section id="CONFIG_FILE">
       <title>Configuration File</title>
 
       <para>Configuration of the loadable modules is read from a
       configuration file in the UCL format, specified with the
-      <option>--config</option> command-line option. An example is provided
-      in <filename>doc/rtpproxy.conf.sample</filename> in the source
+      <option>--config</option> command-line option. See <link
+      linkend="MODULES">Modules</link> for the available modules and their
+      parameters. An example is provided in
+      <filename>doc/rtpproxy.conf.sample</filename> in the source
       tree.</para>
     </section>
 
@@ -992,6 +994,412 @@ bash&gt; sudo systemctl start rtpproxy.service</programlisting>At this stage,
       your rtpproxy.service should catch up a socket created by systemd and
       start working properly. If you see some kind of errors, then you're
       missing one of the steps defined above.</para>
+    </section>
+  </chapter>
+
+  <chapter id="MODULES">
+    <title>Modules</title>
+
+    <para>Some of the RTPProxy functionality is implemented as loadable
+    modules. A module can be loaded either via the <link
+    linkend="CONFIG_FILE">configuration file</link>, which also allows setting
+    its parameters, or via the <option>--dso</option> command-line option,
+    which only works for modules that take no parameters.</para>
+
+    <section>
+      <title>Loading Modules</title>
+
+      <para>Each module is configured in its own block of the
+      <literal>modules</literal> section of the configuration file. The name
+      of the block is the name of the module. Unless the
+      <literal>load</literal> parameter specifies the path to the module's
+      shared object, the module is loaded from
+      <filename><replaceable>libdir</replaceable>/rtpproxy/rtpp_<replaceable>name</replaceable>.so</filename>
+      (<filename>rtpp_<replaceable>name</replaceable>_debug.so</filename> for
+      the debug build). Modules that take no parameters can have an empty
+      block:</para>
+
+      <programlisting>modules {
+    acct_rtcp_hep {
+        capt_host = 192.0.2.10
+    }
+
+    catch_dtmf {
+    }
+}</programlisting>
+
+      <para>The same module can be loaded more than once, each loaded copy
+      being a separate instance, numbered from 1 in the order of
+      loading.</para>
+    </section>
+
+    <section>
+      <title>Controlling Modules</title>
+
+      <para>Modules that are controlled on a per-session basis accept
+      sub-commands appended to the <command>U</command> or
+      <command>L</command> command after <literal>&amp;&amp;</literal>, in the
+      form <literal>M<replaceable>module_id</replaceable>:<replaceable>instance</replaceable>
+      <replaceable>arguments</replaceable></literal>. The module IDs are
+      listed below, and <replaceable>instance</replaceable> is 1 unless the
+      module is loaded more than once. For example, the following command
+      sends <literal>S</literal> to the first instance of the
+      <literal>dtls_gw</literal> module:</para>
+
+      <programlisting>U call-id 192.0.2.1 12345 from-tag &amp;&amp; M4:1 S</programlisting>
+
+      <para>Several sub-commands can be chained in the same command, each
+      with its own <literal>&amp;&amp;</literal>. The output of each of them
+      follows the reply to the main command, separated by
+      <literal>&amp;&amp;</literal> too. A failed sub-command is reported as
+      a negative number, while one with no output is reported as
+      <literal>0</literal>, or omitted when no sub-command after it has any
+      output.</para>
+
+      <table>
+        <title>Modules</title>
+
+        <tgroup cols="3">
+          <thead>
+            <row>
+              <entry>Module</entry>
+              <entry>ID</entry>
+              <entry>Purpose</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry><link linkend="mod.acct_csv">acct_csv</link></entry>
+              <entry>1</entry>
+              <entry>Per-session accounting into a CSV file</entry>
+            </row>
+
+            <row>
+              <entry><link linkend="mod.acct_rtcp_hep">acct_rtcp_hep</link></entry>
+              <entry>2</entry>
+              <entry>Reporting RTCP to a HEP (Homer) collector</entry>
+            </row>
+
+            <row>
+              <entry><link linkend="mod.catch_dtmf">catch_dtmf</link></entry>
+              <entry>3</entry>
+              <entry>Notifying the call controller of DTMF events</entry>
+            </row>
+
+            <row>
+              <entry><link linkend="mod.dtls_gw">dtls_gw</link></entry>
+              <entry>4</entry>
+              <entry>Gateway between plain RTP and DTLS-SRTP</entry>
+            </row>
+
+            <row>
+              <entry><link linkend="mod.ice_lite">ice_lite</link></entry>
+              <entry>5</entry>
+              <entry>ICE-Lite and RTCP multiplexing</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section id="mod.acct_csv">
+      <title>acct_csv</title>
+
+      <para>Writes one record with the session's statistics into a CSV file
+      for each session, when the session ends. A header line with the column
+      names is written when the file is created. The columns include the
+      Call-ID, the from-tag, the session setup and teardown times, and the
+      packet, loss, jitter and SSRC statistics for each direction. The file
+      is re-opened if it is moved or removed, e.g. by log rotation.</para>
+
+      <para>The module takes no sub-commands. The parameters are:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><literal>logfile</literal></term>
+
+          <listitem>
+            <para>Path of the CSV file. A relative path is relative to the
+            directory the rtpproxy was started from. Default:
+            <filename>rtpproxy_acct.csv</filename>.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para>Since the parameter is optional, the module can also be loaded
+      with the <option>--dso</option> command-line option.</para>
+
+      <programlisting>modules {
+    acct_csv {
+        logfile = /var/log/rtpproxy/rtpproxy_acct.csv
+    }
+}</programlisting>
+    </section>
+
+    <section id="mod.acct_rtcp_hep">
+      <title>acct_rtcp_hep</title>
+
+      <para>Reports every RTCP packet received, converted to JSON, to a HEP
+      (Homer) collector, using HEPv3.</para>
+
+      <para>The module takes no sub-commands. The parameters are:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><literal>capt_host</literal></term>
+
+          <listitem>
+            <para>Address of the collector. Default:
+            <literal>10.0.0.1</literal>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>capt_port</literal></term>
+
+          <listitem>
+            <para>Port of the collector. Default:
+            <literal>9060</literal>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>capt_ptype</literal></term>
+
+          <listitem>
+            <para>Transport, <literal>udp</literal> or
+            <literal>tcp</literal>. Default: <literal>udp</literal>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>capt_id</literal></term>
+
+          <listitem>
+            <para>Capture agent ID, from 0 to 4294967295. Default:
+            <literal>101</literal>.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <programlisting>modules {
+    acct_rtcp_hep {
+        capt_host = 192.0.2.10
+        capt_port = 9060
+        capt_ptype = udp
+        capt_id = 101
+    }
+}</programlisting>
+    </section>
+
+    <section id="mod.catch_dtmf">
+      <title>catch_dtmf</title>
+
+      <para>Detects RFC 2833 (RFC 4733) telephone events in the stream and
+      notifies the call controller of each DTMF digit received. Developed in
+      collaboration with the OpenSIPS project. The module takes no
+      parameters.</para>
+
+      <para>Detection is enabled per stream with the sub-command:</para>
+
+      <programlisting>M3:1 <replaceable>tag</replaceable> [<replaceable>payload_type</replaceable> [h]]</programlisting>
+
+      <variablelist>
+        <varlistentry>
+          <term><replaceable>tag</replaceable></term>
+
+          <listitem>
+            <para>URL-encoded string that is sent back with each
+            notification.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><replaceable>payload_type</replaceable></term>
+
+          <listitem>
+            <para>RTP payload type of the telephone events. Default:
+            101.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>h</literal></term>
+
+          <listitem>
+            <para>Drop the telephone event packets instead of relaying
+            them.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para>Notifications are sent the same way as the session timeout
+      notifications, so notifications have to be enabled for the session:
+      the <command>U</command>/<command>L</command> command has to specify
+      the notification socket (permitted with the <option>-n</option>
+      command-line option) and the notification tag. For each digit, when
+      its last packet is received, the following line is sent:</para>
+
+      <programlisting><replaceable>tag</replaceable> <replaceable>digit</replaceable> <replaceable>volume</replaceable> <replaceable>duration</replaceable> <replaceable>side</replaceable></programlisting>
+
+      <para>where <replaceable>duration</replaceable> is in RTP timestamp
+      units, and <replaceable>side</replaceable> is 0 for the caller and 1
+      for the callee. For example:</para>
+
+      <programlisting>U call-id 192.0.2.1 12345 from-tag tcp:192.0.2.100:2222 ntag &amp;&amp; M3:1 caller%20dtmf 101</programlisting>
+
+      <para>would result in notifications like:</para>
+
+      <programlisting>caller dtmf 1 0 960 0</programlisting>
+    </section>
+
+    <section id="mod.dtls_gw">
+      <title>dtls_gw</title>
+
+      <para>Gateways between plain RTP (RTP/AVP) and DTLS-SRTP
+      (UDP/TLS/RTP/SAVP) streams, taking care of certificate validation, key
+      negotiation and SRTP encryption/decryption. It can also re-encrypt
+      already encrypted streams back to back, e.g. for recording. Requires
+      the RTPProxy to be built with libsrtp2 (or libsrtp) and OpenSSL. A
+      self-signed certificate is generated when the module starts. The
+      module takes no parameters.</para>
+
+      <para>The sub-commands are:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><literal>M4:1 S</literal></term>
+
+          <listitem>
+            <para>Allocate a DTLS endpoint on the side facing the encrypted
+            party if needed, and return the session mode and the certificate
+            fingerprint to be put into the SDP.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>M4:1 A <replaceable>digest_alg</replaceable>
+          <replaceable>fingerprint</replaceable>
+          [<replaceable>ssrc</replaceable>]</literal></term>
+
+          <listitem>
+            <para>Set up the DTLS endpoint for the remote end in the
+            <literal>active</literal> or <literal>actpass</literal> mode, using
+            the fingerprint from its SDP. SSRC verification is enabled if
+            <replaceable>ssrc</replaceable> is given.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>M4:1 P <replaceable>digest_alg</replaceable>
+          <replaceable>fingerprint</replaceable>
+          [<replaceable>ssrc</replaceable>]</literal></term>
+
+          <listitem>
+            <para>The same, for the remote end in the
+            <literal>passive</literal> mode.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>M4:1 D</literal></term>
+
+          <listitem>
+            <para>Destroy the DTLS context created by <literal>A</literal> or
+            <literal>P</literal>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>M4:1 U</literal></term>
+
+          <listitem>
+            <para>Destroy the DTLS context created by
+            <literal>S</literal>.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para>For example, an incoming INVITE with plain RTP answered with
+      DTLS-SRTP by a passive party:</para>
+
+      <programlisting>U call-id 192.0.2.1 12345 from-tag &amp;&amp; M4:1 S
+35000 &amp;&amp; actpass SHA-256 4A:AD:B9:...
+
+L call-id 192.0.2.2 23456 from-tag to-tag &amp;&amp; M4:1 P SHA-256 2C:7F:01:...
+35002</programlisting>
+
+      <para>See <filename>modules/dtls_gw/README.md</filename> in the source
+      tree for more scenarios.</para>
+    </section>
+
+    <section id="mod.ice_lite">
+      <title>ice_lite</title>
+
+      <para>Implements the lite variant of ICE (RFC 5245), allowing
+      ICE-enabled user agents to establish media sessions through the
+      RTPProxy, and RTCP multiplexing and de-multiplexing. Together with
+      <literal>dtls_gw</literal>, it allows the RTPProxy to act as a WebRTC
+      endpoint. Requires the same libraries as <literal>dtls_gw</literal>.
+      The module takes no parameters.</para>
+
+      <para>The sub-commands are:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><literal>M5:1 S</literal></term>
+
+          <listitem>
+            <para>Allocate an ICE endpoint if needed, and return the local
+            <literal>ice-ufrag</literal>, <literal>ice-pwd</literal> and the
+            ICE candidates (URL-encoded) to offer to the user agent.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>M5:1 A <replaceable>ice_ufrag</replaceable>
+          <replaceable>ice_pwd</replaceable></literal></term>
+
+          <listitem>
+            <para>Process an ICE offer received from the user agent,
+            allocating an ICE endpoint if needed.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>M5:1 C <replaceable>candidate</replaceable></literal></term>
+
+          <listitem>
+            <para>Add a single ICE candidate received from the user agent, as
+            in the <literal>a=candidate</literal> SDP attribute. Repeat for
+            each candidate.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>M5:1 D</literal></term>
+
+          <listitem>
+            <para>Destroy the ICE context in the forward direction.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><literal>M5:1 U</literal></term>
+
+          <listitem>
+            <para>Destroy the ICE context in the reverse direction.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para>For example, an incoming INVITE with an ICE offer:</para>
+
+      <programlisting>U call-id 192.0.2.1 12345 from-tag &amp;&amp; M5:1 A ufrag pwd &amp;&amp; M5:1 C 1 1 UDP 2130706431 192.0.2.1 12345 typ host</programlisting>
+
+      <para>See <filename>modules/ice_lite/README.md</filename> in the source
+      tree for more scenarios.</para>
     </section>
   </chapter>
 </book>
