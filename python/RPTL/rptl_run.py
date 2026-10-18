@@ -1,7 +1,8 @@
-import sys, os, getopt, shlex, signal
+import sys, os, getopt, shlex, signal, tempfile, shutil
 from collections import deque
 from threading import Thread
-from socket import socketpair, AF_UNIX
+from socket import socket, socketpair, AF_UNIX, AF_INET, AF_INET6, \
+  SOCK_DGRAM, SOCK_STREAM
 from subprocess import Popen, TimeoutExpired, DEVNULL, PIPE
 
 from parsimonious.grammar import Grammar
@@ -16,10 +17,11 @@ grammar = Grammar(
     stmt = comment / socket / command
     comment = ~r"#[^\r\n]*"
     socket = "socket" ws name ":" ws address (ws1 socket_params)? (ws1 arr ws logfile)?
-    command = name ":" ws action (ws output_spec)?
+    command = cmd_name ":" ws action (ws output_spec)?
     name = ~r"[.]?\w+"
+    cmd_name = ~r"[.]?\w+|%%\w+%%"
     output_spec = arr ws (trans_spec / var_name)
-    var_name = ~r"\w+"
+    var_name = ~r"(?:\w|%%\w+%%)+"
     trans_spec = func_name obra func_arg (comm ws func_arg)* cbra
     func_arg = ~r"[^,)]+"
     func_name = ~r"\w+"
@@ -47,16 +49,28 @@ class CommandRunner():
     def __init__(self, instance_name, socket_name, outfile, params, variables):
         from sippy.Rtp_proxy.client import Rtp_proxy_client
         self.name = instance_name
+        rtpproxy_bin = variables.get('RTPPROXY_BIN', 'rtpproxy')
+        rtpproxy_stderr = variables.get('RTPPROXY_STDERR')
         if socket_name == 'stdio:':
-            rtpproxy_bin = variables.get('RTPPROXY_BIN', 'rtpproxy')
-            rtpproxy_stderr = variables.get('RTPPROXY_STDERR')
             self.rc = StdioRtpProxyClient(params, rtpproxy_bin = rtpproxy_bin,
               rtpproxy_stderr = rtpproxy_stderr, instance_name = self.name)
             self.proc = self.rc.proc
+        elif socket_name in ManagedRtpProxy.ctypes:
+            self.rc = ManagedRtpProxy(socket_name, params, rtpproxy_bin = rtpproxy_bin,
+              rtpproxy_stderr = rtpproxy_stderr, instance_name = self.name)
+            self.proc = self.rc.proc
+            socket_name = self.rc.spath
         else:
             self.rc = Rtp_proxy_client({'_sip_address': '127.0.0.1'}, spath = socket_name,
               nworkers = 4, no_version_check = True)
         self.spath = socket_name
+        # Read-only attributes available to the script as %%NAME.ATTR%%
+        self.attrs = {'CTRL': socket_name}
+        if isinstance(self.rc, ManagedRtpProxy) and self.rc.port is not None:
+            self.attrs['CTRL_HOST'] = self.rc.host
+            self.attrs['CTRL_PORT'] = str(self.rc.port)
+        if self.proc is not None:
+            self.attrs['PID'] = str(self.proc.pid)
         self.outfile = outfile
         if outfile:
             self._outfd = open(outfile, 'w')
@@ -131,6 +145,94 @@ class StdioRtpProxyClient(Rtp_proxy_client_stream):
             raise RuntimeError(
               F'managed rtpproxy instance "{self.instance_name}" exited with return code {proc_rc}')
 
+class ManagedRtpProxy():
+    # Managed rtpproxy instance using control socket of the given type, which
+    # is created and bound here and passed to it as an inherited descriptor,
+    # rtpproxy determines the type from the descriptor
+    ctypes = {
+      'udp:': (AF_INET, SOCK_DGRAM, '127.0.0.1'),
+      'udp6:': (AF_INET6, SOCK_DGRAM, '::1'),
+      'tcp:': (AF_INET, SOCK_STREAM, '127.0.0.1'),
+      'tcp6:': (AF_INET6, SOCK_STREAM, '::1'),
+      'unix:': (AF_UNIX, SOCK_STREAM, None),
+      'cunix:': (AF_UNIX, SOCK_STREAM, None),
+    }
+    proc = None
+    client = None
+    tmpdir = None
+    host = None
+    port = None
+
+    def __init__(self, ctype, extra_args, rtpproxy_bin = None,
+      rtpproxy_stderr = None, instance_name = None):
+        from sippy.Rtp_proxy.client import Rtp_proxy_client
+        self.instance_name = instance_name
+        family, stype, host = self.ctypes[ctype]
+        self._stderr = None
+        csock = socket(family, stype)
+        try:
+            if family == AF_UNIX:
+                # Relative to keep it within the sun_path length limit
+                self.tmpdir = tempfile.mkdtemp(prefix = '.rptl_', dir = '.')
+                path = os.path.join(os.path.relpath(self.tmpdir), 'ctrl.sock')
+                csock.bind(path)
+                self.spath = f'{ctype}{path}'
+            else:
+                csock.bind((host, 0))
+                self.host, self.port = host, csock.getsockname()[1]
+                self.spath = f'{ctype}{host}:{self.port}'
+            if stype == SOCK_STREAM:
+                csock.listen(32)
+            if rtpproxy_stderr is not None:
+                self._stderr = open(rtpproxy_stderr, 'w')
+            cmd = [rtpproxy_bin, '-f', '-s', f'fd:{csock.fileno()}'] + \
+              list(extra_args)
+            # Keep stdout of the runner itself clean
+            out = self._stderr if self._stderr is not None else sys.stderr
+            self.proc = Popen(cmd, stdin = DEVNULL, stdout = out,
+              stderr = self._stderr, pass_fds = (csock.fileno(),))
+            csock.close()
+            self.client = Rtp_proxy_client({'_sip_address': '127.0.0.1'},
+              spath = self.spath, nworkers = 1, no_version_check = True)
+        except Exception:
+            csock.close()
+            self._cleanup()
+            raise
+
+    def send_command(self, *args, **kwargs):
+        return self.client.send_command(*args, **kwargs)
+
+    def _cleanup(self):
+        if self.proc is not None and self.proc.poll() is None:
+            self.proc.kill()
+            self.proc.wait()
+        if self._stderr is not None:
+            self._stderr.close()
+            self._stderr = None
+        if self.tmpdir is not None:
+            shutil.rmtree(self.tmpdir, ignore_errors = True)
+            self.tmpdir = None
+
+    def shutdown(self):
+        proc_rc = None
+        try:
+            if self.client is not None:
+                self.client.shutdown()
+                self.client = None
+        finally:
+            if self.proc is not None:
+                self.proc.terminate()
+                try:
+                    proc_rc = self.proc.wait(timeout = 5.0)
+                except TimeoutExpired:
+                    self.proc.kill()
+                    proc_rc = self.proc.wait()
+                self.proc = None
+            self._cleanup()
+        if proc_rc is not None and proc_rc != 0:
+            raise RuntimeError(
+              F'managed rtpproxy instance "{self.instance_name}" exited with return code {proc_rc}')
+
 class ManagedProcess():
     # External command run via "/bin/sh -c" in its own process group, its
     # stdout is collected line by line and delivered to the main thread
@@ -194,6 +296,7 @@ class TransFunction():
           'str_split':self.str_split,
           'validate_port':self.validate_port,
           'str_compare':self.str_compare,
+          'deref':self.deref,
         }
         self.name = name
         self.args = tuple(args)
@@ -205,18 +308,24 @@ class TransFunction():
             spat = spat.encode().decode('unicode_escape')
         res = res.split(spat, len(evars))
         for i, var in enumerate(evars):
-            srun.variables[var] = res[i].strip()
+            srun.variables[srun.expand_vars(var)] = res[i].strip()
 
     def str_compare(self, srun, res):
         assert(len(self.args) == 1)
-        if res != srun.variables[self.args[0]]:
-            raise AssertionError(F'"{res}" != "{srun.variables[self.args[0]]}"')
+        expected = srun.getvar(srun.expand_vars(self.args[0]))
+        if res != expected:
+            raise AssertionError(F'"{res}" != "{expected}"')
+
+    def deref(self, srun, res):
+        # Value is a name of a variable, copy that one
+        assert(len(self.args) == 1)
+        srun.variables[srun.expand_vars(self.args[0])] = srun.getvar(res)
 
     def validate_port(self, srun, res):
         ires = int(res)
         assert(ires > 0 and ires <= 65535)
         assert(len(self.args) == 1)
-        srun.variables[self.args[0]] = res
+        srun.variables[srun.expand_vars(self.args[0])] = res
 
 class ExceptionInfo():
     exception: Exception
@@ -245,6 +354,7 @@ class ScriptRunner():
           '.sleep':self.handle_sleep,
           '.echo':self.handle_echo,
           '.include':self.handle_include,
+          '.foreach':self.handle_foreach,
           '.exec':self.handle_exec,
           '.spawn':self.handle_spawn,
           '.readline':self.handle_readline,
@@ -301,12 +411,15 @@ class ScriptRunner():
             break
         command = self.expand_vars(cmd.action)
         self.cur_command = command
-        if cmd.socket_name.startswith('.'):
-            if cmd.socket_name not in self.internal_ops:
-                raise Exception(F'{cmd.socket_name}: unknown built-in')
-            self.internal_ops[cmd.socket_name](cmd, command)
+        sname = self.expand_vars(cmd.socket_name)
+        if sname.startswith('.'):
+            if sname not in self.internal_ops:
+                raise Exception(F'{sname}: unknown built-in')
+            self.internal_ops[sname](cmd, command)
             return
-        socket = self.sockets[cmd.socket_name]
+        if sname not in self.sockets:
+            raise Exception(F'{sname}: no such socket')
+        socket = self.sockets[sname]
         socket.rc.send_command(command, self.got_result, cmd, command, socket)
 
     def got_result(self, result, cmd, command, socket, ex=None):
@@ -323,6 +436,19 @@ class ScriptRunner():
             self.setvar(cmd.output_var, result)
         self.issue_next_cmd()
 
+    def getvar(self, name):
+        # NAME.ATTR refers to an attribute of socket NAME
+        if '.' in name:
+            sname, attr = name.split('.', 1)
+            if sname not in self.sockets:
+                raise Exception(F'{name}: no such socket: {sname}')
+            attrs = self.sockets[sname].attrs
+            if attr not in attrs:
+                raise Exception(F'{name}: socket {sname} has no attribute {attr}, '
+                  F'available: {", ".join(sorted(attrs))}')
+            return attrs[attr]
+        return self.variables[name]
+
     def expand_vars(self, command):
         orig_command = command
         rval = ''
@@ -337,7 +463,7 @@ class ScriptRunner():
             if epos == -1:
                 raise Exception(F'{orig_command}:unbalanced "%%"')
             varname = command[:epos]
-            rval += self.variables[varname]
+            rval += self.getvar(varname)
             command = command[epos + 2:]
         return rval
 
@@ -348,6 +474,25 @@ class ScriptRunner():
     def handle_sleep(self, cmd, command):
         from sippy.Time.Timeout import Timeout
         Timeout(self.issue_next_cmd, float(command))
+
+    def handle_foreach(self, cmd, command):
+        # .foreach: VAR in VALUE... do FILE
+        args = command.split()
+        if len(args) < 4 or args[1] != 'in' or args[-2] != 'do':
+            raise Exception(F'"{command}": VAR in VALUE... do FILE expected')
+        var, values, fname = args[0], args[2:-2], args[-1]
+        rules = load_script(os.path.join(cmd.srcdir, fname))
+        body = []
+        for value in values:
+            setter = Command()
+            setter.socket_name = '.eval'
+            setter.action = value
+            setter.output_var = var
+            setter.srcdir = cmd.srcdir
+            body.append(setter)
+            body.extend(rules)
+        self.commands[self.i_command:self.i_command] = body
+        self.issue_next_cmd()
 
     def handle_include(self, cmd, command):
         # Paths are relative to the directory of the including script
@@ -418,6 +563,7 @@ class ScriptRunner():
         name = cmd.output_var
         if not isinstance(name, str):
             raise Exception('.spawn requires "-> NAME" to be specified')
+        name = self.expand_vars(name)
         if name in self.procs:
             raise Exception(F'{name}: process has been spawned already')
         mp = ManagedProcess(name, command)
@@ -484,7 +630,7 @@ class ScriptRunner():
 
     def setvar(self, output_var, value):
         if not isinstance(output_var, TransFunction):
-            self.variables[output_var] = value
+            self.variables[self.expand_vars(output_var)] = value
         else:
             try:
                 output_var.handler(self, value)

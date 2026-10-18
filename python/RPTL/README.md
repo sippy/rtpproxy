@@ -78,9 +78,21 @@ is executed, so they can be changed between sockets. `PARAMS` are split
 shell-style after variable expansion, so one variable can carry several
 arguments.
 
+The addresses `udp:`, `udp6:`, `tcp:`, `tcp6:`, `unix:` and `cunix:`,
+with nothing after the type, also start a managed instance, using a control
+socket of that type instead. RPTL creates the socket, bound to an ephemeral
+port on the loopback address (or to a path in a temporary directory for the
+UNIX domain ones), passes it to rtpproxy as `-s fd:N` and connects to it, so
+no port needs to be chosen in advance:
+
+```
+socket bob: udp6: -d dbug -T10 -> bob.rout
+```
+
 A managed instance runs until its socket is closed with `.close:` or the
-script ends. Closing the socket makes rtpproxy exit on its own; if it has
-not done so within 5 seconds it is terminated. A non-zero exit code of a
+script ends. Closing a `stdio:` socket makes rtpproxy exit on its own; if it
+has not done so within 5 seconds it is terminated. Instances using other
+types of control socket are terminated right away. A non-zero exit code of a
 managed instance (e.g. a memory leak detected by a debug build) fails the
 script.
 
@@ -105,6 +117,9 @@ variables. Several rtpproxy commands can be combined into one action with
 Names starting with a dot (`.eval:`, `.exec:` and so on) are built-ins,
 which are executed by the RPTL runner itself, see [Built-ins](#built-ins).
 
+The socket name can also be given as a variable, e.g. `%%R%%: V`, which
+allows the same included script to be run against several instances.
+
 ### Variables and Output
 
 Variables are referenced as `%%NAME%%` anywhere in an action, a socket
@@ -122,6 +137,29 @@ of a command with `-> NAME`:
 gena: Lz60 %%CALLID_A%% 127.0.0.1 %%TRASH_PORT%% %%FT%% %%TT%% -> PORTA
 ```
 
+Each socket also provides read-only attributes, referenced as
+`%%SOCKET.ATTR%%`, both in expansions and as function arguments:
+
+| Attribute | Description |
+|-----------|-------------|
+| `CTRL` | Control socket address, in the form accepted by the `socket` statement and other tools, e.g. `udp:127.0.0.1:41873` for a managed instance. |
+| `CTRL_HOST`, `CTRL_PORT` | Address and port of the control socket of a managed instance using a network socket. |
+| `PID` | Process ID of a managed instance. |
+
+For example, to query a managed instance with an external tool:
+
+```
+socket r1: udp: -d dbug
+.exec: echo V | python3 rtpp_query.py -s %%r1.CTRL%% -i - -> str_compare(PROTO_VER)
+```
+
+Referencing an attribute of a socket that does not exist, or has been
+closed, fails the script.
+
+A variable name to set, or to pass to a function, can itself contain
+variable references, e.g. `-> PORT_%%K%%`, which allows keeping a set of
+values indexed by a loop variable. Use `deref()` to read them back.
+
 Instead of a variable name, the output can be passed to one of the
 transformation functions below, which can check it and/or split it into
 several variables.
@@ -138,6 +176,7 @@ fwd: U %%CALLID_F%% 127.0.0.1 %%PORTA%% %%FT%% && M4:1 S -> str_split(&&, PORT1_
 |----------|-------------|
 | `str_split(SEP, VAR1, VAR2, ...)` | Split the value at `SEP` and assign the pieces, with surrounding whitespace stripped, to `VAR1`, `VAR2`, ... in order. Fails if there are fewer pieces than variables; anything left after the last variable is dropped, so `str_split(\n, FIRST)` takes the first line. `SEP` is taken verbatim (`str_split( , ...)` splits at spaces), may not contain `,` or `)`, and can use backslash escapes such as `\n`. |
 | `str_compare(VAR)` | Fail unless the value is exactly equal to the value of `VAR`. |
+| `deref(VAR)` | Treat the value as a name of a variable and copy that variable into `VAR`, e.g. `.eval: PORT_%%K%% -> deref(PORT)`. |
 | `validate_port(VAR)` | Fail unless the value is an integer in the 1-65535 range, then assign it to `VAR`. `_` is commonly used when the value is not needed. |
 
 To compare a result against a constant, put the constant into a variable
@@ -155,6 +194,7 @@ alice: R call_ab_alice alice_to alice_from -> str_compare(RES_OK)
 | `.eval: VALUE -> OUTPUT` | Assign `VALUE` to a variable or pass it to a function. |
 | `.echo: TEXT` | Print `TEXT` to stderr. |
 | `.sleep: SECONDS` | Pause the script; fractional values are allowed. |
+| `.foreach: VAR in VALUE... do FILE` | Execute statements from `FILE` (resolved like with `.include:`) once for each `VALUE`, with `VAR` set to it. The values are split at whitespace after variable expansion, so a variable can provide the list. |
 | `.include: FILE` | Execute statements from `FILE` at this point. A relative `FILE` is resolved against the directory of the script containing the `.include:`. The file is read when the statement is reached, so its name can contain variables; included statements share all variables and sockets with the rest of the script. |
 | `.close: SOCKET` | Shut down `SOCKET`. For a `stdio:` socket this waits for the managed rtpproxy to exit and fails if its exit code is non-zero, which is useful to make it flush and close its recordings before they are examined. |
 | `.exec:`, `.spawn:`, `.readline:`, `.wait:`, `.kill:` | Run external commands, see below. |
@@ -171,7 +211,7 @@ to `/dev/null` and stderr inherited from the RPTL runner.
 | Built-in | Description |
 |----------|-------------|
 | `.exec: CMDLINE [-> OUTPUT]` | Run `CMDLINE` and wait for it to exit. A non-zero exit code fails the script. Its stdout, with leading and trailing whitespace stripped, is the result; without `-> OUTPUT` it is printed to stderr. |
-| `.spawn: CMDLINE -> NAME` | Start `CMDLINE` in background under handle `NAME` and continue right away. The `NAME` variable is set to its PID. |
+| `.spawn: CMDLINE -> NAME` | Start `CMDLINE` in background under handle `NAME` and continue right away. The `NAME` variable is set to its PID. Like other output names, `NAME` can contain variable references, e.g. `-> CAP_%%K%%`, to keep several processes running at once. |
 | `.readline: NAME [TIMEOUT] [-> OUTPUT]` | Wait for the next line printed by the spawned process `NAME`. Output is buffered from the moment the process is started, so no lines are lost. Fails if the process exits without printing another line, or on timeout. |
 | `.wait: NAME [TIMEOUT] [-> OUTPUT]` | Wait for the spawned process `NAME` to exit and release its handle, so `NAME` can be reused. A non-zero exit code fails the script unless it is captured with `-> OUTPUT` (a negative value means it was killed by that signal). Fails on timeout. |
 | `.kill: NAME [SIGNAL]` | Send `SIGNAL` (name such as `TERM`, `SIGUSR1`, or number; `TERM` by default) to the process group of `NAME`. Does nothing if it has already exited; use `.wait:` afterwards to collect it. |
