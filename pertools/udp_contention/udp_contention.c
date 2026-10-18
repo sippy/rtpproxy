@@ -644,12 +644,12 @@ run_test(int nthreads, int test_type, struct tconf *cfp, struct tstats *tsp)
         pthread_join(wsp[i]->tid, NULL);
         rsp[i]->done = 1;
         pthread_join(rsp[i]->tid, NULL);
-        nsent_total += wsp[i]->nreps * wsp[i]->ndest;
+        nsent_total += (uint64_t)wsp[i]->nreps * wsp[i]->ndest;
         tduration_s = wsp[i]->etime - wsp[i]->stime;
         tduration_r = rsp[i]->etime - rsp[i]->stime;
         send_nerrs_total += wsp[i]->send_nerrs;
         send_nshrts_total += wsp[i]->send_nshrts;
-        pps = (wsp[i]->nreps * wsp[i]->ndest) - wsp[i]->send_nerrs;
+        pps = ((uint64_t)wsp[i]->nreps * wsp[i]->ndest) - wsp[i]->send_nerrs;
         pps /= tduration_s;
         tsp->total_pps += pps;
         nrecvd_total += rsp[i]->nrecvd_total;
