@@ -1,0 +1,42 @@
+# Test that session timeouts for fully setup sessions and half-setup sessions
+# work correctly and there is no early/late destruction of sessions.
+#
+# Four rtpproxy instances using control socket of type CTYPE, IPv4 and IPv6
+# ones, with and without the separate setup timeout (-W), get the same
+# sequence of commands with pauses in between. Their replies are logged into
+# OUT.rout<J>.<1-4> and timeout notifications go to NS.
+#
+# Expects CTYPE, J, NS, OUT and RTPPROXY_BIN to be defined.
+
+.eval: -n %%NS%% -d dbug -T10 -b -> ARGS
+
+.eval: %%OUT%%.rlog%%J%%.1 -> RTPPROXY_STDERR
+socket r1: %%CTYPE%% %%ARGS%% -W5 -> %%OUT%%.rout%%J%%.1
+.eval: %%OUT%%.rlog%%J%%.2 -> RTPPROXY_STDERR
+socket r2: %%CTYPE%% %%ARGS%% -> %%OUT%%.rout%%J%%.2
+.eval: %%OUT%%.rlog%%J%%.3 -> RTPPROXY_STDERR
+socket r3: %%CTYPE%% -6 ::1 %%ARGS%% -W5 -> %%OUT%%.rout%%J%%.3
+.eval: %%OUT%%.rlog%%J%%.4 -> RTPPROXY_STDERR
+socket r4: %%CTYPE%% -6 ::1 %%ARGS%% -> %%OUT%%.rout%%J%%.4
+
+.eval: 1 -> SEG
+.include: round.rptl
+.sleep: 2
+.eval: 2 -> SEG
+.include: round.rptl
+.sleep: 3
+.eval: 3 -> SEG
+.include: round.rptl
+.sleep: 6
+.eval: 4 -> SEG
+.include: round.rptl
+.sleep: 3
+.eval: 5 -> SEG
+.include: round.rptl
+.sleep: 12
+.include: round.rptl
+
+.close: r1
+.close: r2
+.close: r3
+.close: r4

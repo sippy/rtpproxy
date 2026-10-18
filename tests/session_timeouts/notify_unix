@@ -5,4 +5,5 @@ BASEDIR="${TDIR}/.."
 
 . "${TDIR}/test.sub"
 
-run_test "${RTPP_NOTIFY_SOCK_UNIX}"
+# Unique per run, but short enough for a UNIX domain socket
+run_test "unix:/tmp/rtpp_nc.$$.sock"

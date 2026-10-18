@@ -1,0 +1,15 @@
+# Run segment SEG on all four instances: r1 and r2 are IPv4, r3 and r4 are
+# IPv6 ones.
+
+.eval: r1 -> R
+.eval: RTPP%%J%%.1 -> ID
+.include: seg%%SEG%%.v4.rptl
+.eval: r2 -> R
+.eval: RTPP%%J%%.2 -> ID
+.include: seg%%SEG%%.v4.rptl
+.eval: r3 -> R
+.eval: RTPP%%J%%.3 -> ID
+.include: seg%%SEG%%.v6.rptl
+.eval: r4 -> R
+.eval: RTPP%%J%%.4 -> ID
+.include: seg%%SEG%%.v6.rptl
