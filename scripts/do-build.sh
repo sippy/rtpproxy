@@ -71,7 +71,7 @@ cd libsrtp
 make
 ${SUDO} make install
 cd ..
-wget https://ftp2.osuosl.org/pub/blfs/conglomeration/libsndfile/libsndfile-${SNDFILE_VER}.tar.xz
+wget https://github.com/libsndfile/libsndfile/releases/download/${SNDFILE_VER}/libsndfile-${SNDFILE_VER}.tar.xz
 if ! which xzcat
 then
   apt install -y xz-utils
