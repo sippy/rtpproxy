@@ -50,7 +50,7 @@ srandomdev(void)
         if (rlen < 0) {
             warn("read(\"/dev/urandom\")");
         } else if (rlen < sizeof(junk)) {
-            warnx("read(\"/dev/urandom\": short read %d bytes not %d)",
+            warnx("read(\"/dev/urandom\": short read %d bytes not %zu)",
               rlen, sizeof(junk));
         }
         close(fd);
