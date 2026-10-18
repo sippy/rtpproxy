@@ -29,13 +29,19 @@ if BUILD_CRYPTO
 include $(srcdir)/dtls_gw/Makefile.ami
 endif
 
-EXTRA_DIST += Makefile.am ringback.sln
+EXTRA_DIST += Makefile.am ringback.sln run-tests.sh
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
 TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
         BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
         TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
-CLEANFILES += *.core
+CLEANFILES += *.core test-suite.log
+
+# Keep live output and serial execution, and repeat failures at the end.
+check-TESTS: $(TESTS)
+	@srcdir='$(srcdir)'; export srcdir; \
+	$(TESTS_ENVIRONMENT) \
+	XFAIL_TESTS='$(XFAIL_TESTS)' $(SHELL) $(srcdir)/run-tests.sh $(TESTS)
 
 list_tests:
 	@echo ${TESTS}

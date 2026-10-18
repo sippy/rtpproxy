@@ -12,4 +12,4 @@ then
   chown -R rtpproxy .
 fi
 
-TEST_WITNESS_ENABLE=yes make check || (cat tests/test-suite.log; exit 1)
+TEST_WITNESS_ENABLE=yes make check
