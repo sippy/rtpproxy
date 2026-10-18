@@ -211,6 +211,29 @@ above, but the rtpproxy would keep control socket open and accept multiple comma
 Example: \-s cunix:/var/run/rtpproxy\&.sock
 .RE
 .sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIfd:\fR
+Use socket
+\fIN\fR, inherited from the parent process, instead of creating one\&. The type of the control socket is determined from the socket: a datagram IPv4/IPv6 socket is used as
+\fIudp:\fR
+/
+\fIudp6:\fR, a listening IPv4/IPv6 or UNIX domain stream socket as
+\fItcp:\fR
+/
+\fItcp6:\fR
+/
+\fIcunix:\fR, and a connected stream socket as a single control channel to the SIP Controller\&. The rtpproxy does not change the ownership or permissions of such a socket, and does not remove its path on exit\&.
+.sp
+Example: \-s fd:3
+.RE
+.sp
 Default value is
 unix:/var/run/rtpproxy\&.sock\&.
 .RE

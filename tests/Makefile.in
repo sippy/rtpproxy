@@ -115,7 +115,7 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	command_parser/command_parser1 \
 @ENABLE_BASIC_TESTS_TRUE@	command_parser/address_binding \
 @ENABLE_BASIC_TESTS_TRUE@	command_parser/ul_subc \
-@ENABLE_BASIC_TESTS_TRUE@	forwarding/forwarding1_robust \
+@ENABLE_BASIC_TESTS_TRUE@	forwarding/forwarding1 \
 @ENABLE_BASIC_TESTS_TRUE@	session_timeouts/notify_tcp \
 @ENABLE_BASIC_TESTS_TRUE@	session_timeouts/notify_tcp_wild \
 @ENABLE_BASIC_TESTS_TRUE@	session_timeouts/notify_unix \
@@ -445,22 +445,20 @@ EXTRA_DIST = $(am__append_3) $(am__append_6) $(am__append_9) \
 
 @ENABLE_BASIC_TESTS_TRUE@forwarding_EXTRA_DIST = forwarding
 @ENABLE_BASIC_TESTS_TRUE@forwarding_CLEANFILES = forwarding1.0.wav forwarding1.18.wav forwarding1.3.wav \
-@ENABLE_BASIC_TESTS_TRUE@  forwarding1.8.wav forwarding1.9.wav forwarding1.gena.rout forwarding1.geno.rout \
-@ENABLE_BASIC_TESTS_TRUE@  forwarding1.rout forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
-@ENABLE_BASIC_TESTS_TRUE@  forwarding1.0 forwarding1.3 forwarding1.8 forwarding1.9 forwarding1.18 \
-@ENABLE_BASIC_TESTS_TRUE@  forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog \
-@ENABLE_BASIC_TESTS_TRUE@  forwarding1.*.eout rtpproxy_acct.csv forwarding1_robust.rout
+@ENABLE_BASIC_TESTS_TRUE@  forwarding1.4.wav forwarding1.8.wav forwarding1.9.wav forwarding1.rout \
+@ENABLE_BASIC_TESTS_TRUE@  forwarding1.geno.rout forwarding1.gena.rout forwarding1*.rout.norm \
+@ENABLE_BASIC_TESTS_TRUE@  forwarding1*.rout.amod forwarding1_[ao]_*.rtcp forwarding1_[ao]_*.rtp \
+@ENABLE_BASIC_TESTS_TRUE@  forwarding1.0 forwarding1.3 forwarding1.4 forwarding1.8 forwarding1.9 forwarding1.18 \
+@ENABLE_BASIC_TESTS_TRUE@  forwarding1.gena.rlog forwarding1.geno.rlog forwarding1.rlog forwarding1.rptl.rlog \
+@ENABLE_BASIC_TESTS_TRUE@  forwarding1.vars forwarding1.*.eout rtpproxy_acct.csv
 
 @ENABLE_BASIC_TESTS_TRUE@session_timeouts_EXTRA_DIST = session_timeouts
-@ENABLE_BASIC_TESTS_TRUE@session_timeouts_CLEANFILES = session_timeouts.rout[1234567].[1234] session_timeouts.rlog[1234567].[1234] \
-@ENABLE_BASIC_TESTS_TRUE@  session_timeouts.tlog session_timeouts.tlog.sorted session_timeouts.qout[1234567].[1234] \
-@ENABLE_BASIC_TESTS_TRUE@  session_timeouts.fout[1234567].[1234]
-
+@ENABLE_BASIC_TESTS_TRUE@session_timeouts_CLEANFILES = session_timeouts.*
 @ENABLE_BASIC_TESTS_TRUE@playback_EXTRA_DIST = playback
-@ENABLE_BASIC_TESTS_TRUE@playback_CLEANFILES = playback1.0.a.rtp playback1.18.a.rtp playback1.3.a.rtp \
-@ENABLE_BASIC_TESTS_TRUE@  playback1.8.a.rtp playback1.9.a.rtp playback1.0 playback1.18 playback1.3 \
-@ENABLE_BASIC_TESTS_TRUE@  playback1.8 playback1.9 playback1.rout playback1.0.wav playback1.18.wav \
-@ENABLE_BASIC_TESTS_TRUE@  playback1.3.wav playback1.8.wav playback1.9.wav playback1.tout playback1.rlog
+@ENABLE_BASIC_TESTS_TRUE@playback_CLEANFILES = playback1.0 playback1.18 playback1.3 playback1.8 playback1.9 \
+@ENABLE_BASIC_TESTS_TRUE@  playback1.0.wav playback1.18.wav playback1.3.wav playback1.8.wav playback1.9.wav \
+@ENABLE_BASIC_TESTS_TRUE@  playback1.*.a.rtp playback1.*.tos playback1.rout playback1.rout.model \
+@ENABLE_BASIC_TESTS_TRUE@  playback1.rout.norm playback1.rlog playback1.rptl.rlog playback1.vars
 
 @ENABLE_MEMGLITCHING_TRUE@memdeb_EXTRA_DIST = memdeb
 @ENABLE_MEMGLITCHING_TRUE@memdeb_CLEANFILES = glitch1.*
