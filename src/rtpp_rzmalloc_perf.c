@@ -125,10 +125,12 @@ main(int argc, char **argv)
     long long i, j, k;
     struct dummy *dpbuf[1000];
     double stime, etime;
-    struct {
+    struct perf_test {
        perf_func_ctor_t pfunc_ctor;
        const char *tname;
-    } *tp, tests[] = {
+    };
+    const struct perf_test *tp;
+    static const struct perf_test tests[] = {
        {.pfunc_ctor = rtpp_rzmalloc_perf, .tname = "rtpp_rzmalloc()"},
        {.pfunc_ctor = rtpp_refcnt_perf, .tname = "rtpp_zmalloc()+rtpp_refcnt()"},
 #if defined(RTPP_DEBUG)
