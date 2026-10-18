@@ -387,6 +387,23 @@
 
                 <para>Example: -s cunix:/var/run/rtpproxy.sock</para>
               </listitem>
+
+              <listitem id="fd">
+                <para><emphasis>fd:</emphasis> Use socket
+                <replaceable>N</replaceable>, inherited from the parent
+                process, instead of creating one. The type of the control
+                socket is determined from the socket: a datagram IPv4/IPv6
+                socket is used as <emphasis>udp:</emphasis> /
+                <emphasis>udp6:</emphasis>, a listening IPv4/IPv6 or UNIX
+                domain stream socket as <emphasis>tcp:</emphasis> /
+                <emphasis>tcp6:</emphasis> / <emphasis>cunix:</emphasis>,
+                and a connected stream socket as a single control channel to
+                the SIP Controller. The rtpproxy does not change the ownership
+                or permissions of such a socket, and does not remove its path
+                on exit.</para>
+
+                <para>Example: -s fd:3</para>
+              </listitem>
             </itemizedlist></para>
 
           <para>Default value is

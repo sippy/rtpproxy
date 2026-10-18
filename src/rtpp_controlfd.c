@@ -82,6 +82,59 @@ controlfd_init_systemd(void)
     return (-1);
 }
 
+/*
+ * Determine type of the control socket from the descriptor inherited from
+ * the parent process: a datagram socket is udp/udp6, a listening stream one
+ * is tcp/tcp6/cunix and a connected stream one is used as is.
+ */
+static int
+controlfd_probe_inherited(struct rtpp_ctrl_sock *csp, int controlfd)
+{
+    int stype, listening;
+    socklen_t slen;
+    struct sockaddr *sa;
+
+    slen = sizeof(stype);
+    if (getsockopt(controlfd, SOL_SOCKET, SO_TYPE, &stype, &slen) != 0) {
+        warn("fd:%d: not a socket", controlfd);
+        return (-1);
+    }
+    slen = sizeof(listening);
+    if (stype == SOCK_STREAM && getsockopt(controlfd, SOL_SOCKET,
+      SO_ACCEPTCONN, &listening, &slen) != 0) {
+        warn("fd:%d: getsockopt(SO_ACCEPTCONN) failed", controlfd);
+        return (-1);
+    }
+    if (stype == SOCK_STREAM && listening == 0) {
+        csp->type = RTPC_FD;
+        return (0);
+    }
+    sa = sstosa(&csp->bindaddr);
+    slen = sizeof(csp->bindaddr);
+    if (getsockname(controlfd, sa, &slen) != 0) {
+        warn("fd:%d: getsockname() failed", controlfd);
+        return (-1);
+    }
+    if (stype == SOCK_DGRAM && sa->sa_family == AF_INET) {
+        csp->type = RTPC_UDP4;
+    } else if (stype == SOCK_DGRAM && sa->sa_family == AF_INET6) {
+        csp->type = RTPC_UDP6;
+    } else if (stype == SOCK_STREAM && sa->sa_family == AF_INET) {
+        csp->type = RTPC_TCP4;
+    } else if (stype == SOCK_STREAM && sa->sa_family == AF_INET6) {
+        csp->type = RTPC_TCP6;
+    } else if (stype == SOCK_STREAM && sa->sa_family == AF_LOCAL) {
+        csp->type = RTPC_IFSUN_C;
+    } else {
+        warnx("fd:%d: unsupported type of socket", controlfd);
+        return (-1);
+    }
+    if (sa->sa_family != AF_LOCAL)
+        csp->port_ctl = getport(sa);
+    csp->inherited = 1;
+    return (0);
+}
+
 static int
 controlfd_init_ifsun(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
@@ -237,6 +290,10 @@ rtpp_controlfd_init(const struct rtpp_cfg *cfsp)
 
     for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
       ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
+        if (ctrl_sock->inherited) {
+            controlfd_in = controlfd_out = ctrl_sock->controlfd_in;
+            goto have_fd;
+        }
         switch (ctrl_sock->type) {
         case RTPC_SYSD:
             controlfd_in = controlfd_out = controlfd_init_systemd();
@@ -274,6 +331,7 @@ rtpp_controlfd_init(const struct rtpp_cfg *cfsp)
             warnx("unhandled RTPC_XXX type: %d", ctrl_sock->type);
             abort();
         }
+have_fd:
         if (controlfd_in < 0 || controlfd_out < 0) {
             return (-1);
         }
@@ -323,7 +381,7 @@ rtpp_controlfd_cleanup(const struct rtpp_cfg *cfsp)
 
     for (ctrl_sock = RTPP_LIST_HEAD(cfsp->ctrl_socks);
       ctrl_sock != NULL; ctrl_sock = RTPP_ITER_NEXT(ctrl_sock)) {
-        if (RTPP_CTRL_ISUNIX(ctrl_sock) == 0)
+        if (RTPP_CTRL_ISUNIX(ctrl_sock) == 0 || ctrl_sock->inherited)
             continue;
         unlink(ctrl_sock->cmd_sock);
     }
@@ -361,9 +419,19 @@ rtpp_ctrl_sock_parse(const char *optarg)
         rcsp->type= RTPC_STDIO;
         rcsp->exit_on_close = 1;
         optarg += 7;
-    } else if (rtpp_is_lib && strncmp("fd:", optarg, 3) == 0) {
+    } else if (strncmp("fd:", optarg, 3) == 0) {
+        int fd;
+
         rcsp->type= RTPC_FD;
         optarg += 3;
+        if (atoi_safe(optarg, &fd) != ATOI_OK || fd < 0) {
+            warnx("invalid fd: %s", optarg);
+            goto e0;
+        }
+        if (controlfd_probe_inherited(rcsp, fd) != 0)
+            goto e0;
+        if (rcsp->inherited)
+            rcsp->controlfd_in = fd;
     } else if (strncmp("tcp:", optarg, 4) == 0) {
         rcsp->type= RTPC_TCP4;
         optarg += 4;
@@ -374,6 +442,9 @@ rtpp_ctrl_sock_parse(const char *optarg)
     rcsp->cmd_sock = optarg;
 
     return (rcsp);
+e0:
+    free(rcsp);
+    return (NULL);
 }
 
 #if 0

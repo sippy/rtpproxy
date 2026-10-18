@@ -37,6 +37,7 @@ struct rtpp_ctrl_sock {
     int controlfd_out;
     int port_ctl;                   /* Port number for UDP control, 0 for Unix domain */
     int exit_on_close;
+    int inherited;                  /* Listening/datagram socket from fd:N */
     struct {				/* Temporary space for emergencies (i.e. ENOMEM) */
         char buf[RTPP_CMD_BUFLEN];	/* I/O scrap buffer */
         struct sockaddr_storage addr;	/* space to store receiver's address */
