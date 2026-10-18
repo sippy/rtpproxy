@@ -1,0 +1,4 @@
+# Update call CALL on Fwd in the middle of the playback
+.eval: %%CALL%% -> str_split(:, K, CO, CA, KIND)
+.include: forwarding1.restore.rptl
+.include: forwarding1.relatch_%%KIND%%.rptl

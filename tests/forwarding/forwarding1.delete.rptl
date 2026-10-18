@@ -1,0 +1,6 @@
+# Query stats of call K on Fwd and delete it
+.eval: fwd -> R
+.eval: forwarding1_%%K%% -> CID
+.include: forwarding1.sstats.rptl
+fwd: Qv forwarding1_%%K%% from_tag_1 to_tag_1 npkts_ina npkts_ino nrelayed ndropped && D
+fwd: Qv forwarding1_%%K%%_ipv6 from_tag_1 to_tag_1 npkts_ina npkts_ino nrelayed ndropped && D

@@ -1,0 +1,38 @@
+# Set up call CALL on all three instances, and keep the ports allocated in
+# <NAME>_<K> variables for the later phases.
+#
+# Fwd needs one of the Gen.A ports and Gen.A needs one of the Fwd ones, so
+# Gen.A session is created with a placeholder remote first, and then
+# re-targeted once the Fwd port is known.
+
+.eval: %%CALL%% -> str_split(:, K, CO, CA, KIND)
+.include: forwarding1.kind_%%KIND%%.rptl
+
+gena: Uc%%CA%% forwarding1_a_%%K%% 127.0.0.1 %%TRASH%% from_tag_1 -> validate_port(GENA_U)
+gena: Lz60 forwarding1_a_%%K%% 127.0.0.1 %%TRASH%% from_tag_1 to_tag_1 -> validate_port(GENA_L)
+fwd: %%FU%% forwarding1_%%K%% 127.0.0.1 %%GENA_L%% from_tag_1 -> validate_port(FWD_U)
+geno: U forwarding1_o_%%K%% 127.0.0.1 %%FWD_U%% from_tag_1 -> validate_port(GENO_U)
+geno: L forwarding1_o_%%K%% 127.0.0.1 %%TRASH%% from_tag_1 to_tag_1 -> validate_port(GENO_L)
+geno: R forwarding1_o_%%K%% from_tag_1 to_tag_1 -> str_compare(RES_OK)
+fwd: %%FL%% forwarding1_%%K%% 127.0.0.1 %%GENO_L%% from_tag_1 to_tag_1 -> validate_port(FWD_L)
+gena: Uc%%CA%% forwarding1_a_%%K%% 127.0.0.1 %%FWD_L%% from_tag_1 -> str_compare(GENA_U)
+gena: R forwarding1_a_%%K%% from_tag_1 to_tag_1 -> str_compare(RES_OK)
+
+gena: U6c%%CA%% forwarding1_a_%%K%%_ipv6 ::1 %%TRASH%% from_tag_1 -> validate_port(GENA_U6)
+gena: L6z60 forwarding1_a_%%K%%_ipv6 ::1 %%TRASH%% from_tag_1 to_tag_1 -> validate_port(GENA_L6)
+fwd: %%FU6%% forwarding1_%%K%%_ipv6 ::1 %%GENA_L6%% from_tag_1 -> validate_port(FWD_U6)
+geno: U6 forwarding1_o_%%K%%_ipv6 ::1 %%FWD_U6%% from_tag_1 -> validate_port(GENO_U6)
+geno: L6 forwarding1_o_%%K%%_ipv6 ::1 %%TRASH%% from_tag_1 to_tag_1 -> validate_port(GENO_L6)
+geno: R forwarding1_o_%%K%%_ipv6 from_tag_1 to_tag_1 -> str_compare(RES_OK)
+fwd: %%FL6%% forwarding1_%%K%%_ipv6 ::1 %%GENO_L6%% from_tag_1 to_tag_1 -> validate_port(FWD_L6)
+gena: U6c%%CA%% forwarding1_a_%%K%%_ipv6 ::1 %%FWD_L6%% from_tag_1 -> str_compare(GENA_U6)
+gena: R forwarding1_a_%%K%%_ipv6 from_tag_1 to_tag_1 -> str_compare(RES_OK)
+
+.eval: %%FWD_U%% -> FWD_U_%%K%%
+.eval: %%FWD_L%% -> FWD_L_%%K%%
+.eval: %%FWD_U6%% -> FWD_U6_%%K%%
+.eval: %%FWD_L6%% -> FWD_L6_%%K%%
+.eval: %%GENO_L%% -> GENO_L_%%K%%
+.eval: %%GENO_L6%% -> GENO_L6_%%K%%
+.eval: %%GENA_L%% -> GENA_L_%%K%%
+.eval: %%GENA_L6%% -> GENA_L6_%%K%%

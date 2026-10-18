@@ -1,0 +1,5 @@
+# Re-packetized call: repeat the setup
+fwd: Uz30 forwarding1_%%K%% 127.0.0.1 %%GENA_L%% from_tag_1 -> str_compare(FWD_U)
+fwd: Lz60 forwarding1_%%K%% 127.0.0.1 %%GENO_L%% from_tag_1 to_tag_1 -> str_compare(FWD_L)
+fwd: U6z30 forwarding1_%%K%%_ipv6 ::1 %%GENA_L6%% from_tag_1 -> str_compare(FWD_U6)
+fwd: L6z60 forwarding1_%%K%%_ipv6 ::1 %%GENO_L6%% from_tag_1 to_tag_1 -> str_compare(FWD_L6)

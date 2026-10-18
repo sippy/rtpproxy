@@ -1,6 +1,0 @@
-Uc%%CODEC%% %%CALLID%% 127.0.0.1 %%PORT1%% from_tag_1
-Lz60 %%CALLID%% 127.0.0.1 %%PORT2%% from_tag_1 to_tag_1
-R %%CALLID%% from_tag_1 to_tag_1
-U6c%%CODEC%% %%CALLID%%_ipv6 ::1 %%PORT1%% from_tag_1
-L6z60 %%CALLID%%_ipv6 ::1 %%PORT2%% from_tag_1 to_tag_1
-R %%CALLID%%_ipv6 from_tag_1 to_tag_1

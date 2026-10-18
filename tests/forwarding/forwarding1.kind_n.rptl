@@ -1,0 +1,5 @@
+# Commands used for setting up a normal call on Fwd
+.eval: U -> FU
+.eval: L -> FL
+.eval: U6 -> FU6
+.eval: L6 -> FL6

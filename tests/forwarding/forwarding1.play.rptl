@@ -1,0 +1,6 @@
+# Start playback NTIMES times in both generators for call CALL
+.eval: %%CALL%% -> str_split(:, K, CO, CA, KIND)
+geno: P%%NTIMES%% forwarding1_o_%%K%% forwarding1 %%CO%% from_tag_1 to_tag_1 -> str_compare(RES_OK)
+geno: P%%NTIMES%% forwarding1_o_%%K%%_ipv6 forwarding1 %%CO%% from_tag_1 to_tag_1 -> str_compare(RES_OK)
+gena: P%%NTIMES%% forwarding1_a_%%K%% forwarding1 session from_tag_1 to_tag_1 -> str_compare(RES_OK)
+gena: P%%NTIMES%% forwarding1_a_%%K%%_ipv6 forwarding1 session from_tag_1 to_tag_1 -> str_compare(RES_OK)

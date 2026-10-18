@@ -1,0 +1,5 @@
+# Commands used for setting up a re-packetized call on Fwd
+.eval: Uz30 -> FU
+.eval: Lz60 -> FL
+.eval: U6z30 -> FU6
+.eval: L6z60 -> FL6

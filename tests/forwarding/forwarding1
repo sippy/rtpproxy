@@ -19,17 +19,22 @@
 # We also setup several streams (for all supported codecs) and enable
 # re-packetization from 10ms for most codecs (20ms for GSM) to 40ms in one
 # direction and 60ms in the other.
+#
+# The commands are issued by forwarding1.rptl, with all ports allocated
+# dynamically, for each set of codecs in turn.
 
 BASEDIR="`dirname "${0}"`/.."
-SUDO_REQUIRED=1
 . "${BASEDIR}/functions"
 
-TEST_CODECS="${TEST_CODECS:-"0 3 4 9 18"}"
-#TEST_CODECS="0 3 4 8 18 9"
-FWD_SPORT=13342
-GENO_SPORT=12000
-GENA_SPORT=15000
-RTPP_DEBUG_LVL="dbug"
+CODEC_SETS="${CODEC_SETS:-"0,3,4,8,9 18,3,4,9,0"}"
+OUT="forwarding1"
+
+# The tools may be run under a wrapper, e.g. setpriv when started as root.
+# The RPTL interpreter is wrapped as well, so whatever it starts already
+# runs with the right credentials: give it bare commands.
+strip_wrapper() {
+  echo "${1##* -- }"
+}
 
 rotate_CODECSA() {
   first_codec="${1}"
@@ -37,119 +42,58 @@ rotate_CODECSA() {
   CODECSA="${@} ${first_codec}"
 }
 
-setup_gen() {
-  direction="${1}"
-  START_PORT="${2}"
-  shift 2
-  PORT=${START_PORT}
-  i=1
-  for codec in ${1} ${2}
+# Pair every codec with every other one, in both directions, plus one more
+# round with the re-packetization enabled
+setup_codecs() {
+  CODECSO="${1}"
+  CODECSA="${1}"
+  _CODECSO=""
+  _CODECSA=""
+  i=0
+  while [ ${i} -eq 0 -o "${CODECSO}" != "${CODECSA}" ]
   do
-    CID="forwarding1_${direction}_${i}"
-    SED_TRANS="s|%%PORT1%%|${PORT}| ; s|%%PORT2%%|${TRASH_PORT1}| ; s|%%CALLID%%|${CID}| ; s|%%CODEC%%|${codec}|"
-    ${SED} "${SED_TRANS}" forwarding/forwarding1.rec${direction}.input
-    PORT=$((${PORT} + 4))
-    i=$((${i}+1))
+    i=1
+    _CODECSO="${_CODECSO} ${CODECSO}"
+    _CODECSA="${_CODECSA} ${CODECSA}"
+    rotate_CODECSA ${CODECSA}
   done
-  sleep 1
-  i=1
-  for codec in ${1} ${2}
-  do
-    CID="forwarding1_${direction}_${i}"
-    SED_TRANS="s|%%CODEC%%|${codec}| ; s|%%CALLID%%|${CID}| ; s|%%NTIMES%%|4|"
-    ${SED} "${SED_TRANS}" forwarding/forwarding1.gen${direction}.input
-    i=$((${i}+1))
-  done
-  sleep 25
-  i=1
-  for codec in ${1} ${2}
-  do
-    CID="forwarding1_${direction}_${i}"
-    SED_TRANS="s|%%CODEC%%|${codec}| ; s|%%CALLID%%|${CID}| ; s|%%NTIMES%%|1|"
-    ${SED} "${SED_TRANS}" forwarding/forwarding1.gen${direction}.input
-    i=$((${i}+1))
-  done
-  sleep 8
-  i=1
-  for codec in ${1} ${2}
-  do
-    CID="forwarding1_${direction}_${i}"
-    SED_TRANS="s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding/forwarding1.sstats.input
-    i=$((${i}+1))
-  done
-  cat forwarding/forwarding1.gstats.input forwarding/forwarding1.stats.input
+  REPACK_CODECSO="${CODECSO}"
+  rotate_CODECSA ${CODECSA}
+  REPACK_CODECSA="${CODECSA}"
+  CODECSO="${_CODECSO}"
+  CODECSA="${_CODECSA}"
 }
 
-setup_fwd() {
-  START_PORTO=$((${1} + 2))
-  START_PORTA=$((${2} + 2))
-  shift 2
-  i=1
-  PORTO=${START_PORTO}
-  PORTA=${START_PORTA}
-  for codec in ${1}
+# K:CODEC_O:CODEC_A:KIND for each call, K starting from 1
+setup_calls() {
+  CALLS=""
+  k=1
+  set -- ${CODECSA} ${REPACK_CODECSA}
+  for co in ${CODECSO} ${REPACK_CODECSO}
   do
-    CID="forwarding1_${i}"
-    SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding/forwarding1.input
-    PORTO=$((${PORTO} + 4))
-    PORTA=$((${PORTA} + 4))
-    i=$((${i}+1))
+    if [ ${k} -le `echo ${CODECSO} | wc -w` ]
+    then
+      kind=n
+    else
+      kind=r
+    fi
+    CALLS="${CALLS} ${k}:${co}:${1}:${kind}"
+    shift
+    k=$((${k} + 1))
   done
-  for codec in ${2}
+  NCALLS=$((${k} - 1))
+  COPIES=""
+  DELETES=""
+  k=${NCALLS}
+  while [ ${k} -gt 0 ]
   do
-    CID="forwarding1_${i}"
-    SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding/forwarding1.repack.input
-    PORTO=$((${PORTO} + 4))
-    PORTA=$((${PORTA} + 4))
-    i=$((${i}+1))
+    COPIES="${COPIES} ${k}"
+    if [ ${k} -gt $(((${NCALLS} + 1) / 2)) ]
+    then
+      DELETES="${DELETES} ${k}"
+    fi
+    k=$((${k} - 1))
   done
-  while [ ${i} -gt 1 ]
-  do
-    i=$((${i}-1))
-    CID="forwarding1_${i}"
-    PORTA=$((1024 + (${i} * 8)))
-    PORTO=$((${PORTA} + 2))
-    PORT6A=$((${PORTA} + 4))
-    PORT6O=$((${PORTA} + 6))
-    SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; \
-     s|%%PORT6O%%|${PORT6O}| ; s|%%PORT6A%%|${PORT6A}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding/forwarding1.copy.input
-  done
-  sleep 6
-  i=1
-  PORTO=${START_PORTO}
-  PORTA=${START_PORTA}
-  for codec in ${1}
-  do
-    CID="forwarding1_${i}"
-    SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding/forwarding1.relatch.input
-    PORTO=$((${PORTO} + 4))
-    PORTA=$((${PORTA} + 4))
-    i=$((${i}+1))
-  done
-  for codec in ${2}
-  do
-    CID="forwarding1_${i}"
-    SED_TRANS="s|%%PORTO%%|${PORTO}| ; s|%%PORTA%%|${PORTA}| ; s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding/forwarding1.repack.input
-    PORTO=$((${PORTO} + 4))
-    PORTA=$((${PORTA} + 4))
-    i=$((${i}+1))
-  done
-  sleep 30
-  j=$((${i}-1))
-  while [ ${j} -gt $((${i}/2)) ]
-  do
-    CID="forwarding1_${j}"
-    SED_TRANS="s|%%CALLID%%|${CID}|"
-    ${SED} "${SED_TRANS}" forwarding/forwarding1.sstats.input forwarding/forwarding1.delete.input
-    j=$((${j} - 1))
-  done  
-  cat forwarding/forwarding1.gstats.input forwarding/forwarding1.stats.input
 }
 
 cumnlost=0
@@ -183,106 +127,86 @@ verify_results()
   done
 }
 
+# Ports are allocated dynamically and checked by forwarding1.rptl, so
+# replace them before comparing the replies with the reference ones.
+normalize() {
+  awk '/^[0-9]+$/ && $1 >= 1024 { print "PORT"; next } { print }' "${1}"
+}
+
 verify_reslogs()
 {
   local restype="${1}"
-  if ! ${REVTEMPL} forwarding/forwarding1${restype}.moutput forwarding1${restype}.rout > forwarding1${restype}.rout.amod
+  normalize ${OUT}${restype}.rout > ${OUT}${restype}.rout.norm
+  if ! ${REVTEMPL} forwarding/forwarding1${restype}.moutput ${OUT}${restype}.rout.norm > ${OUT}${restype}.rout.amod
   then
-    ${DIFF} forwarding/forwarding1${restype}.output forwarding1${restype}.rout
+    ${DIFF} forwarding/forwarding1${restype}.output ${OUT}${restype}.rout.norm
     local DIFF_RC=${?}
   else
-    ${DIFF} forwarding/forwarding1${restype}.output forwarding1${restype}.rout.amod
+    ${DIFF} forwarding/forwarding1${restype}.output ${OUT}${restype}.rout.amod
     local DIFF_RC=${?}
   fi
   return ${DIFF_RC}
 }
 
-CODECSO="${TEST_CODECS}"
-CODECSA="${TEST_CODECS}"
-PORTO=$((${FWD_SPORT} + 2))
+run_set() {
+  TEST_CODECS="`echo "${1}" | tr ',' ' '`"
+  setup_codecs "${TEST_CODECS}"
+  setup_calls
 
-FORWARDING_RFILES=""
-for codec in ${TEST_CODECS}
+  rm -f rtpproxy_acct.csv
+  witness_start forwarding1 "${OUT}.rout ${OUT}.geno.rout ${OUT}.gena.rout ${OUT}.rlog ${OUT}.geno.rlog ${OUT}.gena.rlog ${OUT}.rptl.rlog"
+  ${RPTL_INT} -s "${BASEDIR}/forwarding/forwarding1.rptl" \
+   -D RTPPROXY_BIN="`strip_wrapper "${RTPPROXY}"`" \
+   -D RECORD_DIR="${RECORD_DIR}" -D RECORD_SPL_DIR="${RECORD_SPL_DIR}" \
+   -D CONF="forwarding/rtpproxy.conf" -D CTRL_SOCK="/tmp/forwarding1.$$.sock" \
+   -D CALLS="${CALLS}" -D COPIES="${COPIES}" -D DELETES="${DELETES}" \
+   -D TRASH="${TRASH_PORT1}" -D PYINT="${PYINT}" -D OUT="${OUT}" \
+   > ${OUT}.vars 2> ${OUT}.rptl.rlog
+  RPTL_RC=${?}
+  if [ ${RPTL_RC} -ne 0 ]
+  then
+    cat ${OUT}.rptl.rlog >&2
+  fi
+  report_rc ${RPTL_RC} "running forwarding1.rptl, codecs ${TEST_CODECS}"
+
+  verify_reslogs ""
+  report "checking rtpproxy.fwd replies, codecs ${TEST_CODECS}"
+  verify_reslogs ".geno"
+  report "checking rtpproxy.geno replies, codecs ${TEST_CODECS}"
+  verify_reslogs ".gena"
+  report "checking rtpproxy.gena replies, codecs ${TEST_CODECS}"
+
+  verify_results "o" "${CODECSA}" "${REPACK_CODECSA}"
+  verify_results "a" "${CODECSO}" "${REPACK_CODECSO}"
+
+  witness_stop
+
+  test -e rtpproxy_acct.csv
+  report "checking if rtpproxy_acct.csv is present"
+  nlexpected="181"
+  anlines=$((`wc -l < rtpproxy_acct.csv`))
+  test ${anlines} -eq ${nlexpected}
+  report "checking number of lines in rtpproxy_acct.csv: ${anlines} vs ${nlexpected}"
+}
+
+for codec in 0 3 4 8 9 18
 do
-  FORWARDING_RFILES="forwarding1.${codec} ${FORWARDING_RFILES}"
+  rm -f ${BASEDIR}/forwarding1.${codec}
 done
-rm -f ${FORWARDING_RFILES}
 ${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/forwarding1
 report "makeann forwarding1"
-rm -f ${BASEDIR}/forwarding1.4
-ffmpeg -i ${BASEDIR}/ringback.sln -f g723_1 -b:a 6300 ${BASEDIR}/forwarding1.4
-report "ffmpeg forwarding1.4"
+# makeann has no G.723 encoder
+case ",`echo ${CODEC_SETS} | tr ' ' ','`," in
+*,4,*)
+  ffmpeg -loglevel error -i ${BASEDIR}/ringback.sln -f g723_1 -b:a 6300 ${BASEDIR}/forwarding1.4
+  report "ffmpeg forwarding1.4"
+  ;;
+esac
 
-_CODECSO=""
-_CODECSA=""
-i=0
-while [ ${i} -eq 0 -o "${CODECSO}" != "${CODECSA}" ]
+# Best effort, raising the limits needs privileges
+setup_buffers 2>/dev/null
+
+for cset in ${CODEC_SETS}
 do
-  i=1
-  _CODECSO="${_CODECSO} ${CODECSO}"
-  _CODECSA="${_CODECSA} ${CODECSA}"
-  rotate_CODECSA ${CODECSA}
+  run_set "${cset}"
 done
-REPACK_CODECSO="${CODECSO}"
-rotate_CODECSA ${CODECSA}
-REPACK_CODECSA="${CODECSA}"
-CODECSO="${_CODECSO}"
-CODECSA="${_CODECSA}"
-
-setup_buffers
-setup_test_net_3
-
-witness_start forwarding1 "forwarding1.rout forwarding1.geno.rout forwarding1.gena.rout forwarding1.rlog forwarding1.geno.rlog forwarding1.gena.rlog"
-
-RTPPROXY_ARGS="-T5 --bridge_symmetric -b -s stdio: -f -d ${RTPP_DEBUG_LVL} -l 0.0.0.0 -6 /:: --config forwarding/rtpproxy.conf"
-
-if [ -e rtpproxy_acct.csv ]
-then
-  rm rtpproxy_acct.csv
-fi
-
-#sts=`date "+%Y%m%d%H%M%S"`
-(setup_fwd ${GENO_SPORT} ${GENA_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
-  ${RTPPROXY} -i -s cunix:/tmp/forwarding1.sock ${RTPPROXY_ARGS} \
-   -m ${FWD_SPORT} > forwarding1.rout 2>forwarding1.rlog) &
-FWD_PID=${!}
-(setup_gen "o" ${FWD_SPORT} "${CODECSO}" "${REPACK_CODECSO}" | \
-  ${RTPPROXY} -P -r "${RECORD_DIR}" -S "${RECORD_SPL_DIR}" -m ${GENO_SPORT} ${RTPPROXY_ARGS} \
-   > forwarding1.geno.rout 2>forwarding1.geno.rlog) &
-GENO_PID=${!}
-(setup_gen "a" ${PORTO} "${CODECSA}" "${REPACK_CODECSA}" | \
-  ${RTPPROXY} -r "${RECORD_DIR}" -m ${GENA_SPORT} ${RTPPROXY_ARGS} \
-   > forwarding1.gena.rout 2>forwarding1.gena.rlog) &
-GENA_PID=${!}
-wait ${FWD_PID}
-#ets=`date "+%Y%m%d%H%M%S"`
-#echo $((${ets} - ${sts}))
-report "wait for rtpproxy Fwd shutdown, PID: ${FWD_PID}"
-wait ${GENO_PID}
-report "wait for rtpproxy Gen.O shutdown, PID: ${GENO_PID}"
-wait ${GENA_PID}
-report "wait for rtpproxy Gen.A shutdown, PID: ${GENA_PID}"
-
-verify_reslogs ""
-DIFF_FWD_RC=${?}
-verify_reslogs ".geno"
-DIFF_GENO_RC=${?}
-verify_reslogs ".gena"
-DIFF_GENA_RC=${?}
-
-verify_results "o" "${CODECSA}" "${REPACK_CODECSA}"
-verify_results "a" "${CODECSO}" "${REPACK_CODECSO}"
-
-report_rc ${DIFF_FWD_RC} "checking rtpproxy.fwd stdout"
-report_rc ${DIFF_GENO_RC} "checking rtpproxy.geno stdout"
-report_rc ${DIFF_GENA_RC} "checking rtpproxy.gena stdout"
-
-witness_stop
-
-test -e rtpproxy_acct.csv
-report "checking if rtpproxy_acct.csv is present"
-
-nlexpected="181"
-anlines=$((`wc -l < rtpproxy_acct.csv`))
-test ${anlines} -eq ${nlexpected}
-report "checking number of lines in rtpproxy_acct.csv: ${anlines} vs ${nlexpected}"

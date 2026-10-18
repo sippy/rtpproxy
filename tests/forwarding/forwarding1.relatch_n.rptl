@@ -1,0 +1,3 @@
+# Normal call: re-latch, with the tags swapped
+fwd: U forwarding1_%%K%% 1.2.3.4 %%GENO_L%% to_tag_1 from_tag_1 -> str_compare(FWD_L)
+fwd: L forwarding1_%%K%% 127.0.0.1 %%GENA_L%% to_tag_1 from_tag_1 -> str_compare(FWD_U)

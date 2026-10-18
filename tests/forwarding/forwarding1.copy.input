@@ -1,4 +1,0 @@
-C %%CALLID%% udp:203.0.113.1:%%PORTA%% from_tag_1 to_tag_1
-C %%CALLID%% udp:203.0.113.1:%%PORTO%% to_tag_1 from_tag_1
-C %%CALLID%%_ipv6 udp:203.0.113.1:%%PORT6A%% from_tag_1 to_tag_1
-C %%CALLID%%_ipv6 udp:203.0.113.1:%%PORT6O%% to_tag_1 from_tag_1

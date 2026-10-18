@@ -1,0 +1,9 @@
+# Restore ports of call K saved by forwarding1.setup.rptl
+.eval: FWD_U_%%K%% -> deref(FWD_U)
+.eval: FWD_L_%%K%% -> deref(FWD_L)
+.eval: FWD_U6_%%K%% -> deref(FWD_U6)
+.eval: FWD_L6_%%K%% -> deref(FWD_L6)
+.eval: GENO_L_%%K%% -> deref(GENO_L)
+.eval: GENO_L6_%%K%% -> deref(GENO_L6)
+.eval: GENA_L_%%K%% -> deref(GENA_L)
+.eval: GENA_L6_%%K%% -> deref(GENA_L6)

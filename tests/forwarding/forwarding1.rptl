@@ -1,0 +1,61 @@
+# Forwarding of payloads between two generator instances through a
+# forwarding one, see forwarding1 for the description of the setup.
+#
+# +-----+      +-----+      +-----+
+# |Gen.O|<---->| Fwd |<---->|Gen.A|
+# +-----+      +-----+      +-----+
+#
+# Ports are allocated dynamically and passed between the instances, the
+# replies of each instance are logged into OUT.rout, OUT.geno.rout and
+# OUT.gena.rout to be compared with the reference ones.
+#
+# Expects RTPPROXY_BIN, RECORD_DIR, RECORD_SPL_DIR, CONF, CTRL_SOCK, CALLS
+# (list of K:CODEC_O:CODEC_A:KIND, KIND being n for normal and r for
+# re-packetized calls), COPIES and DELETES (lists of K), TRASH, PYINT and
+# OUT to be defined.
+
+.eval: 0 -> RES_OK
+.eval: -T5 --bridge_symmetric -b -d dbug -l 0.0.0.0 -6 /:: --config %%CONF%% -> ARGS
+
+.eval: %%OUT%%.rlog -> RTPPROXY_STDERR
+socket fwd: stdio: -i -s cunix:%%CTRL_SOCK%% %%ARGS%% -> %%OUT%%.rout
+.eval: %%OUT%%.geno.rlog -> RTPPROXY_STDERR
+socket geno: stdio: -P -r %%RECORD_DIR%% -S %%RECORD_SPL_DIR%% %%ARGS%% -> %%OUT%%.geno.rout
+.eval: %%OUT%%.gena.rlog -> RTPPROXY_STDERR
+socket gena: stdio: -r %%RECORD_DIR%% %%ARGS%% -> %%OUT%%.gena.rout
+
+# Stream copies are sent into a socket that is never read
+.spawn: exec %%PYINT%% -c "import socket, time; s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.bind(('127.0.0.1', 0)); print(s.getsockname()[1], flush = True); time.sleep(3600)" -> SINK
+.readline: SINK 10 -> validate_port(SINK_PORT)
+
+.foreach: CALL in %%CALLS%% do forwarding1.setup.rptl
+.foreach: K in %%COPIES%% do forwarding1.copy.rptl
+.sleep: 1
+.eval: 4 -> NTIMES
+.foreach: CALL in %%CALLS%% do forwarding1.play.rptl
+.sleep: 5
+.foreach: CALL in %%CALLS%% do forwarding1.relatch.rptl
+.sleep: 20
+.eval: 1 -> NTIMES
+.foreach: CALL in %%CALLS%% do forwarding1.play.rptl
+.sleep: 8
+
+.foreach: CALL in %%CALLS%% do forwarding1.gsstats.rptl
+.eval: geno -> R
+.include: forwarding1.stats.rptl
+.eval: gena -> R
+.include: forwarding1.stats.rptl
+.sleep: 2
+
+.foreach: K in %%DELETES%% do forwarding1.delete.rptl
+.eval: fwd -> R
+.include: forwarding1.stats.rptl
+
+# Shut down only now, since the generators take a while to write out the
+# recordings, while sessions on Fwd time out shortly after the playback
+.close: geno
+.close: gena
+.close: fwd
+
+.kill: SINK
+.wait: SINK 10 -> SINK_RC

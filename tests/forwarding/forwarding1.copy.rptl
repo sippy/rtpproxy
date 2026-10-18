@@ -1,0 +1,5 @@
+# Enable copying of both directions of call K
+fwd: C forwarding1_%%K%% udp:127.0.0.1:%%SINK_PORT%% from_tag_1 to_tag_1 -> str_compare(RES_OK)
+fwd: C forwarding1_%%K%% udp:127.0.0.1:%%SINK_PORT%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+fwd: C forwarding1_%%K%%_ipv6 udp:127.0.0.1:%%SINK_PORT%% from_tag_1 to_tag_1 -> str_compare(RES_OK)
+fwd: C forwarding1_%%K%%_ipv6 udp:127.0.0.1:%%SINK_PORT%% to_tag_1 from_tag_1 -> str_compare(RES_OK)

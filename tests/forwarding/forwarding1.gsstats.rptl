@@ -1,0 +1,8 @@
+# Query stats of call CALL on both generators
+.eval: %%CALL%% -> str_split(:, K, CO, CA, KIND)
+.eval: geno -> R
+.eval: forwarding1_o_%%K%% -> CID
+.include: forwarding1.sstats.rptl
+.eval: gena -> R
+.eval: forwarding1_a_%%K%% -> CID
+.include: forwarding1.sstats.rptl

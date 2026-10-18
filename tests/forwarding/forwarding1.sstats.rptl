@@ -1,0 +1,7 @@
+# Query stats of both sessions of call CID on instance R
+%%R%%: Qv %%CID%% from_tag_1 to_tag_1 npkts_ina npkts_ino nrelayed ndropped
+%%R%%: Qv %%CID%% from_tag_1 to_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+%%R%%: Qv %%CID%% to_tag_1 from_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+%%R%%: Qv %%CID%%_ipv6 from_tag_1 to_tag_1 npkts_ina npkts_ino nrelayed ndropped
+%%R%%: Qv %%CID%%_ipv6 from_tag_1 to_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+%%R%%: Qv %%CID%%_ipv6 to_tag_1 from_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
