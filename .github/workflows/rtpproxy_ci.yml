@@ -358,6 +358,24 @@ jobs:
     - name: test
       run: sh -x scripts/do-test.sh
 
+    - name: Collect coverage
+      run: sh -x scripts/collect-coverage.sh
+
+    - name: Upload coverage to Coveralls
+      uses: coverallsapp/github-action@v2
+      env:
+        TZ: UTC
+        # do-test.sh changes checkout ownership to the rtpproxy test user.
+        GIT_CONFIG_COUNT: 1
+        GIT_CONFIG_KEY_0: safe.directory
+        GIT_CONFIG_VALUE_0: ${{ github.workspace }}
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        file: coverage/lcov.info
+        format: lcov
+        flag-name: functest-${{ matrix.os }}-${{ matrix.compiler }}
+        parallel: true
+
   Glitching:
     name: Glitch Injection
     needs: [LoadJobs_conf, FuncTest]
@@ -468,6 +486,24 @@ jobs:
     - name: test
       run: sh -x scripts/do-test.sh
 
+    - name: Collect coverage
+      run: sh -x scripts/collect-coverage.sh
+
+    - name: Upload coverage to Coveralls
+      uses: coverallsapp/github-action@v2
+      env:
+        TZ: UTC
+        # do-test.sh changes checkout ownership to the rtpproxy test user.
+        GIT_CONFIG_COUNT: 1
+        GIT_CONFIG_KEY_0: safe.directory
+        GIT_CONFIG_VALUE_0: ${{ github.workspace }}
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        file: coverage/lcov.info
+        format: lcov
+        flag-name: glitching-${{ matrix.os }}-${{ matrix.compiler }}
+        parallel: true
+
   Fuzzing:
     name: Fuzz with OSS-Fuzz
     needs: [LoadJobs_conf, Glitching]
@@ -475,6 +511,7 @@ jobs:
         (needs.LoadJobs_conf.outputs.do_Glitch != 'true' || needs.Glitching.result == 'success') }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       security-events: write
     strategy:
       fail-fast: false
@@ -504,6 +541,20 @@ jobs:
         language: c
         sanitizer: ${{ matrix.sanitizer }}
         output-sarif: true
+    - name: Collect fuzzing coverage
+      if: matrix.sanitizer == 'coverage'
+      run: sh -x scripts/fuzz/collect-coverage.sh
+    - name: Upload fuzzing coverage to Coveralls
+      if: matrix.sanitizer == 'coverage'
+      uses: coverallsapp/github-action@v2
+      env:
+        TZ: UTC
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        file: coverage/lcov.info
+        format: lcov
+        flag-name: fuzzing-coverage
+        parallel: true
     - name: Upload Crash
       uses: actions/upload-artifact@v4
       if: failure() && steps.build.outcome == 'success'
@@ -517,6 +568,21 @@ jobs:
         # Path to SARIF file relative to the root of the repository
         sarif_file: cifuzz-sarif/results.sarif
         checkout_path: cifuzz-sarif
+
+  FinishCoverage:
+    name: Finish Coveralls Build
+    needs: [FuncTest, Glitching, Fuzzing]
+    if: ${{ always() && (needs.FuncTest.result != 'skipped' ||
+        needs.Glitching.result != 'skipped' || needs.Fuzzing.result != 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Complete parallel coverage build
+      uses: coverallsapp/github-action@v2
+      env:
+        TZ: UTC
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel-finished: true
 
   Docker:
     name: Build&Push to DockerHub
