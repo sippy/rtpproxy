@@ -420,7 +420,7 @@ output_silence(struct decoder_stream *dp, unsigned int iticks)
         return generate_silence(dp, dp->obuf, iticks);
     if (dp->lpt == RTP_G722) {
         /* No narrowband run can be active after a G.722 frame */
-        memset(dp->obuf, 0, iticks * 2 * dp->rmult);
+        memset(dp->obuf, 0, sizeof(dp->obuf[0]) * iticks * dp->rmult);
         return iticks * 2 * dp->rmult;
     }
     j = generate_silence(dp, dp->nbuf, iticks);
