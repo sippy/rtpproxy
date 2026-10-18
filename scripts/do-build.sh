@@ -8,7 +8,7 @@ BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/scripts/functions.sub"
 
 TTYPE="${1}"
-BCG729_VER=1.1.1
+BCG729_VER=1.1.2
 SNDFILE_VER=1.2.2
 
 TAR_CMD=${TAR_CMD:-"tar"}
