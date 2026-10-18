@@ -1,0 +1,9 @@
+# The first stage of the type 1 playback, see playback1.stage.rptl
+r: U %%CID%% 127.0.0.1 %%P4%% from_tag_1
+r: L %%CID%% 127.0.0.1 %%T4%% from_tag_1 to_tag_1
+r: P %%CID%% playback1 session from_tag_1
+r: P %%CID%% playback1 %%CODEC%% from_tag_1
+r: U6 %%CID%%_ipv6 ::1 %%P6%% from_tag_1
+r: L6 %%CID%%_ipv6 ::1 %%T6%% from_tag_1 to_tag_1
+r: P %%CID%%_ipv6 playback1 session from_tag_1
+r: P %%CID%%_ipv6 playback1 %%CODEC%% from_tag_1

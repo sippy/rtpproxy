@@ -1,0 +1,6 @@
+# Wait for the capture of one run to complete and stop the playback, so
+# that nothing is sent into a re-used port later on, see playback1.rptl
+.eval: %%RUN%% -> str_split(:, T, CODEC, NPKTS)
+.wait: CAP_%%T%%_%%CODEC%% 30
+r: D callid_%%T%%_%%CODEC%% from_tag_1
+r: D callid_%%T%%_%%CODEC%%_ipv6 from_tag_1

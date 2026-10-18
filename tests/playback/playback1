@@ -3,137 +3,155 @@
 # Test will start rtpproxy, initiate a stream playing out,
 # capture and decode packers them with extractaudio and verifies the
 # checksums for all supported codecs.
+#
+# The commands are issued by playback1.rptl to a single rtpproxy instance,
+# with all ports allocated dynamically and all playbacks running in
+# parallel. The streams are captured by udp_capture.py, so no root
+# privileges are required.
 
 BASEDIR="`dirname "${0}"`/.."
-SUDO_REQUIRED=1
-
 . "${BASEDIR}/functions"
-. "${BASEDIR}/playback/playback1.sub"
 
-TARGET_PORT=12344
-RTPP_TIMEOUT=8
+OUT="playback1"
+TYPES="1 2 3 4 5 6 7"
+CODECS="0 3 8 18 9"
 PLAYBACK_RFILES="playback1.0 playback1.3 playback1.8 playback1.18 playback1.9"
+
+# The tools may be run under a wrapper, e.g. setpriv when started as root.
+# The RPTL interpreter is wrapped as well, so whatever it starts already
+# runs with the right credentials: give it bare commands.
+strip_wrapper() {
+  echo "${1##* -- }"
+}
+
+# Expected TOS of the captured IPv4 packets, if checked
+expected_tos() {
+  case "${1}" in
+  4|7)
+    echo "0x2a"
+    ;;
+  5)
+    echo "0xb8"
+    ;;
+  6)
+    echo "0x2b"
+    ;;
+  esac
+}
+
+# Ports are allocated dynamically, replace them with a placeholder
+normalize() {
+  awk '{ for (i = 1; i <= NF; i++) if ($i ~ /^[0-9]+$/ && $i >= 1024) $i = "PORT"; print }'
+}
+
+# Number of commands in the given stage of the given type
+stage_ncmds() {
+  if [ -e ${BASEDIR}/playback/playback1.type${1}.${2}.rptl ]
+  then
+    grep -c '^r:' ${BASEDIR}/playback/playback1.type${1}.${2}.rptl
+  else
+    echo 0
+  fi
+}
+
+# The replies to the given range of commands of the given type, the
+# commands of all stages go in a sequence in the reference output
+model_replies() {
+  if [ -e ${BASEDIR}/playback/playback1.type${1}.output ]
+  then
+    MODEL_ROUT=${BASEDIR}/playback/playback1.type${1}.output
+  else
+    MODEL_ROUT=${BASEDIR}/playback/playback1.output
+  fi
+  if [ ${3} -gt 0 ]
+  then
+    sed -n "$((${2} + 1)),$((${2} + ${3}))p" ${MODEL_ROUT}
+  fi
+}
+
+RUNS=""
+RUNS_ST2=""
+for ttype in ${TYPES}
+do
+  for codec in ${CODECS}
+  do
+    if [ ${ttype} -eq 3 ]
+    then
+      npkts=100
+    elif [ ${codec} -eq 3 ]
+    then
+      npkts=300
+    else
+      npkts=600
+    fi
+    RUNS="${RUNS} ${ttype}:${codec}:${npkts}"
+    if [ `stage_ncmds ${ttype} st2` -gt 0 ]
+    then
+      RUNS_ST2="${RUNS_ST2} ${ttype}:${codec}:${npkts}"
+    fi
+  done
+done
+
 rm -f ${PLAYBACK_RFILES}
 ${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/playback1
 report "makeann playback1"
 
-setup_playback() {
-  delay="${1}"
-  codec="${2}"
-  target_port="${3}"
-  pifile="${4}"
-  p2ifile="${5}"
-  sleep ${delay}
-  ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" "${pifile}"
-  if [ "${p2ifile}" != "" ]
-  then
-    sleep 1
-    ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" "${p2ifile}"
-  fi
-  sleep 1
-  ${SED} "s|%%CODEC%%|${codec}| ; s|%%PORT1%%|${target_port}| ; s|%%PORT2%%|$((${target_port} + 2))|" playback/playback1.nat.input
-}
+${RPTL_INT} -s "${BASEDIR}/playback/playback1.rptl" \
+ -D RTPPROXY_BIN="`strip_wrapper "${RTPPROXY}"`" -D RUNS="${RUNS}" \
+ -D RUNS_ST2="${RUNS_ST2}" \
+ -D PYINT="${PYINT}" -D CAPTURE="${BASEDIR}/playback/udp_capture.py" \
+ -D OUT="${OUT}" > ${OUT}.vars 2> ${OUT}.rptl.rlog
+RPTL_RC=${?}
+if [ ${RPTL_RC} -ne 0 ]
+then
+  cat ${OUT}.rptl.rlog >&2
+fi
+report_rc ${RPTL_RC} "running playback1.rptl"
 
-for ttype in 1 2 3 4 5 6 7
+# The stages are issued for all runs in turn: the first one, the second
+# one for the types that have it, NAT and then the D commands
+for stage in st1 st2 nat D
 do
-  if [ ${ttype} -eq 1 ]
-  then
-    delay=0
-  else
-    delay=1
-  fi
-  PIFILE="playback/playback1.type${ttype}.input"
-  if [ -e "playback/playback1.type${ttype}.st2.input" ]
-  then
-    P2IFILE="playback/playback1.type${ttype}.st2.input"
-  else
-    P2IFILE=""
-  fi
-  for codec in 0 3 8 18 9
+  for run in ${RUNS}
   do
-    if [ ${codec} -ne 3 ]
-    then
-      NPKTS=600
-    else
-      NPKTS=300
-    fi
-    if [ ${ttype} -eq 3 ]
-    then
-      NPKTS=100
-    fi
-    NPKTS=$((${NPKTS} * 2)) # IPv6
-    for retry in 1 2 3 4 5 6
-    do
-      for fname in playback1.tout playback1.${codec}.a.rtp
-      do
-        if [ -e "${fname}" ]
-        then
-          rm -f "${fname}"
-        fi
-      done
-      ${SUDO} true || return 1
-      ${SUDO} ${TCPDUMP} -B 4096 -w playback1.${codec}.a.rtp -s0 -ni ${LOOPBACK_INTERFACE} -c ${NPKTS} udp port ${TARGET_PORT} 2>playback1.tout &
-      TCPD_PID=${!}
-      while [ ! -e playback1.${codec}.a.rtp ]
-      do
-        sleep 1
-      done
-      if [ ${delay} -eq 0 ]
-      then
-        sleep 1
-      fi
-      setup_playback ${delay} ${codec} ${TARGET_PORT} "${PIFILE}" "${P2IFILE}" | \
-       ${RTPPROXY} -l 0.0.0.0 -6 /:: -T$((${RTPP_TIMEOUT} + ${delay})) -b -m 12000 -s stdio: -f -d info > playback1.rout 2>playback1.rlog&
-      PLB_PID=${!}
-      ##ktrace -p ${PLB_PID} -f /var/tmp/rtpproxy.${PLB_PID}.ktrace
-      ##echo ${TCPD_PID}
-      wait ${PLB_PID}
-      report "wait for rtpproxy shutdown, PID: ${PLB_PID}"
-      ${SUDO} kill -TERM ${TCPD_PID} 2>/dev/null
-      KILL_RC=${?}
-      wait ${TCPD_PID}
-      TCPD_RC=${?}
-      if [ ${KILL_RC} -ne 0 -a ${TCPD_RC} -eq 0 ]
-      then
-        ok "wait for tcpdump shutdown, PID: ${TCPD_PID}"
-        break
-      fi
-      ncaptured=`grep 'packets captured' playback1.tout | awk '{print $1}'`
-      if [ ${ncaptured} -eq ${NPKTS} ]
-      then
-        ok "wait for tcpdump shutdown, PID: ${TCPD_PID}, kill rc = ${KILL_RC}, tcpdump rc = ${TCPD_RC}"
-        break
-      fi
-      cat playback1.tout
-      ndropped=`grep 'dropped by kernel' playback1.tout | awk '{print $1}'`
-      if [ ${ndropped} -ne 0 -a ${retry} -lt 6 ]
-      then
-        report "..kernel dropped some packets, re-run"
-        continue
-      fi
-      ${EXTRACTAUDIO} -n playback1.${codec} /dev/null
-      forcefail 1 "wait for tcpdump shutdown, PID: ${TCPD_PID}, kill rc: ${KILL_RC}, tcpd rc: ${TCPD_RC}"
-    done
-    cat playback1.tout
+    ttype="${run%%:*}"
+    n1=`stage_ncmds ${ttype} st1`
+    n2=`stage_ncmds ${ttype} st2`
+    case ${stage} in
+    st1)
+      model_replies ${ttype} 0 ${n1}
+      ;;
+    st2)
+      model_replies ${ttype} ${n1} ${n2}
+      ;;
+    nat)
+      model_replies ${ttype} $((${n1} + ${n2})) 1
+      ;;
+    D)
+      echo 0
+      echo 0
+      ;;
+    esac
+  done
+done > ${OUT}.rout.model
+normalize < ${OUT}.rout > ${OUT}.rout.norm
+normalize < ${OUT}.rout.model | ${DIFF} - ${OUT}.rout.norm
+report "checking rtpproxy stdout"
+
+for ttype in ${TYPES}
+do
+  for codec in ${CODECS}
+  do
     ofile="playback1.${codec}.wav"
-    ${EXTRACTAUDIO} -n playback1.${codec} ${ofile} | grep -v 'delta '
-    report "extractaudio playback1.${codec} -> ${ofile}"
-    #sha256 ${ofile}
-    #report "sha256 ${ofile}"
-    #wait
-    if [ -e playback/playback1.type${ttype}.output ]
+    ${EXTRACTAUDIO} -n playback1.${ttype}.${codec} ${ofile} | grep -v 'delta '
+    report "extractaudio playback1.${ttype}.${codec} -> ${ofile}"
+    sha256_verify ${ofile} ${BASEDIR}/playback/playback1.checksums
+    tos="`expected_tos ${ttype}`"
+    if [ -n "${tos}" ]
     then
-      MODEL_ROUT=playback/playback1.type${ttype}.output
-    else
-      MODEL_ROUT=playback/playback1.output
-    fi
-    ${DIFF} playback1.rout ${MODEL_ROUT}
-    report "checking rtpproxy stdout"
-    sha256_verify ${ofile} playback/playback1.checksums
-    EXTRA_CHECK="playback/playback1.type${ttype}.check"
-    if [ -e "${EXTRA_CHECK}" ]
-    then
-      . "${EXTRA_CHECK}"
+      RES="`cat playback1.${ttype}.${codec}.tos`"
+      test "${RES}" = "${tos}"
+      report "checking TOS [${RES}]"
     fi
   done
 done

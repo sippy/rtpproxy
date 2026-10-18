@@ -1,0 +1,3 @@
+# The last stage of all playbacks, see playback1.rptl
+.include: playback1.restore.rptl
+r: Ln %%CID%% 127.0.0.1 %%T4%% from_tag_1 to_tag_1

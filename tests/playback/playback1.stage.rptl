@@ -1,0 +1,4 @@
+# Issue the commands of the STAGE (st1 or st2) for one run, see
+# playback1.rptl
+.include: playback1.restore.rptl
+.include: playback1.type%%T%%.%%STAGE%%.rptl

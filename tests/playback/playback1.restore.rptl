@@ -1,0 +1,5 @@
+# Restore the parameters of one run, see playback1.rptl
+.eval: %%RUN%% -> str_split(:, T, CODEC, NPKTS)
+.eval: callid_%%T%%_%%CODEC%% -> CID
+.eval: PORTS_%%T%%_%%CODEC%% -> deref(PORTS)
+.eval: %%PORTS%% -> str_split( , P4, P6, T4, T6)
