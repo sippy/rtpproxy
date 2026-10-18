@@ -79,6 +79,24 @@
     </section>
 
     <section>
+      <title>Inherited Control Socket</title>
+
+      <para>The <literal>fd:</literal><replaceable>N</replaceable> control
+      socket, so far only available to applications embedding the RTPProxy
+      library, can now be used with <option>-s</option> in the standalone
+      rtpproxy as well. The rtpproxy then uses socket
+      <replaceable>N</replaceable> inherited from the parent process instead
+      of creating one, and determines its type from the socket itself: a
+      datagram socket is used as <literal>udp:</literal> /
+      <literal>udp6:</literal>, a listening stream socket as
+      <literal>tcp:</literal> / <literal>tcp6:</literal> /
+      <literal>cunix:</literal>, and a connected stream socket as a single
+      control channel. This allows e.g. a supervisor or a test framework to
+      create the control socket on an ephemeral port and pass it to the
+      rtpproxy.</para>
+    </section>
+
+    <section>
       <title>acct_csv: logfile Parameter</title>
 
       <para>The location of the CSV file written by the
@@ -132,6 +150,12 @@
         <para>The rtpproxy crashed instead of exiting with an error when the
         configuration of a module was rejected, e.g. because of an unknown
         or invalid parameter.</para>
+      </listitem>
+
+      <listitem>
+        <para><command>make install</command> put the packet port headers
+        of the librtpproxy into <filename>include/src/librtpproxy</filename>
+        instead of <filename>include/librtpproxy</filename>.</para>
       </listitem>
     </itemizedlist>
   </chapter>
@@ -187,14 +211,32 @@
       </listitem>
 
       <listitem>
-        <para>Fixed <function>alloca()</function> calls in loops reported by
-        CodeQL.</para>
+        <para>Fixed issues reported by CodeQL: <function>alloca()</function>
+        calls in loops, and possible integer overflows in
+        <command>extractaudio</command> and in the
+        <command>udp_contention</command> performance tool.</para>
       </listitem>
 
       <listitem>
         <para>The RPTL test scripting language can now run external commands,
-        and the recording tests have been rewritten using it, so they no
-        longer need any pre-determined ports.</para>
+        start rtpproxy instances with any type of control socket, expose
+        their control addresses and PIDs to the script, and loop over lists
+        of values. The recording, session timeout, forwarding and playback
+        tests have been rewritten using it, so they no longer need any
+        pre-determined ports and can run in parallel. The forwarding and
+        playback tests no longer need root privileges, and the playback test
+        runs all of its playbacks at once. As a result, the functional
+        test suite now completes more than twice as fast.</para>
+      </listitem>
+
+      <listitem>
+        <para>The test suite can be run as root, with the rtpproxy and the
+        tools dropping privileges to a dedicated user.</para>
+      </listitem>
+
+      <listitem>
+        <para>The CI builds now cover Ubuntu 26.04 and use bcg729
+        1.1.2.</para>
       </listitem>
     </itemizedlist>
   </chapter>

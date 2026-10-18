@@ -743,8 +743,7 @@ e.g.: -d INFO:LOG_LOCAL5
       <option>--config</option> command-line option. See <link
       linkend="MODULES">Modules</link> for the available modules and their
       parameters. An example is provided in
-      <filename>doc/rtpproxy.conf.sample</filename> in the source
-      tree.</para>
+      <ulink url="https://github.com/sippy/rtpproxy/blob/master/doc/rtpproxy.conf.sample"><filename>doc/rtpproxy.conf.sample</filename></ulink>.</para>
     </section>
 
     <section>
@@ -1330,8 +1329,9 @@ bash&gt; sudo systemctl start rtpproxy.service</programlisting>At this stage,
 L call-id 192.0.2.2 23456 from-tag to-tag &amp;&amp; M4:1 P SHA-256 2C:7F:01:...
 35002</programlisting>
 
-      <para>See <filename>modules/dtls_gw/README.md</filename> in the source
-      tree for more scenarios.</para>
+      <para>See <ulink
+      url="https://github.com/sippy/rtpproxy/blob/master/modules/dtls_gw/README.md"><filename>modules/dtls_gw/README.md</filename></ulink>
+      for more scenarios.</para>
     </section>
 
     <section id="mod.ice_lite">
@@ -1398,8 +1398,294 @@ L call-id 192.0.2.2 23456 from-tag to-tag &amp;&amp; M4:1 P SHA-256 2C:7F:01:...
 
       <programlisting>U call-id 192.0.2.1 12345 from-tag &amp;&amp; M5:1 A ufrag pwd &amp;&amp; M5:1 C 1 1 UDP 2130706431 192.0.2.1 12345 typ host</programlisting>
 
-      <para>See <filename>modules/ice_lite/README.md</filename> in the source
-      tree for more scenarios.</para>
+      <para>See <ulink
+      url="https://github.com/sippy/rtpproxy/blob/master/modules/ice_lite/README.md"><filename>modules/ice_lite/README.md</filename></ulink>
+      for more scenarios.</para>
+    </section>
+  </chapter>
+
+  <chapter id="DEVELOPMENT">
+    <title>Development</title>
+
+    <para>This chapter is intended for developers who embed the RTPProxy
+    into their own applications, or who work on the RTPProxy itself and
+    need to test their changes.</para>
+
+    <section id="dev.librtpproxy">
+      <title>Embedding RTPProxy: librtpproxy</title>
+
+      <para>The whole RTPProxy engine is also available as a library,
+      <filename>librtpproxy</filename>, which allows running it inside
+      another process, e.g. a test harness, a fuzzer or an application that
+      needs a media relay of its own without managing a separate
+      daemon.</para>
+
+      <section>
+        <title>Building and Installing</title>
+
+        <para>The library is always built, as it is used by the rtpproxy
+        itself, but it is only installed when the
+        <option>--enable-librtpproxy</option> option is given to the
+        <command>configure</command> script:</para>
+
+        <programlisting>./configure --enable-librtpproxy
+make
+make install</programlisting>
+
+        <para>This installs a static <filename>librtpproxy.a</filename>,
+        which already includes the bundled libraries and the modules, and
+        the headers: <filename>librtpproxy.h</filename> with the main
+        interface and <filename>librtpproxy/packetport.h</filename>,
+        <filename>librtpproxy/packet_ext.h</filename> with the packet port
+        interface described below. On Debian and Ubuntu the same files are
+        provided by the <literal>rtpproxy-dev</literal> package.</para>
+
+        <para>Since the library is static, an application has to link with
+        the libraries that the rtpproxy itself has been configured with as
+        well, such as <literal>-lsiplog</literal>,
+        <literal>-lelperiodic</literal>, codec and SRTP libraries,
+        <literal>-lssl -lcrypto</literal>, <literal>-lm</literal> and
+        <literal>-lpthread</literal>. If the RTPProxy has been built with
+        LTO, the application has to be linked using the same
+        compiler.</para>
+      </section>
+
+      <section>
+        <title>Interface</title>
+
+        <para>The main interface consists of two functions:</para>
+
+        <programlisting>#include &lt;librtpproxy.h&gt;
+
+struct rtpp_cfg *rtpp_main(int argc, const char * const *argv);
+void rtpp_shutdown(struct rtpp_cfg *);</programlisting>
+
+        <para><function>rtpp_main()</function> takes the same arguments as
+        the rtpproxy command line (see <link
+        linkend="CONFIGURATION">Configuration</link>), with
+        <literal>argv[0]</literal> being the program name, initializes the
+        engine and starts its threads, then returns right away with a handle
+        to the running instance. The library never daemonizes, does not
+        write a PID file, does not change the current directory and does
+        not install any signal handlers, so the <option>-f</option> option
+        is not needed. Instead of exiting the process, an error in the
+        arguments or during initialization makes
+        <function>rtpp_main()</function> return
+        <literal>NULL</literal>. The global state of the
+        <function>getopt()</function> is saved and restored, so the
+        application is free to use it as well.</para>
+
+        <para><function>rtpp_shutdown()</function> stops the instance,
+        destroys all of its sessions and releases all resources associated
+        with it.</para>
+      </section>
+
+      <section>
+        <title>Controlling an Embedded Instance</title>
+
+        <para>An embedded instance is controlled using the same protocol as
+        a standalone one, via any of the control sockets described in <link
+        linkend="CONFIGURATION">Configuration</link>. The most convenient
+        one is usually the <literal>fd:</literal><replaceable>N</replaceable>
+        socket, which makes the instance use a socket created by the
+        application: one end of a connected socket pair becomes a private
+        control channel, with no need to pick an address or a path. Over
+        such a channel commands are written one per line and the replies are
+        read back the same way, without the cookies used by the network
+        control sockets:</para>
+
+        <programlisting>#include &lt;sys/socket.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+
+#include &lt;librtpproxy.h&gt;
+
+int
+main(void)
+{
+    int fds[2];
+    char fdarg[16], buf[256];
+    struct rtpp_cfg *cfsp;
+    ssize_t len;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0)
+        return (1);
+    snprintf(fdarg, sizeof(fdarg), "fd:%d", fds[1]);
+    const char *argv[] = {"rtpproxy", "-s", fdarg, "-l", "127.0.0.1",
+      "-d", "info"};
+    cfsp = rtpp_main(sizeof(argv) / sizeof(argv[0]), argv);
+    if (cfsp == NULL)
+        return (1);
+
+    const char *cmd = "U call1 127.0.0.1 12000 ftag1\n";
+    write(fds[0], cmd, strlen(cmd));
+    len = read(fds[0], buf, sizeof(buf) - 1);
+    if (len &gt; 0) {
+        buf[len] = '\0';
+        printf("allocated: %s", buf);
+    }
+
+    rtpp_shutdown(cfsp);
+    close(fds[0]);
+    return (0);
+}</programlisting>
+
+        <para>The fuzzing harnesses in <ulink
+        url="https://github.com/sippy/rtpproxy/tree/master/scripts/fuzz"><filename>scripts/fuzz</filename></ulink>
+        are another example of using the library.</para>
+      </section>
+
+      <section>
+        <title>Packet Ports</title>
+
+        <para>Besides sending and receiving packets via sockets, an embedded
+        instance can exchange them with the application directly, through
+        shared memory packet rings called packet ports. A port is created
+        with <function>rtpp_packetport_ctor()</function>, which takes the
+        capacity of the rings and the policy of flushing the outbound ring
+        (explicitly with <function>rtpp_packetport_flush()</function> or
+        on a timer). The application pushes packets into the instance with
+        <function>rtpp_packetport_push()</function> and friends, and pops
+        the packets sent by the instance with
+        <function>rtpp_packetport_try_pop()</function> and
+        friends.</para>
+
+        <para>A port is referenced in the commands by its address, in the
+        <literal>RTQ:0x</literal><replaceable>pointer</replaceable>
+        format: as the remote address of a stream, followed by a port tag in
+        place of the port number, to have the instance send the packets of
+        that stream into the port, or as a local address
+        (<literal>l</literal> modifier) to have the stream receive packets
+        from the port instead of a socket. Packet ports are only available
+        in the library. This interface is a work in progress and may change
+        in the future releases, see <ulink
+        url="https://github.com/sippy/rtpproxy/blob/master/src/librtpproxy/packetport.h"><filename>src/librtpproxy/packetport.h</filename></ulink>
+        for the details.</para>
+      </section>
+    </section>
+
+    <section id="dev.testing">
+      <title>Testing</title>
+
+      <para>The RTPProxy comes with an extensive suite of integration
+      tests, located in the <ulink
+      url="https://github.com/sippy/rtpproxy/tree/master/tests"><filename>tests</filename></ulink>
+      directory. Each test starts one or more rtpproxy instances, drives
+      them via their control sockets, generates and captures media, and
+      compares the results with the reference ones. The tests are also run
+      by the CI on every change, across several operating systems,
+      compilers and architectures.</para>
+
+      <section>
+        <title>Running Tests</title>
+
+        <para>All tests are run with:</para>
+
+        <programlisting>make check</programlisting>
+
+        <para>A subset of the tests can be selected with the
+        <varname>TESTS</varname> variable, and several tests can be run in
+        parallel, since none of them depends on pre-determined ports:</para>
+
+        <programlisting>cd tests
+make -j4 check TESTS="forwarding/forwarding1 playback/playback1"</programlisting>
+
+        <para>A test can also be run directly as <command>sh
+        tests/<replaceable>group</replaceable>/<replaceable>test</replaceable></command>,
+        which prints the result of each of its steps. Besides the build
+        dependencies of the RTPProxy, the tests need Python 3 with the
+        <literal>sippy</literal> and <literal>parsimonious</literal>
+        modules (see <ulink
+        url="https://github.com/sippy/rtpproxy/blob/master/python/tools/requirements.txt"><filename>python/tools/requirements.txt</filename></ulink>),
+        <command>ffmpeg</command> and <command>tcpdump</command>. When the tests are run as root, the
+        rtpproxy and the tools are run as the <literal>rtpproxy</literal>
+        user, via <command>setpriv</command>.</para>
+      </section>
+
+      <section>
+        <title>Writing Tests with RPTL</title>
+
+        <para>New tests are best written using the RTPProxy Testing Language
+        (RPTL), a small scripting language interpreted by <ulink
+        url="https://github.com/sippy/rtpproxy/blob/master/python/RPTL/rptl_run.py"><filename>python/RPTL/rptl_run.py</filename></ulink>.
+        An RPTL script starts the rtpproxy instances it needs, sends them
+        commands, checks the replies and runs external tools, passing the
+        ports allocated by one step on to the next ones, so that the tests
+        need neither pre-determined ports nor root privileges and can safely
+        run in parallel.</para>
+
+        <para>A script is a sequence of statements, one per line. A
+        <literal>socket</literal> statement defines a control connection,
+        which with an address of <literal>stdio:</literal> (or
+        <literal>udp:</literal>, <literal>tcp:</literal>,
+        <literal>unix:</literal> and so on, with nothing after the type)
+        starts a managed rtpproxy instance with the given command line
+        arguments. Every other statement either sends a command to the
+        named socket or runs a built-in, such as <literal>.eval:</literal>,
+        <literal>.sleep:</literal>, <literal>.include:</literal>,
+        <literal>.foreach:</literal> or <literal>.exec:</literal>, and
+        can capture the result into a variable, which is then referenced
+        as <literal>%%NAME%%</literal>, or pass it to a checking function.
+        Any failed check stops the script with an error:</para>
+
+        <programlisting># Expects RTPPROXY_BIN to be defined
+.eval: 0 -> RES_OK
+.eval: E50 -> SESS_NOTFOUND
+socket r: stdio: -d info -p /dev/null -> example.rout
+
+r: U call1 127.0.0.1 12000 ftag1 -> validate_port(PORT_O)
+r: L call1 127.0.0.1 12002 ftag1 ttag1 -> validate_port(PORT_A)
+.echo: allocated ports %%PORT_O%% and %%PORT_A%%
+r: D call1 ftag1 -> str_compare(RES_OK)
+r: D call1 ftag1 -> str_compare(SESS_NOTFOUND)
+
+.close: r</programlisting>
+
+        <para>A test itself is a Bourne shell script, which sets up the
+        environment using the common functions from <ulink
+        url="https://github.com/sippy/rtpproxy/blob/master/tests/functions"><filename>tests/functions</filename></ulink>,
+        runs the RPTL script with the <varname>RPTL_INT</varname>
+        interpreter, passing it the parameters with <option>-D</option>,
+        and then examines the results, e.g. compares the replies logged by
+        the instances with the reference output, or decodes the recorded
+        media with <command>extractaudio</command> and checks its
+        checksum:</para>
+
+        <programlisting>#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+${RPTL_INT} -s "${BASEDIR}/example/example.rptl" \
+ -D RTPPROXY_BIN="${RTPPROXY}"
+report "running example.rptl"
+
+${DIFF} "${BASEDIR}/example/example.output" example.rout
+report "checking rtpproxy replies"</programlisting>
+
+        <para>When the replies contain dynamically allocated ports, the
+        reference output can be a template that matches any port (see
+        <ulink
+        url="https://github.com/sippy/rtpproxy/blob/master/scripts/revtempl.py"><filename>scripts/revtempl.py</filename></ulink>),
+        or the ports can be replaced with a placeholder before the
+        comparison. The test, together with the files it uses, goes into a
+        directory of its group, and is registered in the
+        <filename>Makefile.ami</filename> of that group, after which the
+        <filename>tests/Makefile.in</filename> has to be regenerated with
+        <command>automake</command>.</para>
+
+        <para>The complete description of the language is available in
+        <ulink
+        url="https://github.com/sippy/rtpproxy/blob/master/python/RPTL/README.md"><filename>python/RPTL/README.md</filename></ulink>,
+        and the tests in <filename>tests/recording</filename>,
+        <filename>tests/session_timeouts</filename>,
+        <filename>tests/forwarding</filename> and
+        <filename>tests/playback</filename> are written in RPTL and can
+        be used as examples of more complex scenarios, such as running
+        several instances at once, replaying traffic or capturing streams
+        with external tools.</para>
+      </section>
     </section>
   </chapter>
 </book>
