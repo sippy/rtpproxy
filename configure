@@ -14621,6 +14621,48 @@ printf '%s\n' "#define ENABLE_COVERAGE 1" >>confdefs.h
 
   CFLAGS="${CFLAGS} --coverage"
   LDFLAGS="${LDFLAGS} --coverage"
+  # RTPProxy updates coverage counters from multiple threads.
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -fprofile-update=atomic" >&5
+printf %s "checking whether C compiler accepts -fprofile-update=atomic... " >&6; }
+if test ${ax_cv_check_cflags__Werror__fprofile_update_atomic+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e)
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS -Werror -fprofile-update=atomic"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  ax_cv_check_cflags__Werror__fprofile_update_atomic=yes
+else case e in #(
+  e) ax_cv_check_cflags__Werror__fprofile_update_atomic=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags ;;
+esac
+fi
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags__Werror__fprofile_update_atomic" >&5
+printf '%s\n' "$ax_cv_check_cflags__Werror__fprofile_update_atomic" >&6; }
+if test "x$ax_cv_check_cflags__Werror__fprofile_update_atomic" = xyes
+then :
+  CFLAGS="${CFLAGS} -fprofile-update=atomic"
+else case e in #(
+  e) : ;;
+esac
+fi
+
 fi
 
 # Check whether --enable-noinst was given.
