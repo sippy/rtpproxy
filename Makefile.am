@@ -35,7 +35,8 @@ EXTRA_DIST=	README.remote doc rpm/rtpproxy.init rpm/rtpproxy.spec \
 
 if ENABLE_LIBRTPPROXY
 include_HEADERS = src/librtpproxy.h
-nobase_include_HEADERS = src/librtpproxy/packetport.h src/librtpproxy/packet_ext.h
+librtpproxydir = $(includedir)/librtpproxy
+librtpproxy_HEADERS = src/librtpproxy/packetport.h src/librtpproxy/packet_ext.h
 endif
 
 if BUILD_DOCS
