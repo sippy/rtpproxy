@@ -13,3 +13,19 @@ do
   [ ${RC} -ne 0 -a ${RC} -lt 128 ]
   report "rtcp_hep module configuration validation: ${cfile} (rc=${RC})"
 done
+
+# Modules that fail to load, same as with the --dso option in the
+# startstop/badargs, but from the configuration file
+BADLOAD_CONF="acct_rtcp_hep.badload.conf"
+for mod in badmod/.libs/rtpp_badmod1_debug.so badmod/.libs/rtpp_badmod2_debug.so \
+  badmod/.libs/rtpp_badmod3.so badmod/.libs/rtpp_badmod3_debug.so \
+  badmod/.libs/rtpp_badmod4_debug.so acct_rtcp_hep/.libs/rtpp_acct_rtcp_hep.so
+do
+  printf 'modules {\n    %s {\n        load = %s\n    }\n}\n' \
+    "`basename "${mod}" .so`" "../modules/${mod}" > "${BADLOAD_CONF}"
+  ${RTPPROXY} -f --config "${BADLOAD_CONF}" -s stdio: < /dev/null
+  RC=${?}
+  # The module must be rejected with an error, not by crashing
+  [ ${RC} -ne 0 -a ${RC} -lt 128 ]
+  report "module load failure from configuration: ${mod} (rc=${RC})"
+done
