@@ -207,9 +207,27 @@ disable_aslr() {
       cval=$((`cat /proc/sys/kernel/randomize_va_space`))
       if [ ${cval} -ne 0 ]
       then
-        ${SUDO_SHCMD} "echo 0 > /proc/sys/kernel/randomize_va_space"
+        ${SUDO_SHCMD} "echo 0 > /proc/sys/kernel/randomize_va_space" 2>/dev/null || true
+        cval=$((`cat /proc/sys/kernel/randomize_va_space`))
+      fi
+      if [ ${cval} -eq 0 ]
+      then
+        return 0
       fi
     fi
+    # Sysctl is not writable (i.e. inside a container), fall back to the
+    # per-process ADDR_NO_RANDOMIZE personality, inherited by all children.
+    if [ -e /proc/self/personality ] && \
+     [ $((0x`cat /proc/self/personality` & 0x40000)) -ne 0 ]
+    then
+      return 0
+    fi
+    if [ -z "${RTPP_ASLR_REEXEC}" ]
+    then
+      RTPP_ASLR_REEXEC=1 exec setarch "`uname -m`" -R /bin/sh "${0}"
+    fi
+    echo "disable_aslr: cannot disable address space randomization" >&2
+    exit 1
   fi
 }
 

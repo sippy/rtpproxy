@@ -388,6 +388,7 @@ jobs:
       options: >-
         -v sources:/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
         --sysctl net.ipv4.ip_unprivileged_port_start=1024 --init
+        --security-opt seccomp=unconfined
     env:
       COMPILER: ${{ matrix.compiler }}
       TAR_CMD: tar
