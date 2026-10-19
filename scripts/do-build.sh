@@ -23,7 +23,12 @@ autoreconf --version
 
 echo -n "/proc/sys/kernel/core_pattern: "
 cat /proc/sys/kernel/core_pattern
-${SUDO} sysctl -w kernel.core_pattern=core
+# Image builds cannot change the host kernel's core pattern. Test jobs set it
+# before starting the built image.
+if [ "${TTYPE}" != "fullbuild" ]
+then
+  ${SUDO} sysctl -w kernel.core_pattern=core
+fi
 
 ALLCLEAN_TGT="all clean distclean"
 
@@ -96,37 +101,55 @@ then
   fi
 fi
 
-if [ "${TTYPE}" = "depsbuild" ]
+if [ "${TTYPE}" = "depsbuild" -o "${TTYPE}" = "fullbuild" ]
 then
   ./configure ${CONFIGURE_ARGS}
   make ${ALLCLEAN_TGT}
   if ${APT_GET} install -y libsrtp0-dev
   then
     ./configure ${CONFIGURE_ARGS}
-    exec make ${ALLCLEAN_TGT}
-  else
+    make ${ALLCLEAN_TGT}
+  fi
+  if [ "${TTYPE}" = "depsbuild" ]
+  then
     exit 0
   fi
 fi
 
-CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-coverage"
-case ${TTYPE} in
-basic)
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-basic-tests"
-  ;;
+build_tests() {
+  case ${1} in
+  basic)
+    TEST_CONFIGURE_ARGS="--enable-basic-tests"
+    ;;
 
-glitching)
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --disable-basic-tests --enable-memglitching"
-  ;;
+  glitching)
+    TEST_CONFIGURE_ARGS="--disable-basic-tests --enable-memglitching"
+    ;;
 
-*)
-  echo "Unknown or undefined TTYPE" >&2
-  exit 1
-  ;;
-esac
+  *)
+    echo "Unknown or undefined TTYPE" >&2
+    exit 1
+    ;;
+  esac
 
-./configure ${CONFIGURE_ARGS}
-make clean all
+  ./configure ${CONFIGURE_ARGS} --enable-coverage ${TEST_CONFIGURE_ARGS}
+  make clean all
+}
+
+if [ "${TTYPE}" = "fullbuild" ]
+then
+  # Keep separate configured source trees so both suites use exactly the same
+  # binaries and coverage paths that were produced here, without reconfiguring.
+  for suite in basic glitching
+  do
+    TEST_DIR="/opt/rtpproxy/${suite}"
+    mkdir -p "${TEST_DIR}"
+    cp -a . "${TEST_DIR}/"
+    (cd "${TEST_DIR}" && build_tests "${suite}")
+  done
+else
+  build_tests "${TTYPE}"
+fi
 
 UDPR_DIR=/tmp/dist/udpreplay
 

@@ -1,0 +1,17 @@
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE}
+
+ARG COMPILER=gcc
+ENV COMPILER=${COMPILER} TAR_CMD=tar DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y git lsb-release gnupg2 wget
+WORKDIR /rtpproxy
+COPY . .
+RUN sh -x scripts/ft-apt-get-update.sh && \
+    sh -x scripts/build/install_depends.sh && \
+    sh -x scripts/ft-before_install.sh && \
+    sh -x scripts/do-build.sh fullbuild && \
+    rm -rf /tmp/deps /tmp/dist /rtpproxy /var/lib/apt/lists/*
+
+WORKDIR /opt/rtpproxy/basic
+CMD ["sleep", "infinity"]
