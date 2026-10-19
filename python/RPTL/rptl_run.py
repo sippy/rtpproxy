@@ -2,7 +2,7 @@ import sys, os, getopt, shlex, signal, tempfile, shutil
 from collections import deque
 from threading import Thread
 from socket import socket, socketpair, AF_UNIX, AF_INET, AF_INET6, \
-  SOCK_DGRAM, SOCK_STREAM
+  SOCK_DGRAM, SOCK_STREAM, SHUT_RDWR
 from subprocess import Popen, TimeoutExpired, DEVNULL, PIPE
 
 from parsimonious.grammar import Grammar
@@ -45,6 +45,9 @@ class CommandRunner():
     spath: str
     outfile: str
     proc = None
+    # Set when a command has not been replied to in time, its client worker
+    # is then likely to stay blocked waiting for that reply
+    stuck = False
 
     def __init__(self, instance_name, socket_name, outfile, params, variables):
         from sippy.Rtp_proxy.client import Rtp_proxy_client
@@ -84,9 +87,12 @@ class CommandRunner():
     def shutdown(self):
         if self.rc is None:
             return
-        if hasattr(self.rc, 'shutdown'):
-            self.rc.shutdown()
-        self.rc = None
+        rc, self.rc = self.rc, None
+        if isinstance(rc, (StdioRtpProxyClient, ManagedRtpProxy)):
+            rc.shutdown(abandon = self.stuck)
+        elif not self.stuck:
+            # Worker threads are daemons, so a stuck client can be left as is
+            rc.shutdown()
 
 class StdioRtpProxyClient(Rtp_proxy_client_stream):
     def __init__(self, extra_args, nworkers = 1, rtpproxy_bin = None,
@@ -118,13 +124,19 @@ class StdioRtpProxyClient(Rtp_proxy_client_stream):
                 self._stderr = None
             raise
 
-    def shutdown(self):
+    def shutdown(self, abandon = False):
         proc_rc = None
         if self._stdio_sock is not None:
+            try:
+                # Wake up the worker if it is blocked waiting for a reply
+                self._stdio_sock.shutdown(SHUT_RDWR)
+            except OSError:
+                pass
             self._stdio_sock.close()
             self._stdio_sock = None
         try:
-            super().shutdown()
+            if not abandon:
+                super().shutdown()
         finally:
             if self.proc is not None:
                 try:
@@ -213,11 +225,12 @@ class ManagedRtpProxy():
             shutil.rmtree(self.tmpdir, ignore_errors = True)
             self.tmpdir = None
 
-    def shutdown(self):
+    def shutdown(self, abandon = False):
         proc_rc = None
         try:
             if self.client is not None:
-                self.client.shutdown()
+                if not abandon:
+                    self.client.shutdown()
                 self.client = None
         finally:
             if self.proc is not None:
@@ -342,6 +355,9 @@ class ScriptRunner():
     ex_info: ExceptionInfo = None
     cur_cmd = None
     cur_command = None
+    cmd_tmo = None
+    # Default time to wait for a reply from rtpproxy, in seconds
+    CMD_TIMEOUT = 2.0
 
     def __init__(self, commands, variables = None):
         from sippy.Time.Timeout import Timeout
@@ -420,9 +436,21 @@ class ScriptRunner():
         if sname not in self.sockets:
             raise Exception(F'{sname}: no such socket')
         socket = self.sockets[sname]
+        from sippy.Time.Timeout import Timeout
+        timeout = float(self.variables.get('CMD_TIMEOUT', self.CMD_TIMEOUT))
+        def on_timeout():
+            self.cmd_tmo = None
+            socket.stuck = True
+            self.fail(TimeoutError(F'no reply from "{sname}" in {timeout} seconds'))
+        self.cmd_tmo = Timeout(on_timeout, timeout)
         socket.rc.send_command(command, self.got_result, cmd, command, socket)
 
     def got_result(self, result, cmd, command, socket, ex=None):
+        if self.cmd_tmo is None:
+            # Late reply after the timeout
+            return
+        self.cmd_tmo.cancel()
+        self.cmd_tmo = None
         if result is None or ex is not None:
             if ex is None:
                 ex = Exception(F'None returned by the proxy "{cmd.socket_name}@{socket.spath}" when executing "{cmd.action}"')
@@ -820,7 +848,13 @@ if __name__ == '__main__':
     finally:
         leftover = srun.stop_procs()
         for socket in srun.sockets.values():
-            socket.shutdown()
+            try:
+                socket.shutdown()
+            except Exception as ex:
+                # Do not let it mask the failure that stopped the script
+                if srun.ex_info is None:
+                    raise
+                sys.stderr.write(F'{socket.name}: {ex}\n')
     if srun.ex_info:
         m = F'Failed action: "{srun.ex_info.cmd}"\n\texpanded: "{srun.ex_info.command}"\n'
         sys.stderr.write(m)

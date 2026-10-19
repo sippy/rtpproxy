@@ -40,7 +40,10 @@ NAME: ACTION [-> OUTPUT]
 ```
 
 Statements are executed strictly in order. A command sent to rtpproxy is
-not followed by the next statement until its reply has been received.
+not followed by the next statement until its reply has been received,
+which fails the script if it does not arrive within the number of seconds
+given by the `CMD_TIMEOUT` variable (2 by default). The variable is looked
+up for each command, so the limit can be changed in the middle of a script.
 Any failure (an error from the rtpproxy client, a failed check, a non-zero
 exit code of an external command, a timeout) stops the script and fails it.
 
