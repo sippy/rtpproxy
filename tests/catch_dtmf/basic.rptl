@@ -1,0 +1,101 @@
+# Test the catch_dtmf module: feed it a set of valid and invalid subcommands,
+# then replay a capture with DTMF events in both directions of the session
+# into the ports allocated by the rtpproxy, and query the stats before and
+# after the session has timed out. Replies are logged into OUT.rout, DTMF and
+# timeout notifications are received by rtpp_notify_client.py into OUT.tlog.
+#
+# An independent RTPProxy records packets relayed to the callee, for
+# comparison with the replayed payloads and source ports. Packets towards
+# the caller are all dropped (see ndropped); its destination is the
+# recorder's unused leg.
+#
+# Expects NOTIFY_CLIENT, DSO, PCAP, PYINT, RECORDER_BIN, RECORD_DIR,
+# CHECK_RELAYED, NRELAYED, OUT and RTPPROXY_BIN to be defined.
+
+.eval: catch_dtmf -> CALLID
+.eval: Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29 -> TAG
+# Contains two "%" in a row, which cannot appear in an RPTL statement as is
+.exec: echo 'Hello%2C%B%A%D%''%C%A%T%21%20%3A-%29' -> BAD_TAG
+
+.spawn: exec %%PYINT%% %%NOTIFY_CLIENT%% -s tcp:127.0.0.1:0 -o %%OUT%%.tlog -t 60 -P -> NC
+.readline: NC 10 -> validate_port(NC_PORT)
+.eval: tcp:127.0.0.1:%%NC_PORT%% -> NS
+.echo: OK: started rtpp_notify_client.py on %%NS%%
+
+.eval: %%RTPPROXY_BIN%% -> TEST_BIN
+.eval: %%RECORDER_BIN%% -> RTPPROXY_BIN
+.eval: %%OUT%%.sink -> SINK_CID
+.exec: rm -f %%RECORD_DIR%%/%%SINK_CID%%=from_tag_1.*
+.eval: %%OUT%%.sink.rlog -> RTPPROXY_STDERR
+socket sink: stdio: -l 0.0.0.0 -T60 -W60 -P -r %%RECORD_DIR%% -> %%OUT%%.sink.rout
+.eval: 0 -> RES_OK
+sink: U %%SINK_CID%% 0.0.0.0 0 from_tag_1 -> validate_port(CAP_PORT)
+# Keep all source ports visible to check_relayed.py, as with raw capture.
+sink: La %%SINK_CID%% 127.0.0.1 0 from_tag_1 to_tag_1 -> validate_port(TRASH_PORT)
+sink: R %%SINK_CID%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+.echo: OK: started RTPProxy recorder on ports %%CAP_PORT%% and %%TRASH_PORT%%
+
+.eval: %%TEST_BIN%% -> RTPPROXY_BIN
+.eval: %%OUT%%.rlog -> RTPPROXY_STDERR
+socket rtpp: stdio: -d dbug -n %%NS%% -T3 -W3 --dso %%DSO%% -> %%OUT%%.rout
+.echo: OK: started rtpproxy[%%rtpp.PID%%]
+
+# Invalid DTMF subcommands
+rtpp: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && MX:1 %%TAG%%
+rtpp: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M3:Y %%TAG%%
+rtpp: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M0:1 %%TAG%%
+rtpp: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M1:0 %%TAG%%
+rtpp: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M300:0 %%TAG%%
+# No notification socket
+rtpp: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M3:1 %%TAG%%
+rtpp: U %%CALLID%% 127.0.0.6 12340 from_tag_1 %%NS%% DTAG && M3:1 %%TAG%%
+rtpp: U %%CALLID%% 127.0.0.5 12341 from_tag_1 %%NS%% DTAG && M3:1 %%TAG%% 22
+# Missing, malformed or extra arguments
+rtpp: U %%CALLID%% 127.0.0.4 12342 from_tag_1 %%NS%% DTAG && M3:1
+rtpp: U %%CALLID%% 127.0.0.3 12343 from_tag_1 %%NS%% DTAG && M3:1 Hello%2C%20Foo%40Bar%21%20%3A-%29 nonsense
+rtpp: U %%CALLID%% 127.0.0.2 12344 from_tag_1 %%NS%% DTAG && M3:1 %%BAD_TAG%% 33
+rtpp: U %%CALLID%% 127.0.0.2 12344 from_tag_1 %%NS%% DTAG && M3:1 Hello%2CKiteh 33 non sense
+rtpp: U %%CALLID%% 127.0.0.2 12344 from_tag_1 %%NS%% DTAG && M3:1 Hello%2CKiteh 33 nonsense
+.echo: OK: sent invalid DTMF subcommands
+# The session used for the replay
+rtpp: U %%CALLID%% 127.0.0.1 %%TRASH_PORT%% from_tag_1 %%NS%% DTAG && M3:1 Hello%2C%20Razvan%40OpenSIPS%21+%3A-%29 101 -> validate_port(PORT_U)
+rtpp: L %%CALLID%% 127.0.0.1 %%CAP_PORT%% from_tag_1 to_tag_1 && M3:1 Hello%2C%20Max%21%20%3AD 101 H -> validate_port(PORT_L)
+.echo: OK: set up session on ports %%PORT_U%% and %%PORT_L%%
+
+.exec: tcprewrite --portmap=24270:%%PORT_U%%,24272:%%PORT_L%% -i %%PCAP%% -o %%OUT%%.pcap
+.echo: OK: rewrote %%PCAP%% into %%OUT%%.pcap
+.spawn: exec udpreplay %%OUT%%.pcap -> REPLAY
+.wait: REPLAY 60
+.echo: OK: udpreplay[%%REPLAY%%] has finished
+.eval: npkts_ina=%%NRELAYED%% -> EXPECTED_PACKETS
+.until: CAPTURE_DONE do sink.check.rptl every 0.1 10
+.echo: OK: RTPProxy recorder has captured %%NRELAYED%% packets
+.sleep: 0.5
+
+rtpp: Qv %%CALLID%% from_tag_1 to_tag_1 npkts_ina npkts_ino nrelayed ndropped
+rtpp: Qv %%CALLID%% from_tag_1 to_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+rtpp: Qv %%CALLID%% to_tag_1 from_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+.echo: OK: queried session stats
+
+# Let the session time out
+.sleep: 4
+rtpp: Gv npkts_rcvd npkts_played npkts_relayed npkts_discard nplrs_created nplrs_destroyed
+rtpp: Gv rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+rtpp: Gv nsess_created nsess_destroyed nsess_timeout nsess_complete nsess_nortp nsess_owrtp nsess_nortcp nsess_owrtcp
+rtpp: Gv ncmds_rcvd ncmds_succd ncmds_errs ncmds_repld
+.echo: OK: queried global stats
+
+.eval: %%rtpp.PID%% -> RTPP_PID
+.close: rtpp
+.echo: OK: rtpproxy[%%RTPP_PID%%] has exited
+
+# Recorder teardown must not delay queries of the short-lived test session.
+sink: D %%SINK_CID%% from_tag_1 -> str_compare(RES_OK)
+.close: sink
+.exec: %%PYINT%% %%CHECK_RELAYED%% %%RECORD_DIR%%/%%SINK_CID%%=from_tag_1.a.rtp %%PORT_U%% %%PCAP%% 24272
+.echo: OK: checked relayed packets
+
+# Make sure all notifications have been written out
+.kill: NC
+.wait: NC 3
+.echo: OK: rtpp_notify_client.py[%%NC%%] has exited
