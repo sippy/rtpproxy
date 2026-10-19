@@ -128,6 +128,9 @@ then
   AC_DEFINE([ENABLE_COVERAGE], [1], [Test coverage support is enabled])
   CFLAGS="${CFLAGS} --coverage"
   LDFLAGS="${LDFLAGS} --coverage"
+  # RTPProxy updates coverage counters from multiple threads.
+  AX_CHECK_COMPILE_FLAG([-fprofile-update=atomic],
+    [CFLAGS="${CFLAGS} -fprofile-update=atomic"], [], [-Werror])
 fi
 
 AC_ARG_ENABLE([noinst],

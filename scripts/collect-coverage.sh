@@ -6,7 +6,9 @@ BASEDIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "${BASEDIR}"
 
 mkdir -p coverage
-lcov --capture --directory . --base-directory "${BASEDIR}" --no-external \
+# Let gcov supply each file's compilation directory: this build compiles in
+# several subdirectories, so a single --base-directory resolves paths wrongly.
+lcov --capture --directory . --no-external \
   --gcov-tool "${BASEDIR}/scripts/coverage-gcov.sh" \
   --output-file coverage/raw.info
 
