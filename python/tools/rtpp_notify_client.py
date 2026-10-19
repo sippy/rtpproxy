@@ -31,6 +31,11 @@ from sippyapi.system.Daemonizer import Daemonizer
 
 DEFAULT_RTPP_SPATH = 'unix:/var/run/rtpproxy.sock'
 
+def usage():
+    sys.stderr.write('usage: rtpp_notify_client.py [-s unix:path|tcp:IP:port] ' \
+      '[-S sippy_root_path] [-o outfile] [-t timeout] [-D] [-l logfile] [-P]\n')
+    sys.exit(1)
+
 class cli_handler(object):
     file_out = None
     rval = 0
@@ -63,9 +68,10 @@ def main():
     timeout = None
     daemonize = False
     logfile = None
+    print_port = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 's:S:o:t:Dl:')
+        opts, args = getopt.getopt(sys.argv[1:], 's:S:o:t:Dl:P')
     except getopt.GetoptError:
         usage()
 
@@ -98,6 +104,9 @@ def main():
            continue
         if o == '-D':
            daemonize = True
+           continue
+        if o == '-P':
+           print_port = True
            continue
         if o == '-l':
            logfile = a
@@ -138,6 +147,9 @@ def main():
             port = cs.serversock.getsockname()[1]
             pnum = f'{port}'
         dob.childreport(pnum)
+    elif print_port and stype != 'unix':
+        # Report the port allocated, e.g. when started with port 0
+        print(cs.serversock.getsockname()[1], flush = True)
     ED2.loop()
     if ch.exception is not None:
         raise ch.exception
