@@ -135,7 +135,7 @@ jobs:
   BuildPackages:
     name: Build Packages
     needs: [LoadJobs_conf, FullBuild]
-    uses: sippy/cimagic/.github/workflows/BuildDPKGs.yml@v2
+    uses: sippy/cimagic/.github/workflows/BuildDPKGs.yml@v3
     if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_BuildPackages == 'true' &&
         (needs.LoadJobs_conf.outputs.do_FullBuild != 'true' || needs.FullBuild.result == 'success') }}
     with:
@@ -842,7 +842,7 @@ jobs:
     needs: [LoadJobs_conf, Docker, BuildPackages]
     permissions:
       contents: write
-    uses: sippy/cimagic/.github/workflows/RollReleaseDraft.yml@v2
+    uses: sippy/cimagic/.github/workflows/RollReleaseDraft.yml@v3
     with:
       release_files_artifacts: |
         ${{ needs.BuildPackages.outputs.dpkgs_artifacts }}
