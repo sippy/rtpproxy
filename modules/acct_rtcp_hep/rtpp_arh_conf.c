@@ -75,13 +75,13 @@ conf_set_capt_port(struct rtpp_log *log, const ucl_object_t *top,
         rport = ucl_object_toint(obj);
     } else {
         val = ucl_object_tostring_forced(obj);
-        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for port in section '%s': '%s'",
-            ucl_object_key(obj), val);
+        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for '%s' in section '%s': '%s'",
+            ucl_object_key(obj), ucl_object_key(top), val);
 	return (false);
     }
     if (rport <= 0 || rport > 0xffff) {
-        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for port in section '%s': %d",
-            ucl_object_key(obj), (int)rport);
+        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for '%s' in section '%s': %lld",
+            ucl_object_key(obj), ucl_object_key(top), (long long)rport);
         return (false);
     }
     snprintf(target->capt_port, sizeof(target->capt_port), "%d", (int)rport);
@@ -104,8 +104,8 @@ conf_set_capt_ptype(struct rtpp_log *log, const ucl_object_t *top,
         return (true);
     }
 
-    RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for ptype in section '%s': '%s'",
-      ucl_object_key(obj), val);
+    RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for '%s' in section '%s': '%s'",
+      ucl_object_key(obj), ucl_object_key(top), val);
     return (false);
 }
 
@@ -121,13 +121,13 @@ conf_set_capt_id(struct rtpp_log *log, const ucl_object_t *top,
         capt_id = ucl_object_toint(obj);
     } else {
         val = ucl_object_tostring_forced(obj);
-        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for capt_id in section '%s': '%s'",
-            ucl_object_key(obj), val);
+        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for '%s' in section '%s': '%s'",
+            ucl_object_key(obj), ucl_object_key(top), val);
         return (false);
     }
     if (capt_id < 0 || capt_id > 0xffffffff) {
-        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for capt_id in section '%s': %d",
-            ucl_object_key(obj), (int)capt_id);
+        RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; invalid value for '%s' in section '%s': %lld",
+            ucl_object_key(obj), ucl_object_key(top), (long long)capt_id);
         return (false);
     }
     target->capt_id = capt_id;
