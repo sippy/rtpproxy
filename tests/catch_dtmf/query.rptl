@@ -1,0 +1,9 @@
+# Check capture completion and session statistics for one setup.
+.eval: %%ROOT_OUT%%.%%MODE%% -> OUT
+.eval: rtpp_%%MODE%% -> R
+.eval: %%OUT%%.sink -> SINK_CID
+.until: CAPTURE_DONE do sink.check.rptl every 0.1 10
+%%R%%: Qv %%CALLID%% from_tag_1 to_tag_1 npkts_ina npkts_ino nrelayed ndropped
+%%R%%: Qv %%CALLID%% from_tag_1 to_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+%%R%%: Qv %%CALLID%% to_tag_1 from_tag_1 rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs
+.echo: OK: queried session stats

@@ -1,0 +1,45 @@
+# Run fixed and wildcard notifications concurrently using one recorder and
+# one notification client. Each setup has its own RTPProxy, recorder session,
+# replay, and reply log; notification tags identify the originating setup.
+#
+# Expects NOTIFY_CLIENT, NOTIFY_SOCK_WILD, DSO, PCAP, PYINT, RECORDER_BIN,
+# RECORD_DIR, CHECK_RELAYED, NRELAYED, OUT and RTPPROXY_BIN to be defined.
+
+.eval: %%OUT%% -> ROOT_OUT
+.eval: %%RTPPROXY_BIN%% -> TEST_BIN
+.eval: catch_dtmf -> CALLID
+.eval: 0 -> RES_OK
+.exec: echo 'Hello%2C%B%A%D%''%C%A%T%21%20%3A-%29' -> BAD_TAG
+
+.pyspawn: %%NOTIFY_CLIENT%% -s tcp:127.0.0.1:0 -o %%ROOT_OUT%%.tlog -t 60 -P -> NC
+.readline: NC 10 -> validate_port(NC_PORT)
+.eval: %%RECORDER_BIN%% -> RTPPROXY_BIN
+.exec: rm -f %%RECORD_DIR%%/%%ROOT_OUT%%.fixed.sink=from_tag_1.* %%RECORD_DIR%%/%%ROOT_OUT%%.wildcard.sink=from_tag_1.*
+.eval: %%ROOT_OUT%%.sink.rlog -> RTPPROXY_STDERR
+socket sink: stdio: -l 0.0.0.0 -T60 -W60 -P -r %%RECORD_DIR%% -> %%ROOT_OUT%%.sink.rout
+.eval: %%TEST_BIN%% -> RTPPROXY_BIN
+.eval: tcp:127.0.0.1:%%NC_PORT%% -> NS_fixed
+.eval: %%NOTIFY_SOCK_WILD%%:%%NC_PORT%% -> NS_wildcard
+.eval: %%ROOT_OUT%%.fixed.rlog -> RTPPROXY_STDERR
+socket rtpp_fixed: stdio: -d dbug -n %%NS_fixed%% -T3 -W3 --dso %%DSO%% -> %%ROOT_OUT%%.fixed.rout
+.eval: %%ROOT_OUT%%.wildcard.rlog -> RTPPROXY_STDERR
+# Wildcard notifications inherit the UDP control socket's local address.
+socket rtpp_wildcard: udp: -d dbug -n %%NS_wildcard%% -T3 -W3 --dso %%DSO%% -> %%ROOT_OUT%%.wildcard.rout
+
+# Start both replays before waiting for either to finish.
+.foreach: MODE in fixed wildcard do setup.rptl
+.spawn: exec udpreplay %%ROOT_OUT%%.fixed.pcap -> REPLAY_fixed
+.spawn: exec udpreplay %%ROOT_OUT%%.wildcard.pcap -> REPLAY_wildcard
+.wait: REPLAY_fixed 60
+.wait: REPLAY_wildcard 60
+.sleep: 0.5
+.eval: npkts_ina=%%NRELAYED%% -> EXPECTED_PACKETS
+.foreach: MODE in fixed wildcard do query.rptl
+
+.sleep: 4
+.foreach: MODE in fixed wildcard do finish.rptl
+.close: sink
+.exec: %%PYINT%% %%CHECK_RELAYED%% %%RECORD_DIR%%/%%ROOT_OUT%%.fixed.sink=from_tag_1.a.rtp %%PORT_U_fixed%% %%PCAP%% 24272
+.exec: %%PYINT%% %%CHECK_RELAYED%% %%RECORD_DIR%%/%%ROOT_OUT%%.wildcard.sink=from_tag_1.a.rtp %%PORT_U_wildcard%% %%PCAP%% 24272
+.kill: NC
+.wait: NC 3

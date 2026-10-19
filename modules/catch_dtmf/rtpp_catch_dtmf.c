@@ -197,7 +197,7 @@ rtpp_catch_dtmf_worker(const struct rtpp_wthrdata *wp)
 
         struct rtp_dtmf_event *dtmf =
             (struct rtp_dtmf_event *)(wip->pkt->data.buf + sizeof(rtp_hdr_t));
-        if (dtmf->event > sizeof(dtmf_events) - 1) {
+        if (dtmf->event >= sizeof(dtmf_events) - 1) {
             RTPP_LOG(pvt->mself->log, RTPP_LOG_DBUG, "Unhandled DTMF event %u", dtmf->event);
             goto skip;
         }
