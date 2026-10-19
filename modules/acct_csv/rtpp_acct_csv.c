@@ -334,7 +334,7 @@ conf_set_logfile(struct rtpp_log *log, const ucl_object_t *top,
     val = ucl_object_tostring_forced(obj);
     if (val == NULL || val[0] == '\0') {
         RTPP_LOG(log, RTPP_LOG_ERR, "error in config file; empty value for "
-          "%s in section '%s'", ucl_object_key(obj), ucl_object_key(top));
+          "'%s' in section '%s'", ucl_object_key(obj), ucl_object_key(top));
         return (false);
     }
     if (target->logfile != NULL)

@@ -174,13 +174,13 @@ parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
         if (obj_key == NULL) {
             cp = rtpp_module_dsop_canonic(cf_key, mpath, sizeof(mpath));
             if (cp == NULL) {
-                RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Error: Unable to find load parameter in module: %s", cf_key);
+                RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Error: Unable to find 'load' parameter in module '%s'", cf_key);
                 ecode = -1;
                 goto e0;
             }
         } else {
             if (obj_key->type != UCL_STRING) {
-                RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Error: \"load\" parameter in %s has a wrong type, string is expected", cf_key);
+                RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Error: 'load' parameter in module '%s' has a wrong type, string is expected", cf_key);
                 ecode = -1;
                 goto e0;
             }
@@ -217,10 +217,10 @@ parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
         }
         success = conf_helper_mapper(csp->glog, obj_file, map, confp, &fent);
         if (!success) {
-            RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Config parsing issue in section %s",
+            RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Config parsing issue in section '%s'",
               cf_key);
             if (fent != NULL && fent->conf_key != NULL) {
-                RTPP_LOG(csp->glog, RTPP_LOG_ERR, "\tparameter %s", fent->conf_key);
+                RTPP_LOG(csp->glog, RTPP_LOG_ERR, "\tparameter '%s'", fent->conf_key);
             }
             goto e1;
         }
