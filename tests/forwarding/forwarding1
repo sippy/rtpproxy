@@ -137,7 +137,8 @@ verify_reslogs()
 {
   local restype="${1}"
   normalize ${OUT}${restype}.rout > ${OUT}${restype}.rout.norm
-  if ! ${REVTEMPL} forwarding/forwarding1${restype}.moutput ${OUT}${restype}.rout.norm > ${OUT}${restype}.rout.amod
+  if ! ${REVTEMPL} forwarding/forwarding1${restype}.moutput ${OUT}${restype}.rout.norm \
+    forwarding/forwarding1${restype}.output > ${OUT}${restype}.rout.amod
   then
     ${DIFF} forwarding/forwarding1${restype}.output ${OUT}${restype}.rout.norm
     local DIFF_RC=${?}
