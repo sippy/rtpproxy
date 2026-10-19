@@ -55,3 +55,9 @@ ${DIFF} "${CD_DIR}/catch_dtmf.output" catch_dtmf.rout
 report "catch_dtmf.output"
 ${DIFF} "${CD_DIR}/catch_dtmf.tnotify.output" catch_dtmf.tlog
 report "catch_dtmf"
+for msg in "Unhandled DTMF event 20" "Unhandled DTMF event 17" \
+ "Received DTMF for 8 while processing 7" "Received DTMF for 7 without start"
+do
+  grep -q "${msg}" catch_dtmf.rlog
+  report "catch_dtmf.rlog: ${msg}"
+done
