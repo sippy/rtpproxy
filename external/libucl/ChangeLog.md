@@ -1,5 +1,25 @@
 # Version history
 
+## Libucl 0.9.4
+
+- Fix double comma in JSON emission for consecutive implicit arrays (Fixes #312)
+- Add `ucl_object_iterate_end()` to fix iterator memory leak on early exit
+- Fix potential null pointer dereference in `ucl_hash_sort` function
+- Fix `ucl_object_replace_key` to return true on new insert
+- Reset length during object copy
+- Add null check in `ucl_object_reserve`
+- Skip building POSIX-only tests on Windows
+
+## Libucl 0.9.3
+
+- Fix invalid JSON emission when merging objects (Fixes #312)
+- Fix heap-buffer-overflow in ucl_maybe_parse_number (Fixes #344, #328)
+- Fix Use-After-Free in ucl_hash_insert by ignoring duplicates in different containers (Fixes #347)
+- Fix heap-buffer-overflow in ucl_parse_multiline_string
+- Add support of sanitizers to cmake
+- Fix allocator mismatches in libucl
+- Various other fixes and improvements
+
 ## Libucl 0.9.0
 
 * 803b588 Breaking: Try to fix streamline embedding
