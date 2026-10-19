@@ -48,6 +48,9 @@
 #define	RTPP_LOG_ERR	SIPLOG_ERR
 #define	RTPP_LOG_CRIT	SIPLOG_CRIT
 
+/* Whether a message at the given level passes the minimum level */
+#define	RTPP_LOG_LVL_ENABLED(level, minlvl) ((level) >= (minlvl))
+
 #define	rtpp_log_open(gf, app, call_id, flags) siplog_open(app, call_id, flags)
 #define	rtpp_log_setlevel(handle, level) siplog_set_level(handle, level)
 #define	rtpp_log_write(level, handle, format, args...) siplog_write(level, handle, format, ## args)

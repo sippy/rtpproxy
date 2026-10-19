@@ -47,6 +47,9 @@ struct rtpp_cfg;
 #define	RTPP_LOG_ERR	LOG_ERR
 #define	RTPP_LOG_CRIT	LOG_CRIT
 
+/* Whether a message at the given level passes the minimum level */
+#define	RTPP_LOG_LVL_ENABLED(level, minlvl) ((level) <= (minlvl))
+
 #define	rtpp_log_open(cf, app, call_id, flag) _rtpp_log_open(cf, app, call_id);
 #if !defined(rtpp_log_write_va)
 #define rtpp_log_write_va(level, handle, format, vargs)                  \
