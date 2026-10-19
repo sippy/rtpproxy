@@ -200,7 +200,8 @@ parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
         }
         if (CALL_METHOD(mif, load, csp, csp->glog) != 0) {
             RTPP_LOG(csp->glog, RTPP_LOG_ERR, "%p->load() method has failed: %s", mif, cp);
-            goto e1;
+            /* Nothing to shut down, the load() has cleaned up after itself */
+            goto e2;
         }
         if (CALL_METHOD(mif, get_mconf, &mcp, 0) < 0) {
             RTPP_LOG(csp->glog, RTPP_LOG_ERR, "%p->get_mconf() method has failed: %s", mif, cp);
@@ -227,8 +228,9 @@ parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
         CALL_METHOD(csp->modules_cf, insert, mif);
         continue;
 e1:
-        ecode = -1;
         CALL_METHOD(mif, kaput);
+e2:
+        ecode = -1;
         RTPP_OBJ_DECREF(mif);
         goto e0;
     }
