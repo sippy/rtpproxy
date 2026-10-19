@@ -146,15 +146,11 @@ jobs:
   FullBuild:
     name: Full Build
     needs: [LoadJobs_conf, MinBuild]
-    if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_FullBuild == 'true' &&
+    if: ${{ !cancelled() && (success() || failure()) && (needs.LoadJobs_conf.outputs.do_FullBuild == 'true' ||
+        needs.LoadJobs_conf.outputs.do_FuncTest == 'true' || needs.LoadJobs_conf.outputs.do_Glitch == 'true') &&
         (needs.LoadJobs_conf.outputs.do_MinBuild != 'true' || needs.MinBuild.result == 'success') }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:${{ matrix.os }}
-      options: >-
-        -v sources:/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
-        --sysctl net.ipv4.ip_unprivileged_port_start=1024 --init
     env:
       COMPILER: ${{ matrix.compiler }}
       TAR_CMD: tar
@@ -220,46 +216,40 @@ jobs:
           compiler: 'clang-22'
 
     steps:
-    - name: Install git
-      run: |
-        apt-get update
-        apt-get install -y git lsb-release gnupg2 wget
-
     - uses: actions/checkout@v6
       with:
         submodules: 'recursive'
+        persist-credentials: false
 
-    - name: Cache apt-get packages
-      if: endsWith(matrix.compiler, '-cross') == 0
-      uses: actions/cache@v5
+    - name: Build CI image with both test suites
+      run: |
+        docker build --file docker/Dockerfile.ci \
+          --build-arg BASE_IMAGE=ubuntu:${{ matrix.os }} \
+          --build-arg COMPILER=${{ matrix.compiler }} \
+          --tag rtpproxy-ci:tests .
+
+    - name: Save CI image
+      run: |
+        docker image inspect rtpproxy-ci:tests --format 'Uncompressed CI image size: {{.Size}} bytes'
+        docker save rtpproxy-ci:tests | zstd -T0 -3 -c > "${RUNNER_TEMP}/rtpproxy-ci.tar.zst"
+        du -h "${RUNNER_TEMP}/rtpproxy-ci.tar.zst"
+
+    - name: Upload CI image
+      uses: actions/upload-artifact@v7
       with:
-        path: /var/cache/apt/archives
-        key: depsbuild-${{ matrix.os }}-apt-get-${{ github.run_id }}
-        restore-keys: |
-          depsbuild-${{ matrix.os }}-apt-get
-          depsbuild-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
-
-    - name: Install apt-get updates
-      run: scripts/ft-apt-get-update.sh
-
-    - name: install_depends
-      run: sh -x scripts/build/install_depends.sh
-
-    - name: build
-      run: sh -x ./scripts/do-build.sh depsbuild
+        name: ci-image-${{ matrix.os }}-${{ matrix.compiler }}
+        path: ${{ runner.temp }}/rtpproxy-ci.tar.zst
+        compression-level: 0
+        retention-days: 1
+        overwrite: true
 
   FuncTest:
     name: Functional Testing    
     needs: [LoadJobs_conf, FullBuild]
     if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_FuncTest == 'true' &&
-        (needs.LoadJobs_conf.outputs.do_FullBuild != 'true' || needs.FullBuild.result == 'success') }}
+        needs.FullBuild.result == 'success' }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:${{ matrix.os }}
-      options: >-
-        -v sources:/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
-        --sysctl net.ipv4.ip_unprivileged_port_start=1024 --init
     env:
       COMPILER: ${{ matrix.compiler }}
       TAR_CMD: tar
@@ -357,57 +347,46 @@ jobs:
           compiler: 'clang-22'
 
     steps:
-    - name: Install git
-      run: |
-        apt-get update
-        apt-get install -y git lsb-release gnupg2 wget
-
     - uses: actions/checkout@v6
+
+    - name: Download CI image
+      uses: actions/download-artifact@v4
       with:
-        submodules: 'recursive'
+        name: ci-image-${{ matrix.os }}-${{ matrix.compiler }}
+        path: ${{ runner.temp }}/ci-image
 
-    - name: Cache apt-get packages
-      uses: actions/cache@v5
-      with:
-        path: /var/cache/apt/archives
-        key: functesting-${{ matrix.os }}-apt-get-${{ github.run_id }}
-        restore-keys: |
-          functesting-${{ matrix.os }}-apt-get
-          functesting-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
-
-    - name: Install apt-get updates
-      run: scripts/ft-apt-get-update.sh
-
-    - name: install_depends
-      run: sh -x scripts/build/install_depends.sh
-
-    - name: before_install
-      run: sh -x scripts/ft-before_install.sh
-
-    - name: build
-      run: sh -x ./scripts/do-build.sh basic
+    - name: Start CI image
+      run: |
+        docker load --input "${RUNNER_TEMP}/ci-image/rtpproxy-ci.tar.zst"
+        sudo sysctl -w kernel.core_pattern=core
+        docker run --detach --name rtpproxy-tests --init \
+          --sysctl net.ipv4.ip_unprivileged_port_start=1024 \
+          --workdir /opt/rtpproxy/basic rtpproxy-ci:tests
 
     - name: test
       id: tests
-      run: sh -x scripts/do-test.sh
+      run: docker exec rtpproxy-tests sh -x scripts/do-test.sh
 
     - name: Collect coverage
-      run: sh -x scripts/collect-coverage.sh
+      run: |
+        docker exec rtpproxy-tests sh -x scripts/collect-coverage.sh
+        docker cp rtpproxy-tests:/opt/rtpproxy/basic/coverage .
+        sed -i "s|^SF:/opt/rtpproxy/basic/|SF:${GITHUB_WORKSPACE}/|" coverage/lcov.info
 
     - name: Upload coverage to Coveralls
       uses: coverallsapp/github-action@v2
       env:
         TZ: UTC
-        # do-test.sh changes checkout ownership to the rtpproxy test user.
-        GIT_CONFIG_COUNT: 1
-        GIT_CONFIG_KEY_0: safe.directory
-        GIT_CONFIG_VALUE_0: ${{ github.workspace }}
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         file: coverage/lcov.info
         format: lcov
         flag-name: functest-${{ matrix.os }}-${{ matrix.compiler }}
         parallel: true
+
+    - name: Copy test results
+      if: ${{ always() && steps.tests.outcome != 'skipped' }}
+      run: docker cp rtpproxy-tests:/opt/rtpproxy/basic/tests/test-suite.log tests/test-suite.log
 
     - name: Collect test summary
       id: summary
@@ -417,19 +396,17 @@ jobs:
         JOB_OUTCOME: ${{ job.status }}
       run: python3 scripts/test-summary.py collect --suite functional
 
+    - name: Remove test container
+      if: ${{ always() }}
+      run: docker rm --force rtpproxy-tests 2>/dev/null || true
+
   Glitching:
     name: Glitch Injection
-    needs: [LoadJobs_conf, FuncTest]
-    if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_Glitch == 'true' &&
+    needs: [LoadJobs_conf, FullBuild, FuncTest]
+    if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_Glitch == 'true' && needs.FullBuild.result == 'success' &&
         (needs.LoadJobs_conf.outputs.do_FuncTest != 'true' || needs.FuncTest.result == 'success') }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:${{ matrix.os }}
-      options: >-
-        -v sources:/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
-        --sysctl net.ipv4.ip_unprivileged_port_start=1024 --init
-        --security-opt seccomp=unconfined
     env:
       COMPILER: ${{ matrix.compiler }}
       TAR_CMD: tar
@@ -527,57 +504,47 @@ jobs:
           compiler: 'clang-22'
 
     steps:
-    - name: Install git
-      run: |
-        apt-get update
-        apt-get install -y git lsb-release gnupg2 wget
-
     - uses: actions/checkout@v6
+
+    - name: Download CI image
+      uses: actions/download-artifact@v4
       with:
-        submodules: 'recursive'
+        name: ci-image-${{ matrix.os }}-${{ matrix.compiler }}
+        path: ${{ runner.temp }}/ci-image
 
-    - name: Cache apt-get packages
-      uses: actions/cache@v5
-      with:
-        path: /var/cache/apt/archives
-        key: glitching-${{ matrix.os }}-apt-get-${{ github.run_id }}
-        restore-keys: |
-          glitching-${{ matrix.os }}-apt-get
-          glitching-${{ matrix.os }}-${{ matrix.compiler }}-apt-get
-
-    - name: Install apt-get updates
-      run: scripts/ft-apt-get-update.sh
-
-    - name: install_depends
-      run: sh -x scripts/build/install_depends.sh
-
-    - name: before_install
-      run: sh -x scripts/ft-before_install.sh
-
-    - name: build
-      run: sh -x ./scripts/do-build.sh glitching
+    - name: Start CI image
+      run: |
+        docker load --input "${RUNNER_TEMP}/ci-image/rtpproxy-ci.tar.zst"
+        sudo sysctl -w kernel.core_pattern=core
+        docker run --detach --name rtpproxy-tests --init \
+          --sysctl net.ipv4.ip_unprivileged_port_start=1024 \
+          --security-opt seccomp=unconfined \
+          --workdir /opt/rtpproxy/glitching rtpproxy-ci:tests
 
     - name: test
       id: tests
-      run: sh -x scripts/do-test.sh
+      run: docker exec rtpproxy-tests sh -x scripts/do-test.sh
 
     - name: Collect coverage
-      run: sh -x scripts/collect-coverage.sh
+      run: |
+        docker exec rtpproxy-tests sh -x scripts/collect-coverage.sh
+        docker cp rtpproxy-tests:/opt/rtpproxy/glitching/coverage .
+        sed -i "s|^SF:/opt/rtpproxy/glitching/|SF:${GITHUB_WORKSPACE}/|" coverage/lcov.info
 
     - name: Upload coverage to Coveralls
       uses: coverallsapp/github-action@v2
       env:
         TZ: UTC
-        # do-test.sh changes checkout ownership to the rtpproxy test user.
-        GIT_CONFIG_COUNT: 1
-        GIT_CONFIG_KEY_0: safe.directory
-        GIT_CONFIG_VALUE_0: ${{ github.workspace }}
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         file: coverage/lcov.info
         format: lcov
         flag-name: glitching-${{ matrix.os }}-${{ matrix.compiler }}
         parallel: true
+
+    - name: Copy test results
+      if: ${{ always() && steps.tests.outcome != 'skipped' }}
+      run: docker cp rtpproxy-tests:/opt/rtpproxy/glitching/tests/test-suite.log tests/test-suite.log
 
     - name: Collect test summary
       id: summary
@@ -586,6 +553,10 @@ jobs:
         TEST_OUTCOME: ${{ steps.tests.outcome }}
         JOB_OUTCOME: ${{ job.status }}
       run: python3 scripts/test-summary.py collect --suite glitching
+
+    - name: Remove test container
+      if: ${{ always() }}
+      run: docker rm --force rtpproxy-tests 2>/dev/null || true
 
   TestSummary:
     name: Combined Test Summary
@@ -654,7 +625,7 @@ jobs:
         flag-name: fuzzing-coverage
         parallel: true
     - name: Upload Crash
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: failure() && steps.build.outcome == 'success'
       with:
         name: ${{ matrix.sanitizer }}-artifacts

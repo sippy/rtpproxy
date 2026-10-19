@@ -1,0 +1,29 @@
+# syntax=docker/dockerfile:1
+
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE}
+
+ARG COMPILER=gcc
+ENV COMPILER=${COMPILER} TAR_CMD=tar DEBIAN_FRONTEND=noninteractive
+ENV PIP_NO_CACHE_DIR=1 RTPP_TEST_PREBUILT=yes
+
+WORKDIR /rtpproxy
+# Keep installation, source copies and cleanup in one layer: deleting a file
+# in a later layer does not remove its bytes from the saved image.
+RUN --mount=type=bind,target=/ci-source \
+    printf 'APT::Install-Recommends "false";\nAPT::Install-Suggests "false";\n' \
+      > /etc/apt/apt.conf.d/99ci-no-recommends && \
+    apt-get update && \
+    apt-get install -y ca-certificates git lsb-release gnupg2 wget && \
+    cp -a --no-preserve=ownership /ci-source/. . && \
+    sh -x scripts/ft-apt-get-update.sh && \
+    sh -x scripts/build/install_depends.sh && \
+    sh -x scripts/ft-before_install.sh && \
+    sh -x scripts/do-build.sh fullbuild && \
+    sh -x scripts/build/trim_ci_image.sh && \
+    rm -rf /tmp/deps /tmp/dist /rtpproxy /var/lib/apt/lists/* /root/.cache && \
+    apt-get clean && \
+    du -sh /opt/rtpproxy /usr/lib /usr/local
+
+WORKDIR /opt/rtpproxy/basic
+CMD ["sleep", "infinity"]
