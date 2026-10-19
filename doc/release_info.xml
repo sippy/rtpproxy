@@ -157,6 +157,13 @@
         of the librtpproxy into <filename>include/src/librtpproxy</filename>
         instead of <filename>include/librtpproxy</filename>.</para>
       </listitem>
+
+      <listitem>
+        <para>Syntax errors in the configuration file
+        (<option>--config</option>) were reported with an empty error
+        message instead of the location and description of the
+        problem.</para>
+      </listitem>
     </itemizedlist>
   </chapter>
 
@@ -237,6 +244,12 @@
       <listitem>
         <para>The CI builds now cover Ubuntu 26.04 and use bcg729
         1.1.2.</para>
+      </listitem>
+
+      <listitem>
+        <para>The bundled libucl has been updated from 0.9.2 to 0.9.4,
+        which brings fixes for several memory safety issues in the
+        parser, the JSON emitter and the object API.</para>
       </listitem>
     </itemizedlist>
   </chapter>
