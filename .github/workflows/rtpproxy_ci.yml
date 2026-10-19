@@ -265,6 +265,38 @@ jobs:
       TAR_CMD: tar
       GHA_OS: ubuntu-${{ matrix.os }}
 
+    # BEGIN GENERATED TEST OUTPUTS: FuncTest
+    # Regenerate: python3 scripts/test-summary.py generate
+    outputs:
+      result_ubuntu_22_04_gcc: ${{ steps.summary.outputs.result_ubuntu_22_04_gcc }}
+      result_ubuntu_22_04_clang: ${{ steps.summary.outputs.result_ubuntu_22_04_clang }}
+      result_ubuntu_24_04_gcc: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc }}
+      result_ubuntu_24_04_clang: ${{ steps.summary.outputs.result_ubuntu_24_04_clang }}
+      result_ubuntu_24_04_gcc_9: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_9 }}
+      result_ubuntu_24_04_gcc_10: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_10 }}
+      result_ubuntu_24_04_gcc_11: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_11 }}
+      result_ubuntu_24_04_gcc_12: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_12 }}
+      result_ubuntu_24_04_gcc_14: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_14 }}
+      result_ubuntu_24_04_clang_14: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_14 }}
+      result_ubuntu_24_04_clang_15: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_15 }}
+      result_ubuntu_24_04_clang_16: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_16 }}
+      result_ubuntu_24_04_clang_17: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_17 }}
+      result_ubuntu_24_04_clang_19: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_19 }}
+      result_ubuntu_24_04_clang_20: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_20 }}
+      result_ubuntu_26_04_gcc: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc }}
+      result_ubuntu_26_04_clang: ${{ steps.summary.outputs.result_ubuntu_26_04_clang }}
+      result_ubuntu_26_04_gcc_11: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_11 }}
+      result_ubuntu_26_04_gcc_12: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_12 }}
+      result_ubuntu_26_04_gcc_13: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_13 }}
+      result_ubuntu_26_04_gcc_14: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_14 }}
+      result_ubuntu_26_04_gcc_16: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_16 }}
+      result_ubuntu_26_04_clang_17: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_17 }}
+      result_ubuntu_26_04_clang_18: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_18 }}
+      result_ubuntu_26_04_clang_19: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_19 }}
+      result_ubuntu_26_04_clang_20: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_20 }}
+      result_ubuntu_26_04_clang_22: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_22 }}
+    # END GENERATED TEST OUTPUTS: FuncTest
+
     strategy:
       fail-fast: false
       matrix:
@@ -356,6 +388,7 @@ jobs:
       run: sh -x ./scripts/do-build.sh basic
 
     - name: test
+      id: tests
       run: sh -x scripts/do-test.sh
 
     - name: Collect coverage
@@ -376,6 +409,14 @@ jobs:
         flag-name: functest-${{ matrix.os }}-${{ matrix.compiler }}
         parallel: true
 
+    - name: Collect test summary
+      id: summary
+      if: ${{ always() }}
+      env:
+        TEST_OUTCOME: ${{ steps.tests.outcome }}
+        JOB_OUTCOME: ${{ job.status }}
+      run: python3 scripts/test-summary.py collect --suite functional
+
   Glitching:
     name: Glitch Injection
     needs: [LoadJobs_conf, FuncTest]
@@ -393,6 +434,38 @@ jobs:
       COMPILER: ${{ matrix.compiler }}
       TAR_CMD: tar
       GHA_OS: ubuntu-${{ matrix.os }}
+
+    # BEGIN GENERATED TEST OUTPUTS: Glitching
+    # Regenerate: python3 scripts/test-summary.py generate
+    outputs:
+      result_ubuntu_22_04_gcc: ${{ steps.summary.outputs.result_ubuntu_22_04_gcc }}
+      result_ubuntu_22_04_clang: ${{ steps.summary.outputs.result_ubuntu_22_04_clang }}
+      result_ubuntu_24_04_gcc: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc }}
+      result_ubuntu_24_04_clang: ${{ steps.summary.outputs.result_ubuntu_24_04_clang }}
+      result_ubuntu_24_04_gcc_9: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_9 }}
+      result_ubuntu_24_04_gcc_10: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_10 }}
+      result_ubuntu_24_04_gcc_11: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_11 }}
+      result_ubuntu_24_04_gcc_12: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_12 }}
+      result_ubuntu_24_04_gcc_14: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_14 }}
+      result_ubuntu_24_04_clang_14: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_14 }}
+      result_ubuntu_24_04_clang_15: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_15 }}
+      result_ubuntu_24_04_clang_16: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_16 }}
+      result_ubuntu_24_04_clang_17: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_17 }}
+      result_ubuntu_24_04_clang_19: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_19 }}
+      result_ubuntu_24_04_clang_20: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_20 }}
+      result_ubuntu_26_04_gcc: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc }}
+      result_ubuntu_26_04_clang: ${{ steps.summary.outputs.result_ubuntu_26_04_clang }}
+      result_ubuntu_26_04_gcc_11: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_11 }}
+      result_ubuntu_26_04_gcc_12: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_12 }}
+      result_ubuntu_26_04_gcc_13: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_13 }}
+      result_ubuntu_26_04_gcc_14: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_14 }}
+      result_ubuntu_26_04_gcc_16: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_16 }}
+      result_ubuntu_26_04_clang_17: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_17 }}
+      result_ubuntu_26_04_clang_18: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_18 }}
+      result_ubuntu_26_04_clang_19: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_19 }}
+      result_ubuntu_26_04_clang_20: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_20 }}
+      result_ubuntu_26_04_clang_22: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_22 }}
+    # END GENERATED TEST OUTPUTS: Glitching
 
     strategy:
       fail-fast: false
@@ -485,6 +558,7 @@ jobs:
       run: sh -x ./scripts/do-build.sh glitching
 
     - name: test
+      id: tests
       run: sh -x scripts/do-test.sh
 
     - name: Collect coverage
@@ -504,6 +578,29 @@ jobs:
         format: lcov
         flag-name: glitching-${{ matrix.os }}-${{ matrix.compiler }}
         parallel: true
+
+    - name: Collect test summary
+      id: summary
+      if: ${{ always() }}
+      env:
+        TEST_OUTCOME: ${{ steps.tests.outcome }}
+        JOB_OUTCOME: ${{ job.status }}
+      run: python3 scripts/test-summary.py collect --suite glitching
+
+  TestSummary:
+    name: Combined Test Summary
+    needs: [FuncTest, Glitching]
+    if: ${{ always() && !cancelled() && (needs.FuncTest.result != 'skipped' || needs.Glitching.result != 'skipped') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Publish combined test summary
+      env:
+        TEST_RESULTS: ${{ toJSON(needs) }}
+      run: python3 scripts/test-summary.py render >> "$GITHUB_STEP_SUMMARY"
 
   Fuzzing:
     name: Fuzz with OSS-Fuzz

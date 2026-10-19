@@ -41,7 +41,7 @@ CLEANFILES += *.core test-suite.log
 check-TESTS: $(TESTS)
 	@srcdir='$(srcdir)'; export srcdir; \
 	$(TESTS_ENVIRONMENT) \
-	XFAIL_TESTS='$(XFAIL_TESTS)' $(SHELL) $(srcdir)/run-tests.sh $(TESTS)
+	$(SHELL) $(srcdir)/run-tests.sh $(TESTS)
 
 list_tests:
 	@echo ${TESTS}
