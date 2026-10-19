@@ -155,23 +155,19 @@ host_triplet = @host@
 @ENABLE_BASIC_TESTS_TRUE@	${forwarding_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${session_timeouts_EXTRA_DIST} \
 @ENABLE_BASIC_TESTS_TRUE@	${playback_EXTRA_DIST}
-@ENABLE_MEMGLITCHING_TRUE@am__append_4 = makeann/makeann1 \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch1 memdeb/glitch_libucl1 \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_extractaudio \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_startstop1 \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_basic_versions1 \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_command_parser1_stdio \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_acct_rtcp_hep \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_catch_dtmf \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_unittests_sbuf \
-@ENABLE_MEMGLITCHING_TRUE@	memdeb/glitch_makeann1
-@ENABLE_MEMGLITCHING_TRUE@am__append_5 = ${makeann_CLEANFILES} \
-@ENABLE_MEMGLITCHING_TRUE@	${memdeb_CLEANFILES}
-@ENABLE_MEMGLITCHING_TRUE@am__append_6 = ${makeann_EXTRA_DIST} \
-@ENABLE_MEMGLITCHING_TRUE@	${memdeb_EXTRA_DIST}
-@BUILD_CRYPTO_TRUE@am__append_7 = dtls_gw/basic
-@BUILD_CRYPTO_TRUE@am__append_8 = ${dtls_gw_CLEANFILES}
-@BUILD_CRYPTO_TRUE@am__append_9 = ${dtls_gw_EXTRA_DIST}
+@ENABLE_BASIC_TESTS_FALSE@@ENABLE_MEMGLITCHING_TRUE@am__append_4 = ${makeann_CLEANFILES}
+@ENABLE_BASIC_TESTS_FALSE@@ENABLE_MEMGLITCHING_TRUE@am__append_5 = ${makeann_EXTRA_DIST}
+@ENABLE_MEMGLITCHING_TRUE@am__append_6 = memdeb/glitch1 memdeb/glitch_libucl1 memdeb/glitch_extractaudio \
+@ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_startstop1 memdeb/glitch_basic_versions1 \
+@ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_command_parser1_stdio memdeb/glitch_acct_rtcp_hep \
+@ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_catch_dtmf memdeb/glitch_unittests_sbuf \
+@ENABLE_MEMGLITCHING_TRUE@  memdeb/glitch_makeann1
+
+@ENABLE_MEMGLITCHING_TRUE@am__append_7 = ${memdeb_CLEANFILES}
+@ENABLE_MEMGLITCHING_TRUE@am__append_8 = ${memdeb_EXTRA_DIST}
+@BUILD_CRYPTO_TRUE@@ENABLE_BASIC_TESTS_TRUE@am__append_9 = dtls_gw/basic
+@BUILD_CRYPTO_TRUE@am__append_10 = ${dtls_gw_CLEANFILES}
+@BUILD_CRYPTO_TRUE@am__append_11 = ${dtls_gw_EXTRA_DIST}
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
@@ -394,21 +390,21 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-TESTS = $(am__append_1) $(am__append_4) $(am__append_7)
-CLEANFILES = $(am__append_2) $(am__append_5) $(am__append_8) *.core \
-	test-suite.log
-EXTRA_DIST = $(am__append_3) $(am__append_6) $(am__append_9) \
-	Makefile.am ringback.sln run-tests.sh
+TESTS = $(am__append_1) $(am__append_6) $(am__append_9)
+CLEANFILES = $(am__append_2) $(am__append_4) $(am__append_7) \
+	$(am__append_10) *.core test-suite.log
+EXTRA_DIST = $(am__append_3) $(am__append_5) $(am__append_8) \
+	$(am__append_11) Makefile.am ringback.sln run-tests.sh
 @ENABLE_BASIC_TESTS_TRUE@autosrc_EXTRA_DIST = autosrc
 @ENABLE_BASIC_TESTS_TRUE@autosrc_CLEANFILES = 
 @ENABLE_BASIC_TESTS_TRUE@recording_EXTRA_DIST = recording
 @ENABLE_BASIC_TESTS_TRUE@recording_CLEANFILES = recording.* recording/src_srs*.rlog \
 @ENABLE_BASIC_TESTS_TRUE@  recording/src_srs*.rout recording/call*.rtp
 
+@ENABLE_BASIC_TESTS_FALSE@@ENABLE_MEMGLITCHING_TRUE@makeann_EXTRA_DIST = makeann
 @ENABLE_BASIC_TESTS_TRUE@makeann_EXTRA_DIST = makeann
-@ENABLE_MEMGLITCHING_TRUE@makeann_EXTRA_DIST = makeann
+@ENABLE_BASIC_TESTS_FALSE@@ENABLE_MEMGLITCHING_TRUE@makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
 @ENABLE_BASIC_TESTS_TRUE@makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
-@ENABLE_MEMGLITCHING_TRUE@makeann_CLEANFILES = ringback.0 ringback.3 ringback.8 ringback.18 ringback.9
 @ENABLE_BASIC_TESTS_TRUE@unittests_EXTRA_DIST = unittests
 @ENABLE_BASIC_TESTS_TRUE@rtcp2json_CLEANFILES = rtcp1.output
 @ENABLE_BASIC_TESTS_TRUE@libucl_EXTRA_DIST = libucl
