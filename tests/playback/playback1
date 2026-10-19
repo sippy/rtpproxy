@@ -99,7 +99,7 @@ report "makeann playback1"
 ${RPTL_INT} -s "${BASEDIR}/playback/playback1.rptl" \
  -D RTPPROXY_BIN="`strip_wrapper "${RTPPROXY}"`" -D RUNS="${RUNS}" \
  -D RUNS_ST2="${RUNS_ST2}" \
- -D PYINT="${PYINT}" -D CAPTURE="${BASEDIR}/playback/udp_capture.py" \
+ -D PYINT="${PYINT}" -D CAPTURE="${PYTHON_DIR}/tools/udp_capture.py" \
  -D OUT="${OUT}" > ${OUT}.vars 2> ${OUT}.rptl.rlog
 RPTL_RC=${?}
 if [ ${RPTL_RC} -ne 0 ]
