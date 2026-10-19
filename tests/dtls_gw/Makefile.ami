@@ -1,5 +1,7 @@
 dtls_gw_EXTRA_DIST = dtls_gw
 dtls_gw_CLEANFILES = dtls_gw.?.r*
+if ENABLE_BASIC_TESTS
 TESTS += dtls_gw/basic
+endif
 CLEANFILES += ${dtls_gw_CLEANFILES}
 EXTRA_DIST += ${dtls_gw_EXTRA_DIST}

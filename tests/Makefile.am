@@ -22,7 +22,9 @@ include $(srcdir)/session_timeouts/Makefile.ami
 include $(srcdir)/playback/Makefile.ami
 endif
 if ENABLE_MEMGLITCHING
+if !ENABLE_BASIC_TESTS
 include $(srcdir)/makeann/Makefile.ami
+endif
 include $(srcdir)/memdeb/Makefile.ami
 endif
 if BUILD_CRYPTO
