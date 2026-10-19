@@ -31,7 +31,7 @@ enum rtpp_tnotify_stype {
     RTPP_TNS_FD
 };
 
-#define RTPP_TNT_STYPE(tntp) ({int sst; \
+#define RTPP_TNT_STYPE(tntp) ({int sst = AF_UNSPEC; \
     switch ((tntp)->socket_type) { \
     case RTPP_TNS_LOCAL: \
     case RTPP_TNS_FD: \
