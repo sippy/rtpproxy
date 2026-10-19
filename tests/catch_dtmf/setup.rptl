@@ -1,0 +1,36 @@
+# Allocate a recorder session and prepare one notification/control setup.
+.eval: %%ROOT_OUT%%.%%MODE%% -> OUT
+.eval: rtpp_%%MODE%% -> R
+.eval: %%OUT%%.sink -> SINK_CID
+.eval: NS_%%MODE%% -> deref(NS)
+.eval: %%MODE%%:Hello%2C%20Razvan%40OpenSIPS%21%20%3A-%29 -> TAG
+
+sink: U %%SINK_CID%% 0.0.0.0 0 from_tag_1 -> validate_port(CAP_PORT)
+sink: La %%SINK_CID%% 127.0.0.1 0 from_tag_1 to_tag_1 -> validate_port(TRASH_PORT)
+sink: R %%SINK_CID%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+
+# Invalid DTMF subcommands
+%%R%%: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && MX:1 %%TAG%%
+%%R%%: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M3:Y %%TAG%%
+%%R%%: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M0:1 %%TAG%%
+%%R%%: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M1:0 %%TAG%%
+%%R%%: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M300:0 %%TAG%%
+# No notification socket
+%%R%%: U %%CALLID%% 127.0.0.7 12339 from_tag_1 && M3:1 %%TAG%%
+%%R%%: U %%CALLID%% 127.0.0.6 12340 from_tag_1 %%NS%% %%MODE%%:DTAG && M3:1 %%TAG%%
+%%R%%: U %%CALLID%% 127.0.0.5 12341 from_tag_1 %%NS%% %%MODE%%:DTAG && M3:1 %%TAG%% 22
+# Missing, malformed or extra arguments
+%%R%%: U %%CALLID%% 127.0.0.4 12342 from_tag_1 %%NS%% %%MODE%%:DTAG && M3:1
+%%R%%: U %%CALLID%% 127.0.0.3 12343 from_tag_1 %%NS%% %%MODE%%:DTAG && M3:1 Hello%2C%20Foo%40Bar%21%20%3A-%29 nonsense
+%%R%%: U %%CALLID%% 127.0.0.2 12344 from_tag_1 %%NS%% %%MODE%%:DTAG && M3:1 %%BAD_TAG%% 33
+%%R%%: U %%CALLID%% 127.0.0.2 12344 from_tag_1 %%NS%% %%MODE%%:DTAG && M3:1 Hello%2CKiteh 33 non sense
+%%R%%: U %%CALLID%% 127.0.0.2 12344 from_tag_1 %%NS%% %%MODE%%:DTAG && M3:1 Hello%2CKiteh 33 nonsense
+.echo: OK: sent invalid DTMF subcommands
+# The session used for the replay
+%%R%%: U %%CALLID%% 127.0.0.1 %%TRASH_PORT%% from_tag_1 %%NS%% %%MODE%%:DTAG && M3:1 %%MODE%%:Hello%2C%20Razvan%40OpenSIPS%21+%3A-%29 101 -> validate_port(PORT_U)
+%%R%%: L %%CALLID%% 127.0.0.1 %%CAP_PORT%% from_tag_1 to_tag_1 && M3:1 %%MODE%%:Hello%2C%20Max%21%20%3AD 101 H -> validate_port(PORT_L)
+.echo: OK: set up session on ports %%PORT_U%% and %%PORT_L%%
+
+.exec: tcprewrite --portmap=24270:%%PORT_U%%,24272:%%PORT_L%% -i %%PCAP%% -o %%OUT%%.pcap
+.echo: OK: rewrote %%PCAP%% into %%OUT%%.pcap
+.eval: %%PORT_U%% -> PORT_U_%%MODE%%

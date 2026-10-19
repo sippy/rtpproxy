@@ -1,57 +1,76 @@
 #!/bin/sh
 
-# Tests a set of commands listed in the catch_dtmf.input file
-# and runs those commands through the rtpp control channel, comparing
-# the results with the expected results contained in the
-# catch_dtmf.output file.
+# Tests the catch_dtmf module, see basic.rptl for details. The replies
+# received by basic.rptl are compared with the catch_dtmf.output file and
+# notifications with the catch_dtmf.tnotify.output file. The test runs
+# without fixed ports and does not need root privileges.
+# RPTL runs fixed and wildcard notifications concurrently, sharing one
+# recorder and notification client, including under the glitch runner.
 
 BASEDIR="${BASEDIR:-$(dirname -- $0)/..}"
 BASEDIR="$(readlink -f -- $BASEDIR)"
 
 . $(dirname $0)/../functions
 
-RTPP_NOTIFY_SOCK_TCP="tcp:${IPV4_LHOST}"
-
 CD_DIR="${BASEDIR}/catch_dtmf"
-RTP_PORT=24272
-MIN_PORT=$((${RTP_PORT} - 2))
-MAX_PORT=$((${RTP_PORT} + 1))
 
-run_udpreplay() {
-  sleep 2
-  exec udpreplay "${CD_DIR}/dtmf.pcap"
+# The tools may be run under a wrapper, e.g. setpriv when started as root.
+# The RPTL interpreter is wrapped as well, so whatever it starts already
+# runs with the right credentials: give it bare commands.
+strip_wrapper() {
+  echo "${1##* -- }"
 }
 
-run_catch_dtmf() {
-  (sed "s|%%RTPP_NOTIFY_SOCK_TCP%%|${RTPP_NOTIFY_SOCK_TCP}|g" "${CD_DIR}/catch_dtmf.input"; \
-    sleep 10; cat "${CD_DIR}/sstats.input"; \
-    sleep 4; cat "${CD_DIR}/stats.input"; \
-    cat "${CD_DIR}/gstats.input") | \
-     ${RTPPROXY} ${RTPP_ARGS} 2>catch_dtmf.rlog || return 1
+# Ports are allocated dynamically, so replace each one by its order of
+# appearance before comparing the replies.
+normalize() {
+  grep -v '^MEMDEB(' "${1}" | awk '
+    $1 ~ /^[0-9]+$/ && $1 >= 1024 {
+      if (!($1 in ports))
+        ports[$1] = "P" nports++
+      $1 = ports[$1]
+    }
+    { print }'
 }
 
-set -- `${RTPP_NOTYFY_CLIENT} -s "${RTPP_NOTIFY_SOCK_TCP}:0" \
- -o catch_dtmf.tlog -t 16 -D`
-RTPP_NC_RC=${?}
-RTPP_NC_PID="${1}"
-RTPP_NOTIFY_SOCK_TCP4_PORT="${2}"
-RTPP_NOTIFY_SOCK_TCP="${RTPP_NOTIFY_SOCK_TCP}:${RTPP_NOTIFY_SOCK_TCP4_PORT}"
-report_rc ${RTPP_NC_RC} "Starting rtpp_notify_client.py"
-
-RTPP_ARGS="-d dbug -f -s stdio: -b -n ${RTPP_NOTIFY_SOCK_TCP} -m ${MIN_PORT} \
-  -M ${MAX_PORT} -T3 -W3 --dso ../modules/catch_dtmf/.libs/rtpp_catch_dtmf_debug.so"
-
-run_udpreplay &
-UDPRPL_RC=${?}
-UDPRPL_PID=${!}
-report_rc ${UDPRPL_RC} "Starting udpreplay"
-run_catch_dtmf > catch_dtmf.rout
-report "wait for the rtproxy shutdown"
-notify_client_stop ${RTPP_NC_PID}
-report "wait for rtpp_notify_client.py shutdown"
-wait ${UDPRPL_PID}
-report "wait for udpreplay shutdown"
-${DIFF} "${CD_DIR}/catch_dtmf.output" catch_dtmf.rout
-report "catch_dtmf.output"
-${DIFF} "${CD_DIR}/catch_dtmf.tnotify.output" catch_dtmf.tlog
-report "catch_dtmf"
+OUT="catch_dtmf"
+rm -f "${OUT}.fixed.rlog" "${OUT}.wildcard.rlog"
+: > "${OUT}.rlog"
+# Show progress and errors as they happen, while keeping the exit code.
+{ ${RPTL_INT} -s "${CD_DIR}/basic.rptl" \
+ -D NOTIFY_CLIENT="${PYTHON_DIR}/tools/rtpp_notify_client.py" \
+ -D NOTIFY_SOCK_WILD="${RTPP_NOTIFY_SOCK_WILD}" \
+ -D PCAP="${CD_DIR}/dtmf.pcap" \
+ -D DSO="${TOP_BUILDDIR}/modules/catch_dtmf/.libs/rtpp_catch_dtmf_debug.so" \
+ -D PYINT="${PYINT}" -D RECORDER_BIN="`strip_wrapper "${RTPPROXY_PROD}"`" \
+ -D RECORD_DIR="${RECORD_DIR}" \
+ -D CHECK_RELAYED="${CD_DIR}/check_relayed.py" -D NRELAYED=158 \
+ -D OUT="${OUT}" -D RTPPROXY_BIN="`strip_wrapper "${RTPPROXY}"`" \
+ 2>&1 > ${OUT}.vars; echo ${?} > ${OUT}.rptl.rc; } | tee ${OUT}.rptl.rlog
+RPTL_RC=`cat ${OUT}.rptl.rc`
+# Keep both daemon logs available to the glitch runner, including failures.
+for mode in fixed wildcard
+do
+  if [ -f "${OUT}.${mode}.rlog" ]
+  then
+    cat "${OUT}.${mode}.rlog" >> "${OUT}.rlog"
+  fi
+done
+report_rc ${RPTL_RC} "running basic.rptl"
+for mode in fixed wildcard
+do
+  prefix="${OUT}.${mode}"
+  normalize "${CD_DIR}/catch_dtmf.output" > "${prefix}.eout"
+  normalize "${prefix}.rout" > "${prefix}.nout"
+  ${DIFF} "${prefix}.eout" "${prefix}.nout"
+  report "checking ${mode} rtpproxy replies against catch_dtmf.output"
+  sed -n "s/^${mode}://p" "${OUT}.tlog" > "${prefix}.tlog"
+  ${DIFF} "${CD_DIR}/catch_dtmf.tnotify.output" "${prefix}.tlog"
+  report "checking ${mode} notifications against catch_dtmf.tnotify.output"
+  for msg in "Unhandled DTMF event 20" "Unhandled DTMF event 17" \
+   "Received DTMF for 8 while processing 7" "Received DTMF for 7 without start"
+  do
+    grep -q "${msg}" "${prefix}.rlog"
+    report "checking ${prefix}.rlog for \"${msg}\""
+  done
+done

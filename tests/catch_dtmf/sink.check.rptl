@@ -1,0 +1,1 @@
+sink: Qv %%SINK_CID%% to_tag_1 from_tag_1 npkts_ina -> str_equal(EXPECTED_PACKETS, CAPTURE_DONE)
