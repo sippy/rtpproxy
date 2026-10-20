@@ -1,9 +1,7 @@
 #!/bin/sh
 
-# Tests a set of commands listed in the acct_rtcp_hep/basic.input file
-# and runs those commands through the rtpp control channel, comparing
-# the results with the expected results contained in the
-# acct_rtcp_hep/basic.output file.
+# Exercise HEP over TCP and UDP using dynamically allocated ports. RPTL
+# manages rtpproxy, the HEP receiver and both traffic replay processes.
 
 BASEDIR="${BASEDIR:-$(dirname -- $0)/..}"
 BASEDIR="$(readlink -f -- $BASEDIR)"
@@ -11,142 +9,59 @@ BASEDIR="$(readlink -f -- $BASEDIR)"
 . $(dirname $0)/../functions
 
 CD_DIR="${BASEDIR}/acct_rtcp_hep"
-HEPSIZE=352
 
-run_udpreplay() {
-  direction=${1}
-  rtp_oport=${2}
-  rtp_nport=${3}
-  rtcp_oport=$((${rtp_oport} + 1))
-  rtcp_nport=$((${rtp_nport} + 1))
-  UDPREPLAY_ARGS="-n 160"
-  tcprewrite --portmap=${rtp_oport}:${rtp_nport} --portmap=${rtcp_oport}:${rtcp_nport} \
-   -i "${CD_DIR}/rtcp.${direction}.pcap" -o acct_rtcp_hep.${rtp_nport}.${direction}.pcap || return 1
-  sleep 1
-  exec udpreplay ${UDPREPLAY_ARGS} acct_rtcp_hep.${rtp_nport}.${direction}.pcap
-}
-
-run_rtpproxy() {
-  rname="${1}"
-  rtp_porta=${2}
-  rtp_porto=${3}
-  if [ -e "${rname}" ]
-  then
-    rm "${rname}" || return 1
-  fi
-  (sed "s|%%CALLID%%|${CALL_ID}|g" "${CD_DIR}/basic.input" | \
-   ${RTPPROXY} ${RTPP_ARGS} ${RTPP_REC_ARGS}) | sed \
-   "s|^${rtp_porta}$|%%PORT_A%%|g ;  s|^${rtp_porto}$|%%PORT_O%%|g"
-  (env RTPP_GLITCH_ACT="" ${EXTRACTAUDIO} -S -A "${rname}" || return 1) | \
-   sed "s|${CALL_ID}|%%CALL_ID%%|g"
+# RPTL already runs under the test wrapper, so pass bare commands to it.
+strip_wrapper() {
+  echo "${1##* -- }"
 }
 
 run_acct_rtcp_hep() {
-  HEP_PROTO="${1}"
-  HEP_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
-  RTP_PORT=`${PYINT} -c "from random import random;m=10000;print(m+(int(random()*((65536-m)/4)) * 4))"`
-  CALL_ID="acct_rtcp_hep.${HEP_PROTO}_${HEP_PORT}.rec."
-  RECNAME="${CALL_ID}=from_tag_1.pcap"
-  MIN_PORT=$((${RTP_PORT}))
-  MAX_PORT=$((${RTP_PORT} + 3))
-  RTP_PORT_A=${RTP_PORT}
-  RTP_PORT_O=$((${RTP_PORT} + 2))
-  RTPP_REC_ARGS="-a -P -r ${RECORD_DIR} -S ${RECORD_SPL_DIR}"
-  if [ "${HEP_PROTO}" = "udp" ]
+  proto="${1}"
+  rec_args=""
+  npkts=320
+  if [ "${proto}" = udp ]
   then
-    RTPP_REC_ARGS="${RTPP_REC_ARGS} -R"
+    rec_args="-R"
+    npkts=319
   fi
-
-  CNAME="acct_rtcp_hep.${HEP_PORT}.${HEP_PROTO}.conf"
-  ONAME="acct_rtcp_hep.${HEP_PORT}.${HEP_PROTO}.rout"
-  TNAME="acct_rtcp_hep.${HEP_PORT}.${HEP_PROTO}.tlog"
-  LNAME="acct_rtcp_hep.${HEP_PROTO}.rlog"
-  sed "s|%%HEP_PORT%%|${HEP_PORT}|g ; s|%%HEP_PROTO%%|${HEP_PROTO}|g" < \
-   ${CD_DIR}/basic.conf > "${CNAME}"
-  RTPP_ARGS="-d dbug -f -s stdio: -b -m ${MIN_PORT} \
-   -M ${MAX_PORT} -T1 -W2 --config ${CNAME}"
-
-  NC_ARGS="-l 127.0.0.1 ${HEP_PORT}"
-  if [ "${HEP_PROTO}" = "udp" ]
+  # Keep the full diagnostic log, but show progress as each step completes.
+  # Record the runner's status separately because the pipeline returns awk's.
+  { ${RPTL_INT} -s "${CD_DIR}/basic.rptl" \
+   -D HEP_PROTO="${proto}" -D REC_ARGS="${rec_args}" -D NPKTS="${npkts}" \
+   -D RTPPROXY_BIN="`strip_wrapper "${RTPPROXY}"`" \
+   -D RECORD_DIR="${RECORD_DIR}" -D RECORD_SPL_DIR="${RECORD_SPL_DIR}" \
+   -D TOP_BUILDDIR="${TOP_BUILDDIR}" -D CD_DIR="${CD_DIR}" \
+   -D EXTRACTAUDIO="`strip_wrapper "${EXTRACTAUDIO}"`" -D PYINT="${PYINT}" \
+   2>&1 > "acct_rtcp_hep.${proto}.vars"
+    echo ${?} > "acct_rtcp_hep.${proto}.rptl.rc"
+  } | tee "acct_rtcp_hep.${proto}.rlog" | awk '/^OK: / { print; fflush() }'
+  RPTL_RC=`cat "acct_rtcp_hep.${proto}.rptl.rc"`
+  if [ ${RPTL_RC} -ne 0 ]
   then
-    NC_ARGS="-u ${NC_ARGS}"
+    cat "acct_rtcp_hep.${proto}.rlog" >&2
   fi
-  nc ${NC_ARGS} > ${TNAME}&
-  RTPP_NC_RC=${?}
-  RTPP_NC_PID=${!}
-  sleep 0.2
-  report_rc ${RTPP_NC_RC} "Starting NetCat on port ${HEP_PORT}/${HEP_PROTO}"
-  run_udpreplay a 2006 ${RTP_PORT_A} &
-  UDPRPL_A_RC=${?}
-  UDPRPL_A_PID=${!}
-  report_rc ${UDPRPL_A_RC} "Starting udpreplay (answering) to ${RTP_PORT_A}/rtp"
-  run_udpreplay o 2008 ${RTP_PORT_O} &
-  UDPRPL_O_RC=${?}
-  UDPRPL_O_PID=${!}
-  report_rc ${UDPRPL_O_RC} "Starting udpreplay (originate) to ${RTP_PORT_O}/rtp"
-  run_rtpproxy "${RECNAME}" ${RTP_PORT_A} ${RTP_PORT_O} \
-    > "${ONAME}" 2> "${LNAME}"
-  RTPP_RC=${?}
-  ${DIFF} "${CD_DIR}/basic.${HEP_PROTO}.output" "${ONAME}" >&2
-  DIFF_RC=${?}
-  if [ ${RTPP_RC} -ne 0 -o ${DIFF_RC} -ne 0 ]
-  then
-    kill -KILL ${UDPRPL_A_PID} ${UDPRPL_O_PID} ${RTPP_NC_PID} 2>/dev/null
-    if [ -e "${LNAME}" ]
-    then
-      cat "${LNAME}"
-    fi
-  fi
-  report_rc ${RTPP_RC} "wait for the rtproxy shutdown"
-  report_rc ${DIFF_RC} "checking rtproxy output"
-  kill -TERM ${RTPP_NC_PID} 2>/dev/null
-  if [ "${HEP_PROTO}" != "udp" ]
-  then
-    wait ${RTPP_NC_PID}
-    report "wait for NetCat shutdown"
-  fi
-  wait ${UDPRPL_A_PID}
-  report "wait for udpreplay (answering) shutdown"
-  wait ${UDPRPL_O_PID}
-  report "wait for udpreplay (originate) shutdown"
-  hepsize=`wc -c "${TNAME}"| awk '{print $1}'`
-  if [ ${hepsize} -ne ${HEPSIZE} ]
-  then
-    forcefail 1 "Incorrect HEP size, ${HEPSIZE} expected, ${hepsize} obtained"
-  fi
+  return ${RPTL_RC}
 }
 
-if [ -e rtpproxy_acct.csv ]
-then
-  rm rtpproxy_acct.csv
-fi
+rm -f rtpproxy_acct.csv
 
 run_acct_rtcp_hep tcp &
 TTCP_RC=${?}
 TTCP_PID=${!}
 report_rc "${TTCP_RC}" "Starting sub-test on HEP/tcp"
-sleep 0.2
 run_acct_rtcp_hep udp &
 TUDP_RC=${?}
 TUDP_PID=${!}
-report_rc ${TUDP_RC} "Starting sub-test on HEP/udp"
+report_rc "${TUDP_RC}" "Starting sub-test on HEP/udp"
 wait ${TTCP_PID}
 TTCP_RC=${?}
 wait ${TUDP_PID}
 TUDP_RC=${?}
-cat /dev/null > acct_rtcp_hep.rlog
-for proto in tcp udp
-do
-  lfile="acct_rtcp_hep.${proto}.rlog"
-  if [ -e "${lfile}" ]
-  then
-    cat "${lfile}" >> acct_rtcp_hep.rlog
-  fi
-done
+cat acct_rtcp_hep.tcp.rlog acct_rtcp_hep.udp.rlog > acct_rtcp_hep.rlog
 report_rc "${TTCP_RC}" "Waiting for HEP/tcp to complete"
 report_rc "${TUDP_RC}" "Waiting for HEP/udp to complete"
 
-nlexpected="3"
+nlexpected=3
 anlines=$((`wc -l < rtpproxy_acct.csv`))
 test ${anlines} -eq ${nlexpected}
 report "checking number of lines in rtpproxy_acct.csv: ${anlines} vs ${nlexpected}"

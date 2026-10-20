@@ -2,12 +2,13 @@
 
 TDIR="`dirname "${0}"`"
 BASEDIR="${TDIR}/.."
-SUDO_REQUIRED=1
+SUDO_REQUIRED=0
 . "${BASEDIR}/functions"
 
 . "${TDIR}/glitch.sub"
 
-disable_aslr
+disable_aslr "${@}"
 
-glitch_test acct_rtcp_hep/basic 16 acct_rtcp_hep.rlog
+# Optional first argument selects the number of concurrent glitching jobs.
+glitch_test acct_rtcp_hep/basic 16 acct_rtcp_hep.rlog "" 0 "${1:-50}"
 report "glitching acct_rtcp_hep/basic"

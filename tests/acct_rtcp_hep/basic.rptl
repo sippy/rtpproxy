@@ -1,0 +1,50 @@
+# Test HEP export and automatic recording, with (-R) and without RTCP
+# recording. The wrapper runs this script for both TCP and UDP.
+
+.eval: acct_rtcp_hep.%%HEP_PROTO%% -> WORK_BASE
+.eval: %%WORK_BASE%%.rec. -> CALLID
+.eval: %%RECORD_DIR%%/%%CALLID%%=from_tag_1.pcap -> RECNAME
+# HEP includes CALLID; dropping the old random _NNNNN suffix saves 6 bytes.
+.eval: 346 -> HEP_SIZE
+
+# The receiver announces its bound port, so there is no startup sleep or
+# race between choosing a port and binding it.
+.spawn: exec %%PYINT%% %%CD_DIR%%/hep_sink.py %%HEP_PROTO%% %%WORK_BASE%%.tlog -> HEP
+.readline: HEP 10 -> validate_port(HEP_PORT)
+.echo: OK: Starting HEP receiver on port %%HEP_PORT%%/%%HEP_PROTO%%
+.exec: sed 's|@HEP_PORT@|%%HEP_PORT%%|g; s|@HEP_PROTO@|%%HEP_PROTO%%|g; s|@TOP_BUILDDIR@|%%TOP_BUILDDIR%%|g' %%CD_DIR%%/basic.conf > %%WORK_BASE%%.conf
+.exec: rm -f %%RECNAME%%
+.exec: mkdir -p %%RECORD_SPL_DIR%%
+socket rtpp: stdio: -d dbug -T1 -W2 -a -P -r %%RECORD_DIR%% -S %%RECORD_SPL_DIR%% %%REC_ARGS%% --config %%WORK_BASE%%.conf -> %%WORK_BASE%%.rout
+rtpp: U %%CALLID%% 127.0.0.1 12345 from_tag_1 -> validate_port(PORT_A)
+rtpp: L %%CALLID%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(PORT_O)
+.echo: OK: checking rtpproxy replies (HEP/%%HEP_PROTO%%)
+
+.exec: expr %%PORT_A%% + 1 -> PORT_A_RTCP
+.exec: expr %%PORT_O%% + 1 -> PORT_O_RTCP
+.exec: tcprewrite --dstipmap=0.0.0.0/0:127.0.0.1 --portmap=2006:%%PORT_A%% --portmap=2007:%%PORT_A_RTCP%% -i %%CD_DIR%%/rtcp.a.pcap -o %%WORK_BASE%%.a.pcap
+.exec: tcprewrite --dstipmap=0.0.0.0/0:127.0.0.1 --portmap=2008:%%PORT_O%% --portmap=2009:%%PORT_O_RTCP%% -i %%CD_DIR%%/rtcp.o.pcap -o %%WORK_BASE%%.o.pcap
+.spawn: exec udpreplay -n 160 %%WORK_BASE%%.a.pcap -> REPLAY_A
+.echo: OK: Starting udpreplay (answering) to %%PORT_A%%/rtp (HEP/%%HEP_PROTO%%)
+.spawn: exec udpreplay -n 160 %%WORK_BASE%%.o.pcap -> REPLAY_O
+.echo: OK: Starting udpreplay (originate) to %%PORT_O%%/rtp (HEP/%%HEP_PROTO%%)
+.wait: REPLAY_A 60
+.echo: OK: wait for udpreplay (answering) shutdown (HEP/%%HEP_PROTO%%)
+.wait: REPLAY_O 60
+.echo: OK: wait for udpreplay (originate) shutdown (HEP/%%HEP_PROTO%%)
+.sleep: 0.5
+
+# Closing flushes the recording, the module's HEP queue and CSV accounting,
+# and checks the debug binary's exit status (including memory leaks).
+.close: rtpp
+.echo: OK: wait for rtpproxy shutdown (HEP/%%HEP_PROTO%%)
+.kill: HEP
+.readline: HEP 10 -> str_compare(HEP_SIZE)
+.wait: HEP 10
+.echo: OK: wait for HEP receiver shutdown (HEP/%%HEP_PROTO%%)
+.echo: OK: checking HEP/%%HEP_PROTO%% size: %%HEP_SIZE%% bytes
+
+.exec: RTPP_GLITCH_ACT= %%EXTRACTAUDIO%% -S -A %%RECNAME%% -> str_split(\n, EA_RES)
+.eval: %%RECNAME%%: %%NPKTS%% -> EA_EXP
+.eval: %%EA_RES%% -> str_compare(EA_EXP)
+.echo: OK: checking recording packet count (HEP/%%HEP_PROTO%%): %%NPKTS%%
