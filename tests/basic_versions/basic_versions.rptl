@@ -1,0 +1,6 @@
+# CONTROL selects stdio or a managed listener; commands and expected replies
+# are shared by all transports. No probing commands may alter the counters.
+.eval: %%OUT%%.rlog -> RTPPROXY_STDERR
+socket rtpp: %%CONTROL%% -d dbug -> %%OUT%%.qout
+.include: %%COMMANDS%%
+.close: rtpp
