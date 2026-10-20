@@ -215,11 +215,24 @@ to `/dev/null` and stderr inherited from the RPTL runner.
 |----------|-------------|
 | `.exec: CMDLINE [-> OUTPUT]` | Run `CMDLINE` and wait for it to exit. A non-zero exit code fails the script. Its stdout, with leading and trailing whitespace stripped, is the result; without `-> OUTPUT` it is printed to stderr. |
 | `.spawn: CMDLINE -> NAME` | Start `CMDLINE` in background under handle `NAME` and continue right away. The `NAME` variable is set to its PID. Like other output names, `NAME` can contain variable references, e.g. `-> CAP_%%K%%`, to keep several processes running at once. |
+| `.pyspawn: SCRIPT [ARGS ...] -> NAME` | Start a Python script from a dedicated fork server, using the runner's interpreter. Arguments are split shell-style; shell expansions and redirections are not supported. The handle supports `.readline:`, `.wait:` and `.kill:` like `.spawn:`. |
 | `.readline: NAME [TIMEOUT] [-> OUTPUT]` | Wait for the next line printed by the spawned process `NAME`. Output is buffered from the moment the process is started, so no lines are lost. Fails if the process exits without printing another line, or on timeout. |
 | `.wait: NAME [TIMEOUT] [-> OUTPUT]` | Wait for the spawned process `NAME` to exit and release its handle, so `NAME` can be reused. A non-zero exit code fails the script unless it is captured with `-> OUTPUT` (a negative value means it was killed by that signal). Fails on timeout. |
 | `.kill: NAME [SIGNAL]` | Send `SIGNAL` (name such as `TERM`, `SIGUSR1`, or number; `TERM` by default) to the process group of `NAME`. Does nothing if it has already exited; use `.wait:` afterwards to collect it. |
 
 `TIMEOUT` is in seconds; without it `.readline:` and `.wait:` wait forever.
+
+`.pyspawn:` is a POSIX prototype for avoiding repeated interpreter startup.
+The fork server is shared by Python helpers within one RPTL runner and is
+started lazily, so scripts using only `.spawn:` incur no server cost. Helpers
+inherit the current working directory and environment, read stdin from
+`/dev/null`, and run in their own process groups. For an exec-based comparison,
+set `RPTL_PYSPAWN=0` in the runner's environment. A runner starting just one
+Python helper may pay more startup cost than the exec path.
+
+Managed commands share one I/O thread per runner. It multiplexes their stdout
+pipes, preserves line order within each process, and collects exit statuses
+without blocking output from other commands.
 
 Every spawned process must be collected with `.wait:`. Processes still
 running when the script ends, or when it fails, are terminated, and if the
