@@ -7,7 +7,7 @@ include $(top_srcdir)/autosrc/Makefile.ami
 bin_PROGRAMS=rtpproxy
 if ENABLE_noinst
 noinst_PROGRAMS = rtpp_rzmalloc_perf rtpp_rzmalloc_perf_debug rtpp_fintest \
-  rtpp_wref_test
+  rtpp_wref_test pproc_manager_test
 endif
 if ENABLE_debug
 bin_PROGRAMS += rtpproxy_debug
@@ -193,6 +193,14 @@ rtpp_wref_test_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) $(RTPP_MEMDEB_CPPFLAGS) \
 rtpp_wref_test_CFLAGS = $(NOPT_CFLAGS) $(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 rtpp_wref_test_LDADD = $(RTPP_MEMDEB_LD_ADD)
 rtpp_wref_test_LDFLAGS = $(LTO_FLAG)
+
+pproc_manager_test_SOURCES = pproc_manager_test.c $(SRCS_MEMDEB_CORE) \
+  $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+pproc_manager_test_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) $(RTPP_MEMDEB_CPPFLAGS) \
+  -I$(top_srcdir) -DMEMDEB_APP=pproc_manager_test
+pproc_manager_test_CFLAGS = $(NOPT_CFLAGS) $(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+pproc_manager_test_LDADD = $(RTPP_MEMDEB_LD_ADD)
+pproc_manager_test_LDFLAGS = $(LTO_FLAG)
 
 librtpproxy_la_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN) \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h \
