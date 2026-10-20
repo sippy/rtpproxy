@@ -177,7 +177,15 @@ rtpp_exit(int memdeb, int rval)
 static void
 rtpp_glog_fin(void)
 {
+    const int shutdown_signals[] = {SIGHUP, SIGINT, SIGTERM, SIGXCPU,
+      SIGXFSZ, SIGVTALRM, SIGPROF, SIGUSR1, SIGUSR2};
 
+    /* Coverage atexit handlers may still run after this cleanup. A late
+     * shutdown signal must not dereference the retired configuration/log. */
+    if (_sig_cf->ropts.no_sigtrap == 0) {
+        for (size_t i = 0; i < sizeof(shutdown_signals) / sizeof(shutdown_signals[0]); i++)
+            signal(shutdown_signals[i], SIG_IGN);
+    }
     RTPP_OBJ_DECREF(_sig_cf->glog);
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_FIN(rtpproxy);
