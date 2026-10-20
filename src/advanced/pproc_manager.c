@@ -55,6 +55,8 @@ struct pproc_handler {
 struct pproc_handlers {
     struct rtpp_refcnt *rcnt;
     int nprocs;
+    /* Unused snapshots, with capacities nprocs - 1 down to zero. */
+    struct pproc_handlers *spare;
     struct pproc_handler pproc[0];
 };
 
@@ -71,7 +73,7 @@ static enum pproc_action rtpp_pproc_mgr_handle(struct pproc_manager *, struct pk
 static struct pproc_act rtpp_pproc_mgr_handleat(struct pproc_manager *, struct pkt_proc_ctx *,
   enum pproc_order) __attribute__((always_inline));
 static int rtpp_pproc_mgr_lookup(struct pproc_manager *, void *, struct packet_processor_if *);
-static int rtpp_pproc_mgr_unregister(struct pproc_manager *, void *);
+static void rtpp_pproc_mgr_unregister(struct pproc_manager *, void *);
 static struct pproc_manager *rtpp_pproc_mgr_clone(struct pproc_manager *);
 void rtpp_pproc_mgr_reg_drop(struct pproc_manager *);
 
@@ -85,6 +87,30 @@ DEFINE_SMETHODS(pproc_manager,
     .reg_drop = &rtpp_pproc_mgr_reg_drop,
 );
 
+/* Only the manager owning a snapshot may change its spare link. Readers
+ * access the immutable handler array and retain the snapshot independently.
+ */
+static void
+pproc_handlers_dtor(struct pproc_handlers *handlers)
+{
+    struct pproc_handlers *spare, *next;
+
+    /* Detach before DECREF to release long spare chains without recursion. */
+    spare = handlers->spare;
+    handlers->spare = NULL;
+    while (spare != NULL) {
+        next = spare->spare;
+        spare->spare = NULL;
+        RTPP_OBJ_DECREF(spare);
+        spare = next;
+    }
+    for (int i = 0; i < handlers->nprocs; i++) {
+        const struct packet_processor_if *ip = &handlers->pproc[i].ppif;
+        if (ip->rcnt != NULL)
+            RTPP_OBJ_DECREF(ip);
+    }
+}
+
 static struct pproc_handlers *
 pproc_handlers_alloc(int nprocs)
 {
@@ -95,6 +121,7 @@ pproc_handlers_alloc(int nprocs)
     if (hndlrs == NULL)
         return (NULL);
     hndlrs->nprocs = nprocs;
+    RTPP_OBJ_DTOR_ATTACH_s(hndlrs, pproc_handlers_dtor, hndlrs);
     return (hndlrs);
 }
 
@@ -109,6 +136,7 @@ struct pproc_manager *
 pproc_manager_ctor(struct rtpp_stats *rtpp_stats, int nprocs)
 {
     struct pproc_manager_pvt *pvt;
+    struct pproc_handlers **next;
 
     pvt = rtpp_rzmalloc(sizeof(*pvt), PVT_RCOFFS(pvt));
     if (pvt == NULL)
@@ -119,9 +147,17 @@ pproc_manager_ctor(struct rtpp_stats *rtpp_stats, int nprocs)
     if (pthread_mutex_init(&pvt->lock, NULL) != 0)
         goto e1;
     RTPP_OBJ_DTOR_ATTACH_s(&(pvt->pub), pthread_mutex_destroy, &pvt->lock);
-    pvt->handlers = pproc_handlers_alloc(nprocs);
-    if (pvt->handlers == NULL)
-        goto e1;
+    /* Clones need a reserve for every handler they inherit as well. */
+    next = &pvt->handlers;
+    for (int n = nprocs; n >= 0; n--) {
+        *next = pproc_handlers_alloc(n);
+        if (*next == NULL) {
+            if (pvt->handlers != NULL)
+                RTPP_OBJ_DECREF(pvt->handlers);
+            goto e1;
+        }
+        next = &(*next)->spare;
+    }
     RTPP_OBJ_BORROW_s(&(pvt->pub), rtpp_stats);
     pvt->rtpp_stats = rtpp_stats;
     PUBINST_FININIT(&pvt->pub, pvt, rtpp_pproc_mgr_dtor);
@@ -138,7 +174,7 @@ rtpp_pproc_mgr_register(struct pproc_manager *pub, enum pproc_order pproc_order,
 {
     int i;
     struct pproc_manager_pvt *pvt;
-    struct pproc_handlers *newh;
+    struct pproc_handlers *newh, *spare, *oldh;
 
     PUB2PVT(pub, pvt);
     pthread_mutex_lock(&pvt->lock);
@@ -146,6 +182,12 @@ rtpp_pproc_mgr_register(struct pproc_manager *pub, enum pproc_order pproc_order,
     newh = pproc_handlers_alloc(pvt->handlers->nprocs + 1);
     if (newh == NULL) {
         pthread_mutex_unlock(&pvt->lock);
+        return (-1);
+    }
+    spare = pproc_handlers_alloc(pvt->handlers->nprocs);
+    if (spare == NULL) {
+        pthread_mutex_unlock(&pvt->lock);
+        RTPP_OBJ_DECREF(newh);
         return (-1);
     }
     for (i = 0; i < pvt->handlers->nprocs; i++)
@@ -162,11 +204,16 @@ rtpp_pproc_mgr_register(struct pproc_manager *pub, enum pproc_order pproc_order,
     for (int j = 0; j < newh->nprocs; j++) {
         ip = &newh->pproc[j].ppif;
         if (ip->rcnt != NULL)
-            RTPP_OBJ_BORROW_s(newh, ip);
+            RTPP_OBJ_INCREF(ip);
     }
-    RTPP_OBJ_DECREF(pvt->handlers);
+    oldh = pvt->handlers;
+    spare->spare = oldh->spare;
+    oldh->spare = NULL;
+    newh->spare = spare;
     pvt->handlers = newh;
     pthread_mutex_unlock(&pvt->lock);
+    /* Handler destructors may call back into a manager. */
+    RTPP_OBJ_DECREF(oldh);
     return (0);
 }
 
@@ -256,7 +303,7 @@ rtpp_pproc_mgr_lookup(struct pproc_manager *pub, void *key, struct packet_proces
     return (0);
 }
 
-static int
+static void
 rtpp_pproc_mgr_unregister(struct pproc_manager *pub, void *key)
 {
     int i;
@@ -270,11 +317,11 @@ rtpp_pproc_mgr_unregister(struct pproc_manager *pub, void *key)
         RTPP_DBG_ASSERT(pvt->handlers->pproc[i].order != _PPROC_ORD_EMPTY);
         if (ip->key != key)
             continue;
-        newh = pproc_handlers_alloc(pvt->handlers->nprocs - 1);
-        if (newh == NULL) {
-            pthread_mutex_unlock(&pvt->lock);
-            return (-1);
-        }
+        oldh = pvt->handlers;
+        newh = oldh->spare;
+        assert(newh != NULL);
+        assert(newh->nprocs == oldh->nprocs - 1);
+        oldh->spare = NULL;
         if (i > 0)
             memcpy(&newh->pproc[0], &pvt->handlers->pproc[0],
               sizeof(pvt->handlers->pproc[0]) * i);
@@ -284,15 +331,14 @@ rtpp_pproc_mgr_unregister(struct pproc_manager *pub, void *key)
         for (int j = 0; j < newh->nprocs; j++) {
             ip = &newh->pproc[j].ppif;
             if (ip->rcnt != NULL)
-                RTPP_OBJ_BORROW_s(newh, ip);
+                RTPP_OBJ_INCREF(ip);
         }
-        oldh = pvt->handlers;
         pvt->handlers = newh;
         pthread_mutex_unlock(&pvt->lock);
         /* DECREF might call a destructor chain, so it should be done out */
         /* of the locked area! */
         RTPP_OBJ_DECREF(oldh);
-        return (0);
+        return;
     }
     abort();
 }
@@ -318,7 +364,7 @@ rtpp_pproc_mgr_clone(struct pproc_manager *pub)
         const struct packet_processor_if *ip = &pvt_new->handlers->pproc[i].ppif;
         RTPP_DBG_ASSERT(pvt->handlers->pproc[i].order != _PPROC_ORD_EMPTY);
         if (ip->rcnt != NULL)
-            RTPP_OBJ_BORROW(pvt->handlers, ip);
+            RTPP_OBJ_INCREF(ip);
     }
     pthread_mutex_unlock(&pvt->lock);
     return (rval);
