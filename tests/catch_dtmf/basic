@@ -13,13 +13,6 @@ BASEDIR="$(readlink -f -- $BASEDIR)"
 CD_DIR="${BASEDIR}/catch_dtmf"
 OUT="catch_dtmf"
 
-# The tools may be run under a wrapper, e.g. setpriv when started as root.
-# The RPTL interpreter is wrapped as well, so whatever it starts already
-# runs with the right credentials: give it bare commands.
-strip_wrapper() {
-  echo "${1##* -- }"
-}
-
 # Ports are allocated dynamically, so replace each one by its order of
 # appearance before comparing the replies.
 normalize() {

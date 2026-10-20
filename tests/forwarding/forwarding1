@@ -29,13 +29,6 @@ BASEDIR="`dirname "${0}"`/.."
 CODEC_SETS="${CODEC_SETS:-"0,3,4,8,9 18,3,4,9,0"}"
 OUT="forwarding1"
 
-# The tools may be run under a wrapper, e.g. setpriv when started as root.
-# The RPTL interpreter is wrapped as well, so whatever it starts already
-# runs with the right credentials: give it bare commands.
-strip_wrapper() {
-  echo "${1##* -- }"
-}
-
 rotate_CODECSA() {
   first_codec="${1}"
   shift
