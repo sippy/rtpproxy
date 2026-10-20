@@ -12,4 +12,11 @@ then
   chown -R rtpproxy .
 fi
 
-TEST_WITNESS_ENABLE=yes make check
+if [ "${RTPP_TEST_PREBUILT}" = "yes" ]
+then
+  # The CI image already contains every test binary. Its object files and
+  # static archives are omitted, so do not recurse through the build targets.
+  TEST_WITNESS_ENABLE=yes make -C tests check-TESTS
+else
+  TEST_WITNESS_ENABLE=yes make check
+fi

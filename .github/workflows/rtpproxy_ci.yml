@@ -229,7 +229,10 @@ jobs:
           --tag rtpproxy-ci:tests .
 
     - name: Save CI image
-      run: docker save rtpproxy-ci:tests | zstd -T0 -3 -c > "${RUNNER_TEMP}/rtpproxy-ci.tar.zst"
+      run: |
+        docker image inspect rtpproxy-ci:tests --format 'Uncompressed CI image size: {{.Size}} bytes'
+        docker save rtpproxy-ci:tests | zstd -T0 -3 -c > "${RUNNER_TEMP}/rtpproxy-ci.tar.zst"
+        du -h "${RUNNER_TEMP}/rtpproxy-ci.tar.zst"
 
     - name: Upload CI image
       uses: actions/upload-artifact@v7
