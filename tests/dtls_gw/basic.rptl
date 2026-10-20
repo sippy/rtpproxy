@@ -1,0 +1,21 @@
+# Exercise the same IPv4/IPv6 DTLS transitions as the standalone example,
+# using managed proxies and paths supplied by the test harness.
+.eval: 25 -> WAIT_TRAFFIC
+.exec: mkdir -p %%RECORD_SPL_DIR%%
+.eval: -T5 -p /dev/null --bridge_symmetric -d dbug -l 0.0.0.0 -6 /:: --dso %%DSO%% -> RTPPROXY_ARGS
+.eval: dtls_gw.a.rlog -> RTPPROXY_STDERR
+socket gena: stdio: %%RTPPROXY_ARGS%% -r %%RECORD_DIR%% -> dtls_gw.a.creplies
+.echo: OK: rtpproxy GenA started
+.eval: dtls_gw.f.rlog -> RTPPROXY_STDERR
+socket fwd: stdio: %%RTPPROXY_ARGS%% -i -> dtls_gw.f.creplies
+.echo: OK: rtpproxy Fwd started
+.eval: dtls_gw.o.rlog -> RTPPROXY_STDERR
+socket geno: stdio: %%RTPPROXY_ARGS%% -P -r %%RECORD_DIR%% -S %%RECORD_SPL_DIR%% -> dtls_gw.o.creplies
+.echo: OK: rtpproxy GenO started
+.include: %%SCENARIO%%
+.close: geno
+.echo: OK: wait for rtpproxy GenO shutdown
+.close: fwd
+.echo: OK: wait for rtpproxy Fwd shutdown
+.close: gena
+.echo: OK: wait for rtpproxy GenA shutdown
