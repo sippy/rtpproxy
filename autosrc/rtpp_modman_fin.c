@@ -28,6 +28,10 @@ static void rtpp_modman_startall_fin(void *pub) {
     fprintf(stderr, "Method rtpp_modman@%p::startall (rtpp_modman_startall) is invoked after destruction\x0a", pub);
     RTPP_AUTOTRAP();
 }
+static void rtpp_modman_stopall_fin(void *pub) {
+    fprintf(stderr, "Method rtpp_modman@%p::stopall (rtpp_modman_stopall) is invoked after destruction\x0a", pub);
+    RTPP_AUTOTRAP();
+}
 void rtpp_modman_fin(struct rtpp_modman *pub) {
     RTPP_DBG_ASSERT(pub->do_acct != (rtpp_modman_do_acct_t)NULL);
     RTPP_DBG_ASSERT(pub->do_acct != (rtpp_modman_do_acct_t)&rtpp_modman_do_acct_fin);
@@ -44,6 +48,9 @@ void rtpp_modman_fin(struct rtpp_modman *pub) {
     RTPP_DBG_ASSERT(pub->startall != (rtpp_modman_startall_t)NULL);
     RTPP_DBG_ASSERT(pub->startall != (rtpp_modman_startall_t)&rtpp_modman_startall_fin);
     pub->startall = (rtpp_modman_startall_t)&rtpp_modman_startall_fin;
+    RTPP_DBG_ASSERT(pub->stopall != (rtpp_modman_stopall_t)NULL);
+    RTPP_DBG_ASSERT(pub->stopall != (rtpp_modman_stopall_t)&rtpp_modman_stopall_fin);
+    pub->stopall = (rtpp_modman_stopall_t)&rtpp_modman_stopall_fin;
 }
 #endif /* RTPP_DEBUG */
 #if defined(RTPP_FINTEST)
@@ -72,6 +79,7 @@ rtpp_modman_fintest()
     tp->pub.get_ul_subc_h = (rtpp_modman_get_ul_subc_h_t)((void *)0x1);
     tp->pub.insert = (rtpp_modman_insert_t)((void *)0x1);
     tp->pub.startall = (rtpp_modman_startall_t)((void *)0x1);
+    tp->pub.stopall = (rtpp_modman_stopall_t)((void *)0x1);
     RTPP_OBJ_DTOR_ATTACH_s(&tp->pub, (rtpp_refcnt_dtor_t)&rtpp_modman_fin,
       &tp->pub);
     RTPP_OBJ_DECREF(&(tp->pub));
@@ -80,7 +88,8 @@ rtpp_modman_fintest()
     CALL_TFIN(&tp->pub, get_ul_subc_h);
     CALL_TFIN(&tp->pub, insert);
     CALL_TFIN(&tp->pub, startall);
-    assert((_naborts - naborts_s) == 5);
+    CALL_TFIN(&tp->pub, stopall);
+    assert((_naborts - naborts_s) == 6);
 }
 DATA_SET(rtpp_fintests, rtpp_modman_fintest);
 #endif /* RTPP_FINTEST */
