@@ -36,7 +36,7 @@ normalize() {
 { ${RPTL_INT} -s "${CD_DIR}/basic.rptl" \
  -D NOTIFY_CLIENT="${PYTHON_DIR}/tools/rtpp_notify_client.py" \
  -D PCAP="${CD_DIR}/dtmf.pcap" \
- -D DSO="../modules/catch_dtmf/.libs/rtpp_catch_dtmf_debug.so" \
+ -D DSO="${TOP_BUILDDIR}/modules/catch_dtmf/.libs/rtpp_catch_dtmf_debug.so" \
  -D PYINT="${PYINT}" -D RECORDER_BIN="`strip_wrapper "${RTPPROXY_PROD}"`" \
  -D RECORD_DIR="${RECORD_DIR}" \
  -D CHECK_RELAYED="${CD_DIR}/check_relayed.py" -D NRELAYED=158 \
