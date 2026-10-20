@@ -10,13 +10,6 @@ CTYPES="stdio: udp: unix: tcp: cunix: udp6: tcp6:"
 # Output files are named after the test, so the tests can run in parallel
 OUT="session_timeouts.`basename "${0}"`"
 
-# The tools may be run under a wrapper, e.g. setpriv when started as root.
-# The RPTL interpreter is wrapped as well, so whatever it starts already
-# runs with the right credentials: give it bare commands.
-strip_wrapper() {
-  echo "${1##* -- }"
-}
-
 # Ports are allocated dynamically, so replace each one by its order of
 # appearance before comparing the replies.
 normalize() {

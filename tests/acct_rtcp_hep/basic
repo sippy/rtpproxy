@@ -10,11 +10,6 @@ BASEDIR="$(readlink -f -- $BASEDIR)"
 
 CD_DIR="${BASEDIR}/acct_rtcp_hep"
 
-# RPTL already runs under the test wrapper, so pass bare commands to it.
-strip_wrapper() {
-  echo "${1##* -- }"
-}
-
 run_acct_rtcp_hep() {
   proto="${1}"
   rec_args=""
