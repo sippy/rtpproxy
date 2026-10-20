@@ -572,17 +572,15 @@ main(int argc, char **argv)
 
     struct cnode *cnp_next;
     nasamples = nbsamples = nwsamples = 0;
+    ap = (dflags & D_FLAG_NOSYNC) != 0 ? &channels : &act_subset;
     do {
         neof = 0;
         asample = bsample = 0;
         seen_a = seen_b = 0;
         isample += 1;
-        if ((dflags & D_FLAG_NOSYNC) == 1) {
-            ap = &channels;
-        } else if (sync_sample == isample) {
+        if ((dflags & D_FLAG_NOSYNC) == 0 && sync_sample == isample) {
             if (eaud_ss_syncactive(&channels, &act_subset, isample, &sync_sample) < 0)
                 errx(1, "eaud_ss_syncactive() failed");
-            ap = &act_subset;
         }
         MYQ_FOREACH(cnp, ap) {
 restart:
@@ -667,7 +665,10 @@ out:
     sf_close(sffile);
 
     while (argc > 1) {
-        link(argv[0], argv[argc - 1]);
+        if (link(argv[0], argv[argc - 1]) != 0) {
+            warn("%s: can't link to %s", argv[0], argv[argc - 1]);
+            ecode = 1;
+        }
         argc--;
     }
 

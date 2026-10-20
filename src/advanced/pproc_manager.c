@@ -70,7 +70,7 @@ struct pproc_manager_pvt {
 
 static int rtpp_pproc_mgr_register(struct pproc_manager *, enum pproc_order, const struct packet_processor_if *);
 static enum pproc_action rtpp_pproc_mgr_handle(struct pproc_manager *, struct pkt_proc_ctx *);
-static struct pproc_act rtpp_pproc_mgr_handleat(struct pproc_manager *, struct pkt_proc_ctx *,
+static inline struct pproc_act rtpp_pproc_mgr_handleat(struct pproc_manager *, struct pkt_proc_ctx *,
   enum pproc_order) __attribute__((always_inline));
 static int rtpp_pproc_mgr_lookup(struct pproc_manager *, void *, struct packet_processor_if *);
 static void rtpp_pproc_mgr_unregister(struct pproc_manager *, void *);
@@ -224,7 +224,7 @@ rtpp_pproc_mgr_handle(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp)
     return rtpp_pproc_mgr_handleat(pub, pktxp, _PPROC_ORD_EMPTY).a;
 }
 
-static struct pproc_act
+static inline struct pproc_act
 rtpp_pproc_mgr_handleat(struct pproc_manager *pub, struct pkt_proc_ctx *pktxp,
   enum pproc_order startat)
 {
