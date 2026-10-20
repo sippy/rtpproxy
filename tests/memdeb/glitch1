@@ -2,7 +2,7 @@
 
 TDIR="`dirname "${0}"`"
 BASEDIR="${TDIR}/.."
-SUDO_REQUIRED=1
+SUDO_REQUIRED=0
 . "${BASEDIR}/functions"
 
 . "${TDIR}/glitch.sub"
@@ -33,7 +33,7 @@ rtpp_glitch()
     reportifnotfail "glitch rtpproxy using ${1}, action ${2}"
 }
 
-disable_aslr
+disable_aslr "${@}"
 
 rtpp_glitch "garbage" "r"
 rtpp_glitch "*" "garbage"
