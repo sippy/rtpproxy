@@ -178,6 +178,7 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
     snp = &rtep->rtt.socket_name;
     rval = 0;
     sprefix = NULL;
+    usock_name = sock_name;
     if (strncmp("unix:", sock_name, 5) == 0) {
         usock_name = sock_name + 5;
         rtep->rtt.socket_type = RTPP_TNS_LOCAL;
@@ -195,7 +196,6 @@ parse_timeout_sock(const char *sock_name, union rtpp_tnotify_entry *rtep,
         rtep->rtt.fd = fd;
     } else {
         sprefix = "unix:";
-        usock_name = sock_name;
         rtep->rtt.socket_type = RTPP_TNS_LOCAL;
     }
     switch (rtep->rtt.socket_type) {

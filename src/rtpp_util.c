@@ -199,7 +199,7 @@ struct rtpp_daemon_rope
 rtpp_daemon(int nochdir, int noclose, int noredir)
 {
     struct sigaction osa, sa;
-    int fd;
+    int fd = -1;
     pid_t newgrp;
     int oerrno;
     int osa_ok;
