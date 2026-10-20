@@ -5,5 +5,8 @@ TESTS += memdeb/glitch_scheduler memdeb/glitch1 memdeb/glitch_libucl1 \
   memdeb/glitch_command_parser1_stdio memdeb/glitch_acct_rtcp_hep \
   memdeb/glitch_catch_dtmf memdeb/glitch_unittests_sbuf \
   memdeb/glitch_makeann1 memdeb/glitch_playback memdeb/glitch_recording
+if BUILD_CRYPTO
+TESTS += memdeb/glitch_dtls_gw
+endif
 CLEANFILES += ${memdeb_CLEANFILES}
 EXTRA_DIST += ${memdeb_EXTRA_DIST}
