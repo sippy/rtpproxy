@@ -9,7 +9,7 @@
 
 # The receiver announces its bound port, so there is no startup sleep or
 # race between choosing a port and binding it.
-.spawn: exec %%PYINT%% %%CD_DIR%%/hep_sink.py %%HEP_PROTO%% %%WORK_BASE%%.tlog -> HEP
+.pyspawn: %%CD_DIR%%/hep_sink.py %%HEP_PROTO%% %%WORK_BASE%%.tlog -> HEP
 .readline: HEP 10 -> validate_port(HEP_PORT)
 .echo: OK: Starting HEP receiver on port %%HEP_PORT%%/%%HEP_PROTO%%
 .exec: sed 's|@HEP_PORT@|%%HEP_PORT%%|g; s|@HEP_PROTO@|%%HEP_PROTO%%|g; s|@TOP_BUILDDIR@|%%TOP_BUILDDIR%%|g' %%CD_DIR%%/basic.conf > %%WORK_BASE%%.conf

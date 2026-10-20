@@ -1,10 +1,10 @@
 # Stream recording to a remote UDP destination (C).
 #
-# Expects PYINT and UDP_SINK to be defined.
+# Expects UDP_SINK to be defined.
 
 .include: basic.setup.rptl
 
-.spawn: exec %%PYINT%% %%UDP_SINK%% 127.0.0.1 %%WORK_BASE%%.tlog -> SINK
+.pyspawn: %%UDP_SINK%% 127.0.0.1 %%WORK_BASE%%.tlog -> SINK
 .readline: SINK 10 -> validate_port(SINK_PORT)
 
 rtpp: C %%CALLID%% udp:127.0.0.1:%%SINK_PORT%% from_tag_1 -> str_compare(RES_OK)
