@@ -1,17 +1,25 @@
+# Optional output, daemon log, and timeout (zero disables the timeout).
 spin_nc()
 {
 #  NC_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
 #  (nc -k -l 127.0.0.1 ${NC_PORT} > glitch1.ncout)&
 #  (strace -o glitch1.nctrace -f ${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 2>glitch1.nclog 1>glitch1.nclog)&
-  GNC_LOG="glitch1.nclog"
-  if [ -e ${GNC_LOG} ]
+  GNC_OUT="${1:-glitch1.ncout}"
+  GNC_LOG="${2:-glitch1.nclog}"
+  if [ -e "${GNC_LOG}" ]
   then
     rm "${GNC_LOG}"
   fi
   # Filtering replaces this file as the test runner (root in CI), while the
   # notification client runs as rtpproxy and cannot truncate that replacement.
-  rm -f glitch1.ncout
-  set -- `${RTPP_NOTYFY_CLIENT} -D -s tcp:127.0.0.1:0 -o glitch1.ncout -t 600 -l "${GNC_LOG}"`
+  rm -f "${GNC_OUT}"
+  if [ "${3:-600}" = 0 ]
+  then
+    set --
+  else
+    set -- -t "${3:-600}"
+  fi
+  set -- `${RTPP_NOTYFY_CLIENT} -G -D -s tcp:127.0.0.1:0 -o "${GNC_OUT}" -l "${GNC_LOG}" "${@}"`
   RTPP_NC_RC=${?}
   NC_PID="${1}"
   NC_PORT="${2}"
@@ -64,7 +72,7 @@ glitch_collect()
     echo "                   ....$((`wc -l < glitch1.ncout`)) selected points"
   fi
   echo "                   ....$((`awk '{print $2}' glitch1.ncout | sort -u | wc -l`)) unique points"
-  GPS="`awk '{print $2}' glitch1.ncout | sort -u`"
+  GPS="`awk '!seen[$2]++ {print $2}' glitch1.ncout`"
   for gp in ${GPS}
   do
     glline_c="`grep -w ${gp} glitch1.ncout | awk '{print $7}' | sort -u | wc -l`"
@@ -77,56 +85,303 @@ glitch_collect()
   done
 }
 
-glitch_do()
+glitch_worker()
 {
   test="${1}"
-  nok_expected="${2}"
-  rlog="${3}"
+  rlog="${2}"
+  queue="${3}"
+  counts="${4}"
 
   nfail=0
   nok=0
+  worker_failed=0
 
-  GPS="`awk '{print $7" "$2}' glitch1.ncout  | sort -u | awk '{print $2}'`"
-  for gp in ${GPS}
+  while :
   do
-    glline="`grep -w ${gp} glitch1.ncout | awk '{print $7}' | uniq`"
+    entry="`${PYINT:-python3} "${BASEDIR}/memdeb/glitch_queue.py" "${queue}"`" || return 1
+    [ -n "${entry}" ] || break
+    gp="${entry%% *}"
+    glline="${entry#* }"
     tp="${gp}:*"
-    if RTPP_GLITCH_ACT="g" RTPP_GLITCH_TRIG="${tp}" ./${test} 2>/dev/null >/dev/null
+    if [ -n "${rlog}" ]
     then
+      rm -f -- "${rlog}" || return 1
+    fi
+    # Keep each attempt's output: an early setup failure may miss its target,
+    # and later iterations reuse the test's own log files.
+    exit_status="${counts}.${gp}.status"
+    # Let the launcher create this file: it may run under a different uid.
+    rm -f -- "${exit_status}" || return 1
+    if RTPP_GLITCH_ACT="Rg" RTPP_GLITCH_TRIG="${tp}" \
+      RTPP_GLITCH_CH_PORT="${NC_PORT}" RPTL_EXIT_STATUS="${exit_status}" \
+      "${test}" > "${counts}.${gp}.log" 2>&1
+    then
+       point_nok=1
        nok=$((${nok} + 1))
        res="INEFFECTIVE"
     else
+       point_nok=0
        res="OK, caused test to fail"
        nfail=$((${nfail} + 1))
     fi
-    if [ ! -z ${rlog} ]
+    # A test can translate a daemon crash into an ordinary failure (or even
+    # success). Inspect the status captured by its parent, before any logs.
+    if [ -f "${exit_status}" ] && awk '$2 < 0 && $2 != -$3 {crashed = 1}
+      END {exit !crashed}' "${exit_status}"
     then
+      printf "%-24s glitching CRASH at %s\n" "${tp}:" "${glline}"
+      awk '$2 < 0 && $2 != -$3 {
+        printf "managed process pid %s exited on signal %d\n", $1, -$2
+      }' "${exit_status}"
+      tail -n 80 "${counts}.${gp}.log"
+      return 1
+    fi
+    if [ -n "${rlog}" ]
+    then
+      if [ ! -f "${rlog}" ] || [ ! -r "${rlog}" ]
+      then
+        echo "${tp}: missing or unreadable test log ${PWD}/${rlog}" >&2
+        return 1
+      fi
       if grep -q "MEMDEB(.*): errors found: " "${rlog}"
       then
          res="${res} (LEAKS!)"
+         worker_failed=1
       fi
       if grep -q "^Died on signal" "${rlog}"
       then
          res="CRASH"
       fi
     fi
-    printf "%-24s glitching %s at ${glline}\n" "${tp}:" "${res}"
+    printf "%-24s glitching %s at %s\n" "${tp}:" "${res}" "${glline}"
     if [ "${res}" = "CRASH" ]
     then
       grep -B 5 -A 5 "^Died on signal" "${rlog}"
       return 1
     fi
+    # A retry replaces the unconfirmed attempt rather than counting twice.
+    echo "${point_nok} $((1 - point_nok))" > "${workdir}/${gp}.result"
   done
+  echo "${nok} ${nfail}" > "${counts}"
+  return "${worker_failed}"
+}
+
+# Count each cookie once: repeated reports cannot cover an unexercised point.
+glitch_check_coverage()
+{
+  awk -v missing="${3:-}" '
+    FILENAME == ARGV[1] { expected[$1] = $2; total++; next }
+    $2 in expected { hit[$2] = 1 }
+    END {
+      for (gp in expected) {
+        if (gp in hit)
+          exercised++
+        else {
+          printf "%s:*: glitch point not exercised at %s\n", gp, expected[gp]
+          if (missing != "")
+            print gp > missing
+        }
+      }
+      printf "%d of %d glitch points exercised\n", exercised, total
+      exit (exercised != total)
+    }' "${1}" "${2}"
+}
+
+# Freeze parents before enumerating children, so they cannot start another
+# iteration or reparent a child while interrupt cleanup walks the tree.
+glitch_stop_tree()
+{
+  local child
+
+  kill -STOP "${1}" 2>/dev/null || return 0
+  echo "${1}"
+  for child in `pgrep -P "${1}"`
+  do
+    glitch_stop_tree "${child}"
+  done
+}
+
+glitch_interrupt()
+{
+  trap '' INT TERM HUP
+  # Descendants may have their own sessions (RPTL .spawn).
+  interrupted_pids="`for pid in ${pids}; do glitch_stop_tree "${pid}"; done`"
+  if [ -n "${interrupted_pids}" ]
+  then
+    kill -TERM ${interrupted_pids} 2>/dev/null || true
+    kill -CONT ${interrupted_pids} 2>/dev/null || true
+    sleep 1
+    kill -KILL ${interrupted_pids} 2>/dev/null || true
+  fi
+  for pid in ${pids}
+  do
+    wait "${pid}" 2>/dev/null || true
+  done
+  if [ -n "${NC_PID}" ]
+  then
+    stop_nc
+  fi
+  echo "Glitching interrupted; worker logs retained in ${workdir}" >&2
+  exit "${1}"
+}
+
+# Keep PID tracking and fatal failures shared across the stress and retry passes.
+glitch_dispatch()
+{
+  local queue="${1}" njobs="${2}" pass="${3}" job pid
+
+  pids=""
+  job=0
+  while [ "${job}" -lt "${njobs}" ]
+  do
+    (
+      if [ "${njobs}" -gt 1 ]
+      then
+        jobdir="`${MKTEMP_CMD} -d "${workdir}/${pass}.${job}.XXXXXXXX"`" || exit 1
+        cd "${jobdir}" || exit 1
+        export BASEDIR TOP_BUILDDIR
+        BUILDDIR="$(pwd)"
+        export BUILDDIR
+      fi
+      glitch_worker "${test}" "${rlog}" \
+        "${queue}" "${workdir}/${pass}.${job}.counts"
+    ) &
+    pids="${pids} ${!}"
+    if [ "${interrupted}" -ne 0 ]
+    then
+      glitch_interrupt "${interrupted}"
+    fi
+    job=$((job + 1))
+  done
+
+  for pid in ${pids}
+  do
+    wait "${pid}" || failed=1
+    if [ "${interrupted}" -ne 0 ]
+    then
+      glitch_interrupt "${interrupted}"
+    fi
+  done
+  pids=""
+}
+
+glitch_wait_coverage()
+{
+  local attempt
+
+  # Reports arrive asynchronously; allow a bounded wait for final hits.
+  for attempt in 1 2 3
+  do
+    glitch_check_coverage "${queue}" "${workdir}/hits.ncout" >/dev/null && return 0
+    [ "${attempt}" = 3 ] || sleep 1
+    if [ "${interrupted}" -ne 0 ]
+    then
+      glitch_interrupt "${interrupted}"
+    fi
+  done
+  return 1
+}
+
+# Parallel execution is opt-in: the test must allocate its ports dynamically
+# and support running in an independent working directory (e.g. via RPTL).
+glitch_do()
+(
+  test="${BASEDIR}/${1}"
+  nok_expected="${2}"
+  rlog="${3}"
+  njobs="${4:-1}"
+  points="$(pwd)/glitch1.ncout"
+  # The harness may run as root while the test's tools run as rtpproxy.
+  # Both parent and worker directories must be accessible to those tools.
+  workdir="`${MKTEMP_CMD} -d "${TMPDIR:-/tmp}/glitch.XXXXXXXX"`" || return 1
+  queue="${workdir}/queue"
+  # Preserve first-seen order and avoid rescanning the points for each job.
+  awk '!seen[$2]++ {print $2 " " $7}' "${points}" > "${queue}" || return 1
+  if [ ! -s "${queue}" ]
+  then
+    echo "No glitch points selected; logs retained in ${workdir}" >&2
+    return 1
+  fi
+
+  pids=""
+  NC_PID=""
+  interrupted=0
+  # Defer cleanup until the current worker's PID has been recorded.
+  trap 'interrupted=130' INT
+  trap 'interrupted=143' TERM
+  trap 'interrupted=129' HUP
+  # A serial dispatch may take much longer than the initial survey.
+  spin_nc "${workdir}/hits.ncout" "${workdir}/collector.nclog" 0
+  if [ "${interrupted}" -ne 0 ]
+  then
+    glitch_interrupt "${interrupted}"
+  fi
+  failed=0
+  retried=0
+  glitch_dispatch "${queue}" "${njobs}" stress
+  glitch_wait_coverage || true
+  if [ "${failed}" -eq 0 ] && \
+    ! glitch_check_coverage "${queue}" "${workdir}/hits.ncout" "${workdir}/stress.missing" >/dev/null
+  then
+    retried=1
+    awk 'FILENAME == ARGV[1] {missing[$1] = 1; next} $1 in missing' \
+      "${workdir}/stress.missing" "${queue}" > "${workdir}/retry.queue" || failed=1
+    retry_jobs=$((`wc -l < "${workdir}/retry.queue"`))
+    retry_points="${retry_jobs}"
+    [ "${retry_jobs}" -le 5 ] || retry_jobs=5
+    [ "${retry_jobs}" -le "${njobs}" ] || retry_jobs="${njobs}"
+    echo "Retrying ${retry_points} unexercised glitch points with ${retry_jobs} jobs"
+    glitch_dispatch "${workdir}/retry.queue" "${retry_jobs}" retry
+    glitch_wait_coverage || true
+  fi
+  stop_nc
+  NC_PID=""
+  if ! glitch_check_coverage "${queue}" "${workdir}/hits.ncout" "${workdir}/missing"
+  then
+    failed=1
+    while read -r gp
+    do
+      for logfile in "${workdir}"/*."${gp}".log
+      do
+        [ -f "${logfile}" ] || continue
+        echo "Test output for unexercised point ${gp}:"
+        tail -n 80 "${logfile}"
+      done
+    done < "${workdir}/missing"
+  fi
+  if [ "${failed}" -ne 0 ]
+  then
+    echo "Glitching failed; worker logs retained in ${workdir}"
+    return 1
+  fi
+  set -- `awk '{nok += $1; nfail += $2} END {print nok + 0, nfail + 0}' "${workdir}"/*.result`
+  nok="${1}"
+  nfail="${2}"
   echo "${nok} times ineffective, ${nfail} times effective"
   if [ ${nok} -gt ${nok_expected} ]
   then
     echo "Glitching was ineffective ${nok} times vs expected ${nok_expected}"
+    echo "Worker logs retained in ${workdir}"
     return 1
   fi
+  if [ "${retried}" -ne 0 ]
+  then
+    echo "Glitch coverage recovered on retry"
+  fi
+  rm -rf "${workdir}"
   return 0
-}
+)
 
+# Arguments: test, expected ineffective points, log, filter, retries, jobs.
+# Jobs defaults to one; callers must opt in only for parallel-safe tests.
 glitch_test() {
+  njobs="${6:-1}"
+  case "${njobs}" in
+    ''|*[!0-9]*|0*)
+      echo "glitch_test: jobs must be a positive integer" >&2
+      return 1
+      ;;
+  esac
   if [ ! -z "${5}" ]
   then
     nretry="${5}"
@@ -135,6 +390,6 @@ glitch_test() {
   fi
   glitch_collect "${1}" "${4}" "${nretry}"
   report "Collecting glitch data for \"${1}\""
-  glitch_do "${1}" "${2}" "${3}"
+  glitch_do "${1}" "${2}" "${3}" "${njobs}"
   return ${?}
 }

@@ -1,0 +1,252 @@
+#!/bin/sh
+
+# Verify collection and dynamic dispatch without faulting an rtpproxy instance.
+BASEDIR="${BASEDIR:-$(dirname -- $0)/..}"
+BASEDIR="$(readlink -f -- "${BASEDIR}")"
+QUEUE_HELPERS="${BASEDIR}/memdeb"
+. "${BASEDIR}/functions"
+. "${QUEUE_HELPERS}/glitch.sub"
+
+${PYINT} "${PYTHON_DIR}/tools/test_glitch_collector.py"
+report "shared glitch collector regression tests"
+
+fixture_root="`mktemp -d "${TMPDIR:-/tmp}/glitch-scheduler.XXXXXXXX"`" || exit 1
+trap 'rm -rf "${fixture_root}"' EXIT
+ln -s "${QUEUE_HELPERS}" "${fixture_root}/memdeb" || exit 1
+BASEDIR="${fixture_root}"
+export BASEDIR
+real_mktemp="${MKTEMP_CMD}"
+scheduler_mktemp() {
+  printf '%s\n' "${*}" >> "${fixture_root}/mktemp.calls"
+  ${real_mktemp} "${@}"
+}
+MKTEMP_CMD=scheduler_mktemp
+: > "${fixture_root}/mktemp.calls"
+cat > "${fixture_root}/test" <<'EOT'
+#!/bin/sh
+if [ "${OMIT_LOG:-0}" != 1 ]
+then
+  : > test.rlog
+fi
+cookie="${RTPP_GLITCH_TRIG%%:*}"
+echo "fixture output for ${cookie}"
+test "${RTPP_GLITCH_ACT}" = Rg || exit 2
+${PYINT:-python3} - "${RTPP_GLITCH_CH_PORT}" "${cookie}" <<'PY'
+import os
+from pathlib import Path
+import socket
+import sys
+
+cookie = sys.argv[2]
+mode = os.environ.get('REPORT_MODE', '')
+if mode in ('recover', 'retry_ineffective', 'crash', 'leak'):
+    marker = Path(os.environ['RESULTS_ROOT']) / ('attempt-' + cookie)
+    first = not marker.exists()
+    marker.touch()
+    if first and (cookie == 'c0002' or mode == 'recover'):
+        sys.exit(0)
+if cookie == 'c0002':
+    if mode == 'missing':
+        sys.exit(0)
+    if mode == 'wrong':
+        cookie = 'cffff'
+with socket.create_connection(('127.0.0.1', int(sys.argv[1]))) as conn:
+    # Multiple reports of one cookie must still count as just one point.
+    conn.sendall((f's0: {cookie} called from test() at fixture:1\n' * 2).encode())
+PY
+test "${?}" = 0 || exit 2
+printf '%s\n' "${PWD##*/}" >> "${RESULTS_ROOT}/${cookie}"
+printf '%s\n' "${cookie}" >> "${RESULTS_ROOT}/order"
+if [ "${cookie}" = c0002 ]
+then
+  case "${REPORT_MODE:-}" in
+  crash) echo 'Died on signal 11' > test.rlog; exit 1 ;;
+  exit_crash|exit_crash_success)
+    echo '1234 -11 0' >> "${RPTL_EXIT_STATUS}"
+    [ "${REPORT_MODE}" = exit_crash_success ] && exit 0
+    exit 1 ;;
+  exit_normal)
+    echo '1234 1 0' >> "${RPTL_EXIT_STATUS}"
+    exit 1 ;;
+  exit_cleanup)
+    echo '1234 -15 15' >> "${RPTL_EXIT_STATUS}"
+    echo '1235 -9 9' >> "${RPTL_EXIT_STATUS}"
+    exit 1 ;;
+  leak) echo 'MEMDEB(fixture): errors found: 1' > test.rlog; exit 1 ;;
+  retry_ineffective) exit 0 ;;
+  esac
+fi
+if [ "${SLOW_TEST}" = 1 ] && [ "${cookie}" = c0003 ]
+then
+  # Hold the first slot until another worker claims the last point.
+  tries=0
+  while [ ! -e "${RESULTS_ROOT}/c0006" ] && [ "${tries}" -lt 100 ]
+  do
+    sleep 0.05
+    tries=$((tries + 1))
+  done
+fi
+case "${cookie}" in
+  c0001|c0004) exit 0 ;;
+  *) exit 1 ;;
+esac
+EOT
+chmod +x "${fixture_root}/test" || exit 1
+
+for workers in 2 1 50
+do
+  mkdir "${fixture_root}/${workers}" || exit 1
+  cd "${fixture_root}/${workers}" || exit 1
+  RESULTS_ROOT="$(pwd)/results"
+  mkdir "${RESULTS_ROOT}" || exit 1
+  SLOW_TEST=0
+  [ "${workers}" = 2 ] && SLOW_TEST=1
+  export RESULTS_ROOT SLOW_TEST
+  cat > glitch1.ncout <<'EOT'
+s1: c0003 called from setup() at z.c:90
+s2: c0001 called from setup() at a.c:10
+s3: c0003 called from setup() at z.c:90
+s4: c0002 called from setup() at m.c:20
+s5: c0004 called from setup() at b.c:40
+s6: c0001 called from setup() at a.c:10
+s7: c0005 called from setup() at c.c:50
+s8: c0006 called from setup() at c.c:60
+EOT
+  before="`wc -l < "${fixture_root}/mktemp.calls"`"
+  glitch_do test 2 test.rlog "${workers}" > run.log 2>&1
+  rc=${?}
+  cat run.log
+  report_rc "${rc}" "scheduler with ${workers} workers"
+  after="`wc -l < "${fixture_root}/mktemp.calls"`"
+  expected_calls=1
+  [ "${workers}" -gt 1 ] && expected_calls=$((workers + 1))
+  [ "$((after - before))" -eq "${expected_calls}" ] || exit 1
+  report_rc 0 "creating worker directories through the credential wrapper"
+  grep -q '^2 times ineffective, 4 times effective$' run.log
+  report "aggregating worker results"
+  grep -q '^6 of 6 glitch points exercised$' run.log
+  report "verifying every point through the shared collector"
+  for cookie in c0003 c0001 c0002 c0004 c0005 c0006
+  do
+    [ "`wc -l < "${RESULTS_ROOT}/${cookie}"`" -eq 1 ] || exit 1
+  done
+  if [ "${workers}" = 2 ]
+  then
+    slow_worker="`cat "${RESULTS_ROOT}/c0003"`"
+    fast_worker="`cat "${RESULTS_ROOT}/c0001"`"
+    [ "${slow_worker}" != "${fast_worker}" ] || exit 1
+    for cookie in c0002 c0004 c0005 c0006
+    do
+      [ "`cat "${RESULTS_ROOT}/${cookie}"`" = "${fast_worker}" ] || exit 1
+    done
+    report_rc 0 "idle worker drains the queue while the first worker is busy"
+  elif [ "${workers}" = 1 ]
+  then
+    printf '%s\n' c0003 c0001 c0002 c0004 c0005 c0006 > expected
+    diff -u expected "${RESULTS_ROOT}/order"
+    report "preserving first-seen order without duplicate execution"
+  fi
+done
+
+# A failing test without the requested hit is not successful fault injection.
+for REPORT_MODE in missing wrong
+do
+  export REPORT_MODE
+  glitch_do test 2 test.rlog 2 > "${REPORT_MODE}.log" 2>&1
+  reportifnotfail "rejecting ${REPORT_MODE} glitch reports"
+  grep -q 'c0002:\*: glitch point not exercised at m.c:20' "${REPORT_MODE}.log"
+  report "identifying the unexercised point"
+  grep -q '^5 of 6 glitch points exercised$' "${REPORT_MODE}.log"
+  report "counting unique matching reports"
+  grep -q '^fixture output for c0002$' "${REPORT_MODE}.log"
+  report "showing test output for unexercised points"
+  failure_workdir="`awk '/^Glitching failed; worker logs retained in / {print $NF}' "${REPORT_MODE}.log"`"
+  [ -s "${failure_workdir}/hits.ncout" ] || exit 1
+  rm -rf "${failure_workdir}"
+done
+unset REPORT_MODE
+
+# Keep the stress pass, then retry only its missing points with at most 5 jobs.
+for REPORT_MODE in recover retry_ineffective crash leak exit_crash exit_crash_success exit_normal exit_cleanup
+do
+  export REPORT_MODE
+  RESULTS_ROOT="${fixture_root}/${REPORT_MODE}.results"
+  mkdir "${RESULTS_ROOT}" || exit 1
+  export RESULTS_ROOT
+  glitch_do test 2 test.rlog 50 > "${REPORT_MODE}.log" 2>&1
+  rc=${?}
+  case "${REPORT_MODE}" in
+  recover)
+    report_rc "${rc}" "recovering coverage at lower concurrency"
+    grep -q '^Retrying 6 unexercised glitch points with 5 jobs$' recover.log
+    report "limiting the retry pass to five workers"
+    grep -q '^6 of 6 glitch points exercised$' recover.log
+    grep -q '^2 times ineffective, 4 times effective$' recover.log
+    report "counting each point once after retry"
+    ! grep -q 'logs retained in ' recover.log || exit 1
+    report_rc 0 "discarding worker logs after a successful retry"
+    for cookie in c0001 c0002 c0003 c0004 c0005 c0006
+    do
+      [ "`wc -l < "${RESULTS_ROOT}/${cookie}"`" -eq 2 ] || exit 1
+    done
+    ;;
+  retry_ineffective)
+    [ "${rc}" -ne 0 ] || exit 1
+    grep -q '^Retrying 1 unexercised glitch points with 1 jobs$' retry_ineffective.log
+    grep -q '^3 times ineffective, 3 times effective$' retry_ineffective.log
+    grep -q '^Glitching was ineffective 3 times vs expected 2$' retry_ineffective.log
+    report "applying ineffective limits to retry results"
+    [ "`wc -l < "${RESULTS_ROOT}/c0002"`" -eq 2 ] || exit 1
+    for cookie in c0001 c0003 c0004 c0005 c0006
+    do
+      [ "`wc -l < "${RESULTS_ROOT}/${cookie}"`" -eq 1 ] || exit 1
+    done
+    report "retrying only unexercised points"
+    ;;
+  exit_normal|exit_cleanup)
+    report_rc "${rc}" "accepting ${REPORT_MODE} process statuses"
+    ;;
+  crash|leak|exit_crash|exit_crash_success)
+    [ "${rc}" -ne 0 ] || exit 1
+    ! grep -q '^Retrying ' "${REPORT_MODE}.log" || exit 1
+    report_rc 0 "preserving ${REPORT_MODE} failures without retry"
+    case "${REPORT_MODE}" in
+    exit_crash*)
+      grep -q 'managed process pid 1234 exited on signal 11' "${REPORT_MODE}.log"
+      report "detecting a crash from wait status without a crash diagnostic"
+      ;;
+    esac
+    ;;
+  esac
+  if [ "${rc}" -ne 0 ]
+  then
+    failure_workdir="`awk '/[Ww]orker logs retained in / {print $NF}' "${REPORT_MODE}.log" | tail -n 1`"
+    [ -n "${failure_workdir}" ] && [ -d "${failure_workdir}" ] || exit 1
+    rm -rf "${failure_workdir}"
+  fi
+done
+unset REPORT_MODE
+
+# Do not reuse a previous iteration's log or count setup failures as faults.
+OMIT_LOG=1
+export OMIT_LOG
+printf '%s\n' 'stale log' > test.rlog
+glitch_do test 2 test.rlog 1 > missing.log 2>&1
+reportifnotfail "rejecting a missing per-test log"
+grep -q 'missing or unreadable test log' missing.log
+report "reporting the missing log without grep errors"
+test ! -e test.rlog
+report "removing stale per-test logs"
+failure_workdir="`awk '/^Glitching failed; worker logs retained in / {print $NF}' missing.log`"
+[ -n "${failure_workdir}" ] || exit 1
+rm -rf "${failure_workdir}"
+
+# An empty survey cannot prove that any fault injection ran.
+: > glitch1.ncout
+glitch_do test 2 test.rlog 1 > empty.log 2>&1
+reportifnotfail "rejecting an empty glitch survey"
+grep -q '^No glitch points selected;' empty.log
+report "reporting the empty survey"
+failure_workdir="`awk '/^No glitch points selected; logs retained in / {print $NF}' empty.log`"
+[ -n "${failure_workdir}" ] || exit 1
+rm -rf "${failure_workdir}"
