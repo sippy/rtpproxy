@@ -577,6 +577,8 @@ rtpp_stream_handle_play(struct rtpp_stream *self,
 e2:
     CALL_SMETHOD(self->pproc_manager->reverse, unreg, drop_on_pa_poi.key);
 e1:
+    pvt->rtps.uid = RTPP_UID_NONE;
+    pvt->rtps.inact = 0;
     RTPP_OBJ_DECREF(rsrv);
 e0:
     pthread_mutex_unlock(&pvt->lock);
