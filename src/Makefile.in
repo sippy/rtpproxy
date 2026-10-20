@@ -96,7 +96,9 @@ bin_PROGRAMS = rtpproxy$(EXEEXT) $(am__EXEEXT_1)
 @ENABLE_noinst_TRUE@noinst_PROGRAMS = rtpp_rzmalloc_perf$(EXEEXT) \
 @ENABLE_noinst_TRUE@	rtpp_rzmalloc_perf_debug$(EXEEXT) \
 @ENABLE_noinst_TRUE@	rtpp_fintest$(EXEEXT) \
-@ENABLE_noinst_TRUE@	rtpp_wref_test$(EXEEXT) $(am__EXEEXT_2)
+@ENABLE_noinst_TRUE@	rtpp_wref_test$(EXEEXT) \
+@ENABLE_noinst_TRUE@	pproc_manager_test$(EXEEXT) \
+@ENABLE_noinst_TRUE@	$(am__EXEEXT_2)
 @ENABLE_debug_TRUE@am__append_2 = rtpproxy_debug
 @BUILD_OBJCK_TRUE@@ENABLE_noinst_TRUE@am__append_3 = rtpp_objck rtpp_objck_perf
 @ENABLE_MODULE_IF_TRUE@am__append_4 = rtpp_module_if.h
@@ -340,7 +342,29 @@ librtpproxy_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(LDFLAGS) -o $@
 @ENABLE_LIBRTPPROXY_FALSE@am_librtpproxy_la_rpath =
 @ENABLE_LIBRTPPROXY_TRUE@am_librtpproxy_la_rpath = -rpath $(libdir)
-am__objects_14 = $(MAINSRCDIR)/rtpp_fintest-rtpp_memdeb.$(OBJEXT) \
+am__objects_14 =  \
+	$(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.$(OBJEXT) \
+	$(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.$(OBJEXT) \
+	$(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.$(OBJEXT) \
+	$(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.$(OBJEXT) \
+	$(MAINSRCDIR)/pproc_manager_test-rtpp_threads.$(OBJEXT) \
+	$(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.$(OBJEXT) \
+	$(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.$(OBJEXT) \
+	$(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.$(OBJEXT)
+am__objects_15 = $(am__objects_14) \
+	pproc_manager_test-rtpp_memdeb_test.$(OBJEXT)
+am_pproc_manager_test_OBJECTS =  \
+	pproc_manager_test-pproc_manager_test.$(OBJEXT) \
+	$(am__objects_15) \
+	$(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.$(OBJEXT)
+pproc_manager_test_OBJECTS = $(am_pproc_manager_test_OBJECTS)
+am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.la
+pproc_manager_test_DEPENDENCIES = $(am__DEPENDENCIES_1)
+pproc_manager_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(pproc_manager_test_CFLAGS) $(CFLAGS) \
+	$(pproc_manager_test_LDFLAGS) $(LDFLAGS) -o $@
+am__objects_16 = $(MAINSRCDIR)/rtpp_fintest-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_fintest-rtpp_glitch.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_fintest-rtpp_autoglitch.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_fintest-rtpp_refcnt.$(OBJEXT) \
@@ -348,98 +372,97 @@ am__objects_14 = $(MAINSRCDIR)/rtpp_fintest-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_fintest-rtpp_mallocs.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_fintest-rtpp_stacktrace.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_fintest-rtpp_coverage.$(OBJEXT)
-am__objects_15 = $(am__objects_14) \
+am__objects_17 = $(am__objects_16) \
 	rtpp_fintest-rtpp_memdeb_test.$(OBJEXT)
-am__objects_16 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_command_rcache_fin.$(OBJEXT)
-am__objects_17 =  \
+am__objects_18 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_command_rcache_fin.$(OBJEXT)
+am__objects_19 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_log_obj_fin.$(OBJEXT)
-am__objects_18 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_port_table_fin.$(OBJEXT)
-am__objects_19 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_timed_task_fin.$(OBJEXT)
-am__objects_20 =  \
+am__objects_20 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_port_table_fin.$(OBJEXT)
+am__objects_21 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_timed_task_fin.$(OBJEXT)
+am__objects_22 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_modman_fin.$(OBJEXT)
-am__objects_21 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_module_if_fin.$(OBJEXT)
-am__objects_22 = $(am__objects_16) $(am__objects_17) $(am__objects_18) \
-	$(am__objects_19) $(am__objects_20) $(am__objects_21)
 am__objects_23 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_netaddr_fin.$(OBJEXT)
-am__objects_24 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_pearson_perfect_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_module_if_fin.$(OBJEXT)
+am__objects_24 = $(am__objects_18) $(am__objects_19) $(am__objects_20) \
+	$(am__objects_21) $(am__objects_22) $(am__objects_23)
 am__objects_25 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_refcnt_fin.$(OBJEXT)
-am__objects_26 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_server_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_netaddr_fin.$(OBJEXT)
+am__objects_26 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_pearson_perfect_fin.$(OBJEXT)
 am__objects_27 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_stats_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_refcnt_fin.$(OBJEXT)
 am__objects_28 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_stream_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_server_fin.$(OBJEXT)
 am__objects_29 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_timed_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_stats_fin.$(OBJEXT)
 am__objects_30 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_pcount_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_stream_fin.$(OBJEXT)
 am__objects_31 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_record_fin.$(OBJEXT)
-am__objects_32 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_hash_table_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_timed_fin.$(OBJEXT)
+am__objects_32 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_pcount_fin.$(OBJEXT)
 am__objects_33 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_weakref_fin.$(OBJEXT)
-am__objects_34 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_analyzer_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_record_fin.$(OBJEXT)
+am__objects_34 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_hash_table_fin.$(OBJEXT)
 am__objects_35 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_pcnt_strm_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_weakref_fin.$(OBJEXT)
 am__objects_36 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_ttl_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_analyzer_fin.$(OBJEXT)
 am__objects_37 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_pipe_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_pcnt_strm_fin.$(OBJEXT)
 am__objects_38 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_ringbuf_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_ttl_fin.$(OBJEXT)
 am__objects_39 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_sessinfo_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_pipe_fin.$(OBJEXT)
 am__objects_40 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_ringbuf_fin.$(OBJEXT)
+am__objects_41 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_sessinfo_fin.$(OBJEXT)
+am__objects_42 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_rw_lock_fin.$(OBJEXT)
-am__objects_41 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_proc_servers_fin.$(OBJEXT)
-am__objects_42 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_proc_wakeup_fin.$(OBJEXT)
-am__objects_43 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_socket_fin.$(OBJEXT)
-am__objects_44 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_refproxy_fin.$(OBJEXT)
+am__objects_43 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_proc_servers_fin.$(OBJEXT)
+am__objects_44 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_proc_wakeup_fin.$(OBJEXT)
 am__objects_45 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_wref_fin.$(OBJEXT)
-am__objects_46 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_command_reply_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_socket_fin.$(OBJEXT)
+am__objects_46 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_refproxy_fin.$(OBJEXT)
 am__objects_47 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_wref_fin.$(OBJEXT)
+am__objects_48 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_command_reply_fin.$(OBJEXT)
+am__objects_49 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_genuid_fin.$(OBJEXT)
-am__objects_48 =  \
+am__objects_50 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_bindaddrs_fin.$(OBJEXT)
-am__objects_49 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_packetport_fin.$(OBJEXT)
-am__objects_50 = $(am__objects_23) $(am__objects_24) $(am__objects_25) \
-	$(am__objects_26) $(am__objects_27) $(am__objects_28) \
-	$(am__objects_29) $(am__objects_30) $(am__objects_31) \
-	$(am__objects_32) $(am__objects_33) $(am__objects_34) \
-	$(am__objects_35) $(am__objects_36) $(am__objects_37) \
-	$(am__objects_38) $(am__objects_39) $(am__objects_40) \
-	$(am__objects_41) $(am__objects_42) $(am__objects_43) \
-	$(am__objects_44) $(am__objects_45) $(am__objects_46) \
-	$(am__objects_47) $(am__objects_48) $(am__objects_49)
+am__objects_51 = $(RTPP_AUTOSRC_DIR)/rtpp_fintest-rtpp_packetport_fin.$(OBJEXT)
+am__objects_52 = $(am__objects_25) $(am__objects_26) $(am__objects_27) \
+	$(am__objects_28) $(am__objects_29) $(am__objects_30) \
+	$(am__objects_31) $(am__objects_32) $(am__objects_33) \
+	$(am__objects_34) $(am__objects_35) $(am__objects_36) \
+	$(am__objects_37) $(am__objects_38) $(am__objects_39) \
+	$(am__objects_40) $(am__objects_41) $(am__objects_42) \
+	$(am__objects_43) $(am__objects_44) $(am__objects_45) \
+	$(am__objects_46) $(am__objects_47) $(am__objects_48) \
+	$(am__objects_49) $(am__objects_50) $(am__objects_51)
 am_rtpp_fintest_OBJECTS = rtpp_fintest-rtpp_fintest.$(OBJEXT) \
-	$(am__objects_15) $(am__objects_22) $(am__objects_50)
+	$(am__objects_17) $(am__objects_24) $(am__objects_52)
 rtpp_fintest_OBJECTS = $(am_rtpp_fintest_OBJECTS)
-am__DEPENDENCIES_1 = $(top_srcdir)/libexecinfo/libexecinfo.la
 rtpp_fintest_DEPENDENCIES = $(am__DEPENDENCIES_1)
 rtpp_fintest_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rtpp_fintest_CFLAGS) \
 	$(CFLAGS) $(rtpp_fintest_LDFLAGS) $(LDFLAGS) -o $@
-am__objects_51 = $(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_command_rcache_fin.$(OBJEXT)
-am__objects_52 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_log_obj_fin.$(OBJEXT)
-am__objects_53 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_port_table_fin.$(OBJEXT)
+am__objects_53 = $(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_command_rcache_fin.$(OBJEXT)
 am__objects_54 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_timed_task_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_log_obj_fin.$(OBJEXT)
 am__objects_55 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_modman_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_port_table_fin.$(OBJEXT)
 am__objects_56 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_timed_task_fin.$(OBJEXT)
+am__objects_57 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_modman_fin.$(OBJEXT)
+am__objects_58 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_module_if_fin.$(OBJEXT)
-am__objects_57 = $(am__objects_51) $(am__objects_52) $(am__objects_53) \
-	$(am__objects_54) $(am__objects_55) $(am__objects_56)
-am__objects_58 = rtpp_objck-rtpp_objck.$(OBJEXT) $(am__objects_57) \
+am__objects_59 = $(am__objects_53) $(am__objects_54) $(am__objects_55) \
+	$(am__objects_56) $(am__objects_57) $(am__objects_58)
+am__objects_60 = rtpp_objck-rtpp_objck.$(OBJEXT) $(am__objects_59) \
 	rtpp_objck-rtpp_network.$(OBJEXT) \
 	rtpp_objck-rtpp_stats.$(OBJEXT) \
 	rtpp_objck-rtpp_netaddr.$(OBJEXT) \
@@ -452,7 +475,7 @@ am__objects_58 = rtpp_objck-rtpp_objck.$(OBJEXT) $(am__objects_57) \
 	rtpp_objck-rtpp_wi_sgnl.$(OBJEXT) \
 	rtpp_objck-rtpp_wi_pkt.$(OBJEXT) rtpp_objck-rtp.$(OBJEXT) \
 	rtpp_objck-rtpp_util.$(OBJEXT)
-am__objects_59 = $(MAINSRCDIR)/rtpp_objck-rtpp_memdeb.$(OBJEXT) \
+am__objects_61 = $(MAINSRCDIR)/rtpp_objck-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_glitch.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_autoglitch.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_refcnt.$(OBJEXT) \
@@ -460,87 +483,87 @@ am__objects_59 = $(MAINSRCDIR)/rtpp_objck-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_mallocs.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_stacktrace.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_objck-rtpp_coverage.$(OBJEXT)
-am__objects_60 = $(am__objects_59) \
+am__objects_62 = $(am__objects_61) \
 	rtpp_objck-rtpp_memdeb_test.$(OBJEXT)
-am__objects_61 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_netaddr_fin.$(OBJEXT)
-am__objects_62 = $(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_pearson_perfect_fin.$(OBJEXT)
 am__objects_63 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_refcnt_fin.$(OBJEXT)
-am__objects_64 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_server_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_netaddr_fin.$(OBJEXT)
+am__objects_64 = $(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_pearson_perfect_fin.$(OBJEXT)
 am__objects_65 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_stats_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_refcnt_fin.$(OBJEXT)
 am__objects_66 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_stream_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_server_fin.$(OBJEXT)
 am__objects_67 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_timed_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_stats_fin.$(OBJEXT)
 am__objects_68 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_pcount_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_stream_fin.$(OBJEXT)
 am__objects_69 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_record_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_timed_fin.$(OBJEXT)
 am__objects_70 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_hash_table_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_pcount_fin.$(OBJEXT)
 am__objects_71 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_weakref_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_record_fin.$(OBJEXT)
 am__objects_72 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_analyzer_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_hash_table_fin.$(OBJEXT)
 am__objects_73 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_pcnt_strm_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_weakref_fin.$(OBJEXT)
 am__objects_74 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_ttl_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_analyzer_fin.$(OBJEXT)
 am__objects_75 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_pipe_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_pcnt_strm_fin.$(OBJEXT)
 am__objects_76 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_ringbuf_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_ttl_fin.$(OBJEXT)
 am__objects_77 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_sessinfo_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_pipe_fin.$(OBJEXT)
 am__objects_78 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_rw_lock_fin.$(OBJEXT)
-am__objects_79 = $(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_proc_servers_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_ringbuf_fin.$(OBJEXT)
+am__objects_79 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_sessinfo_fin.$(OBJEXT)
 am__objects_80 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_proc_wakeup_fin.$(OBJEXT)
-am__objects_81 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_socket_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_rw_lock_fin.$(OBJEXT)
+am__objects_81 = $(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_proc_servers_fin.$(OBJEXT)
 am__objects_82 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_refproxy_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_proc_wakeup_fin.$(OBJEXT)
 am__objects_83 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_wref_fin.$(OBJEXT)
-am__objects_84 = $(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_command_reply_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_socket_fin.$(OBJEXT)
+am__objects_84 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_refproxy_fin.$(OBJEXT)
 am__objects_85 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_genuid_fin.$(OBJEXT)
-am__objects_86 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_bindaddrs_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_wref_fin.$(OBJEXT)
+am__objects_86 = $(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_command_reply_fin.$(OBJEXT)
 am__objects_87 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_genuid_fin.$(OBJEXT)
+am__objects_88 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_bindaddrs_fin.$(OBJEXT)
+am__objects_89 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_objck-rtpp_packetport_fin.$(OBJEXT)
-am__objects_88 = $(am__objects_61) $(am__objects_62) $(am__objects_63) \
-	$(am__objects_64) $(am__objects_65) $(am__objects_66) \
-	$(am__objects_67) $(am__objects_68) $(am__objects_69) \
-	$(am__objects_70) $(am__objects_71) $(am__objects_72) \
-	$(am__objects_73) $(am__objects_74) $(am__objects_75) \
-	$(am__objects_76) $(am__objects_77) $(am__objects_78) \
-	$(am__objects_79) $(am__objects_80) $(am__objects_81) \
-	$(am__objects_82) $(am__objects_83) $(am__objects_84) \
-	$(am__objects_85) $(am__objects_86) $(am__objects_87)
-am_rtpp_objck_OBJECTS = $(am__objects_58) $(am__objects_60) \
-	$(am__objects_88)
+am__objects_90 = $(am__objects_63) $(am__objects_64) $(am__objects_65) \
+	$(am__objects_66) $(am__objects_67) $(am__objects_68) \
+	$(am__objects_69) $(am__objects_70) $(am__objects_71) \
+	$(am__objects_72) $(am__objects_73) $(am__objects_74) \
+	$(am__objects_75) $(am__objects_76) $(am__objects_77) \
+	$(am__objects_78) $(am__objects_79) $(am__objects_80) \
+	$(am__objects_81) $(am__objects_82) $(am__objects_83) \
+	$(am__objects_84) $(am__objects_85) $(am__objects_86) \
+	$(am__objects_87) $(am__objects_88) $(am__objects_89)
+am_rtpp_objck_OBJECTS = $(am__objects_60) $(am__objects_62) \
+	$(am__objects_90)
 rtpp_objck_OBJECTS = $(am_rtpp_objck_OBJECTS)
 am__DEPENDENCIES_2 =
 rtpp_objck_DEPENDENCIES = $(am__DEPENDENCIES_2) $(am__DEPENDENCIES_1)
 rtpp_objck_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rtpp_objck_CFLAGS) \
 	$(CFLAGS) $(rtpp_objck_LDFLAGS) $(LDFLAGS) -o $@
-am__objects_89 = $(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_command_rcache_fin.$(OBJEXT)
-am__objects_90 = $(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_log_obj_fin.$(OBJEXT)
-am__objects_91 = $(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_port_table_fin.$(OBJEXT)
-am__objects_92 = $(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_timed_task_fin.$(OBJEXT)
-am__objects_93 =  \
+am__objects_91 = $(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_command_rcache_fin.$(OBJEXT)
+am__objects_92 = $(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_log_obj_fin.$(OBJEXT)
+am__objects_93 = $(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_port_table_fin.$(OBJEXT)
+am__objects_94 = $(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_timed_task_fin.$(OBJEXT)
+am__objects_95 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_modman_fin.$(OBJEXT)
-am__objects_94 = $(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_module_if_fin.$(OBJEXT)
-am__objects_95 = $(am__objects_89) $(am__objects_90) $(am__objects_91) \
-	$(am__objects_92) $(am__objects_93) $(am__objects_94)
-am__objects_96 = rtpp_objck_perf-rtpp_objck.$(OBJEXT) \
-	$(am__objects_95) rtpp_objck_perf-rtpp_network.$(OBJEXT) \
+am__objects_96 = $(RTPP_AUTOSRC_DIR)/rtpp_objck_perf-rtpp_module_if_fin.$(OBJEXT)
+am__objects_97 = $(am__objects_91) $(am__objects_92) $(am__objects_93) \
+	$(am__objects_94) $(am__objects_95) $(am__objects_96)
+am__objects_98 = rtpp_objck_perf-rtpp_objck.$(OBJEXT) \
+	$(am__objects_97) rtpp_objck_perf-rtpp_network.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_stats.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_netaddr.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_pearson_perfect.$(OBJEXT) \
@@ -554,7 +577,7 @@ am__objects_96 = rtpp_objck_perf-rtpp_objck.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_wi_pkt.$(OBJEXT) \
 	rtpp_objck_perf-rtp.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_util.$(OBJEXT)
-am_rtpp_objck_perf_OBJECTS = $(am__objects_96) \
+am_rtpp_objck_perf_OBJECTS = $(am__objects_98) \
 	rtpp_objck_perf-rtpp_refcnt.$(OBJEXT) \
 	rtpp_objck_perf-rtpp_mallocs.$(OBJEXT)
 rtpp_objck_perf_OBJECTS = $(am_rtpp_objck_perf_OBJECTS)
@@ -574,7 +597,7 @@ rtpp_rzmalloc_perf_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_rzmalloc_perf_CFLAGS) $(CFLAGS) \
 	$(rtpp_rzmalloc_perf_LDFLAGS) $(LDFLAGS) -o $@
-am__objects_97 =  \
+am__objects_99 =  \
 	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_glitch.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_autoglitch.$(OBJEXT) \
@@ -583,49 +606,49 @@ am__objects_97 =  \
 	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_mallocs.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_stacktrace.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_rzmalloc_perf_debug-rtpp_coverage.$(OBJEXT)
-am__objects_98 = $(am__objects_97) \
+am__objects_100 = $(am__objects_99) \
 	rtpp_rzmalloc_perf_debug-rtpp_memdeb_test.$(OBJEXT)
-am__objects_99 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_netaddr_fin.$(OBJEXT)
-am__objects_100 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_pearson_perfect_fin.$(OBJEXT)
-am__objects_101 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_refcnt_fin.$(OBJEXT)
-am__objects_102 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_server_fin.$(OBJEXT)
-am__objects_103 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_stats_fin.$(OBJEXT)
-am__objects_104 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_stream_fin.$(OBJEXT)
-am__objects_105 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_timed_fin.$(OBJEXT)
-am__objects_106 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_pcount_fin.$(OBJEXT)
-am__objects_107 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_record_fin.$(OBJEXT)
-am__objects_108 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_hash_table_fin.$(OBJEXT)
-am__objects_109 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_weakref_fin.$(OBJEXT)
-am__objects_110 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_analyzer_fin.$(OBJEXT)
-am__objects_111 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_pcnt_strm_fin.$(OBJEXT)
-am__objects_112 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_ttl_fin.$(OBJEXT)
-am__objects_113 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_pipe_fin.$(OBJEXT)
-am__objects_114 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_ringbuf_fin.$(OBJEXT)
-am__objects_115 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_sessinfo_fin.$(OBJEXT)
-am__objects_116 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_rw_lock_fin.$(OBJEXT)
-am__objects_117 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_proc_servers_fin.$(OBJEXT)
-am__objects_118 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_proc_wakeup_fin.$(OBJEXT)
-am__objects_119 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_socket_fin.$(OBJEXT)
-am__objects_120 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_refproxy_fin.$(OBJEXT)
-am__objects_121 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_wref_fin.$(OBJEXT)
-am__objects_122 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_command_reply_fin.$(OBJEXT)
-am__objects_123 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_genuid_fin.$(OBJEXT)
-am__objects_124 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_bindaddrs_fin.$(OBJEXT)
-am__objects_125 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_packetport_fin.$(OBJEXT)
-am__objects_126 = $(am__objects_99) $(am__objects_100) \
-	$(am__objects_101) $(am__objects_102) $(am__objects_103) \
-	$(am__objects_104) $(am__objects_105) $(am__objects_106) \
-	$(am__objects_107) $(am__objects_108) $(am__objects_109) \
-	$(am__objects_110) $(am__objects_111) $(am__objects_112) \
-	$(am__objects_113) $(am__objects_114) $(am__objects_115) \
-	$(am__objects_116) $(am__objects_117) $(am__objects_118) \
-	$(am__objects_119) $(am__objects_120) $(am__objects_121) \
-	$(am__objects_122) $(am__objects_123) $(am__objects_124) \
-	$(am__objects_125)
+am__objects_101 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_netaddr_fin.$(OBJEXT)
+am__objects_102 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_pearson_perfect_fin.$(OBJEXT)
+am__objects_103 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_refcnt_fin.$(OBJEXT)
+am__objects_104 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_server_fin.$(OBJEXT)
+am__objects_105 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_stats_fin.$(OBJEXT)
+am__objects_106 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_stream_fin.$(OBJEXT)
+am__objects_107 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_timed_fin.$(OBJEXT)
+am__objects_108 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_pcount_fin.$(OBJEXT)
+am__objects_109 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_record_fin.$(OBJEXT)
+am__objects_110 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_hash_table_fin.$(OBJEXT)
+am__objects_111 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_weakref_fin.$(OBJEXT)
+am__objects_112 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_analyzer_fin.$(OBJEXT)
+am__objects_113 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_pcnt_strm_fin.$(OBJEXT)
+am__objects_114 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_ttl_fin.$(OBJEXT)
+am__objects_115 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_pipe_fin.$(OBJEXT)
+am__objects_116 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_ringbuf_fin.$(OBJEXT)
+am__objects_117 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_sessinfo_fin.$(OBJEXT)
+am__objects_118 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_rw_lock_fin.$(OBJEXT)
+am__objects_119 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_proc_servers_fin.$(OBJEXT)
+am__objects_120 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_proc_wakeup_fin.$(OBJEXT)
+am__objects_121 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_socket_fin.$(OBJEXT)
+am__objects_122 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_refproxy_fin.$(OBJEXT)
+am__objects_123 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_wref_fin.$(OBJEXT)
+am__objects_124 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_command_reply_fin.$(OBJEXT)
+am__objects_125 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_genuid_fin.$(OBJEXT)
+am__objects_126 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_bindaddrs_fin.$(OBJEXT)
+am__objects_127 = $(RTPP_AUTOSRC_DIR)/rtpp_rzmalloc_perf_debug-rtpp_packetport_fin.$(OBJEXT)
+am__objects_128 = $(am__objects_101) $(am__objects_102) \
+	$(am__objects_103) $(am__objects_104) $(am__objects_105) \
+	$(am__objects_106) $(am__objects_107) $(am__objects_108) \
+	$(am__objects_109) $(am__objects_110) $(am__objects_111) \
+	$(am__objects_112) $(am__objects_113) $(am__objects_114) \
+	$(am__objects_115) $(am__objects_116) $(am__objects_117) \
+	$(am__objects_118) $(am__objects_119) $(am__objects_120) \
+	$(am__objects_121) $(am__objects_122) $(am__objects_123) \
+	$(am__objects_124) $(am__objects_125) $(am__objects_126) \
+	$(am__objects_127)
 am_rtpp_rzmalloc_perf_debug_OBJECTS =  \
 	rtpp_rzmalloc_perf_debug-rtpp_rzmalloc_perf.$(OBJEXT) \
-	rtpp_rzmalloc_perf_debug-rtpp_time.$(OBJEXT) $(am__objects_98) \
-	$(am__objects_126)
+	rtpp_rzmalloc_perf_debug-rtpp_time.$(OBJEXT) \
+	$(am__objects_100) $(am__objects_128)
 rtpp_rzmalloc_perf_debug_OBJECTS =  \
 	$(am_rtpp_rzmalloc_perf_debug_OBJECTS)
 rtpp_rzmalloc_perf_debug_DEPENDENCIES = $(am__DEPENDENCIES_2) \
@@ -634,7 +657,7 @@ rtpp_rzmalloc_perf_debug_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rtpp_rzmalloc_perf_debug_CFLAGS) $(CFLAGS) \
 	$(rtpp_rzmalloc_perf_debug_LDFLAGS) $(LDFLAGS) -o $@
-am__objects_127 = $(MAINSRCDIR)/rtpp_wref_test-rtpp_memdeb.$(OBJEXT) \
+am__objects_129 = $(MAINSRCDIR)/rtpp_wref_test-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_wref_test-rtpp_glitch.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_wref_test-rtpp_autoglitch.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_wref_test-rtpp_refcnt.$(OBJEXT) \
@@ -642,64 +665,64 @@ am__objects_127 = $(MAINSRCDIR)/rtpp_wref_test-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_wref_test-rtpp_mallocs.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_wref_test-rtpp_stacktrace.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpp_wref_test-rtpp_coverage.$(OBJEXT)
-am__objects_128 = $(am__objects_127) \
+am__objects_130 = $(am__objects_129) \
 	rtpp_wref_test-rtpp_memdeb_test.$(OBJEXT)
-am__objects_129 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_netaddr_fin.$(OBJEXT)
-am__objects_130 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_pearson_perfect_fin.$(OBJEXT)
 am__objects_131 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_refcnt_fin.$(OBJEXT)
-am__objects_132 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_server_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_netaddr_fin.$(OBJEXT)
+am__objects_132 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_pearson_perfect_fin.$(OBJEXT)
 am__objects_133 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_stats_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_refcnt_fin.$(OBJEXT)
 am__objects_134 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_stream_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_server_fin.$(OBJEXT)
 am__objects_135 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_timed_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_stats_fin.$(OBJEXT)
 am__objects_136 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_pcount_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_stream_fin.$(OBJEXT)
 am__objects_137 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_record_fin.$(OBJEXT)
-am__objects_138 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_hash_table_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_timed_fin.$(OBJEXT)
+am__objects_138 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_pcount_fin.$(OBJEXT)
 am__objects_139 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_record_fin.$(OBJEXT)
+am__objects_140 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_hash_table_fin.$(OBJEXT)
+am__objects_141 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_weakref_fin.$(OBJEXT)
-am__objects_140 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_analyzer_fin.$(OBJEXT)
-am__objects_141 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_pcnt_strm_fin.$(OBJEXT)
-am__objects_142 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_ttl_fin.$(OBJEXT)
-am__objects_143 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_pipe_fin.$(OBJEXT)
+am__objects_142 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_analyzer_fin.$(OBJEXT)
+am__objects_143 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_pcnt_strm_fin.$(OBJEXT)
 am__objects_144 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_ringbuf_fin.$(OBJEXT)
-am__objects_145 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_sessinfo_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_ttl_fin.$(OBJEXT)
+am__objects_145 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_pipe_fin.$(OBJEXT)
 am__objects_146 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_ringbuf_fin.$(OBJEXT)
+am__objects_147 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_sessinfo_fin.$(OBJEXT)
+am__objects_148 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_rw_lock_fin.$(OBJEXT)
-am__objects_147 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_proc_servers_fin.$(OBJEXT)
-am__objects_148 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_proc_wakeup_fin.$(OBJEXT)
-am__objects_149 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_socket_fin.$(OBJEXT)
-am__objects_150 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_refproxy_fin.$(OBJEXT)
+am__objects_149 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_proc_servers_fin.$(OBJEXT)
+am__objects_150 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_proc_wakeup_fin.$(OBJEXT)
 am__objects_151 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_wref_fin.$(OBJEXT)
-am__objects_152 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_command_reply_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_socket_fin.$(OBJEXT)
+am__objects_152 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_refproxy_fin.$(OBJEXT)
 am__objects_153 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_wref_fin.$(OBJEXT)
+am__objects_154 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_command_reply_fin.$(OBJEXT)
+am__objects_155 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_genuid_fin.$(OBJEXT)
-am__objects_154 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_bindaddrs_fin.$(OBJEXT)
-am__objects_155 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_packetport_fin.$(OBJEXT)
-am__objects_156 = $(am__objects_129) $(am__objects_130) \
-	$(am__objects_131) $(am__objects_132) $(am__objects_133) \
-	$(am__objects_134) $(am__objects_135) $(am__objects_136) \
-	$(am__objects_137) $(am__objects_138) $(am__objects_139) \
-	$(am__objects_140) $(am__objects_141) $(am__objects_142) \
-	$(am__objects_143) $(am__objects_144) $(am__objects_145) \
-	$(am__objects_146) $(am__objects_147) $(am__objects_148) \
-	$(am__objects_149) $(am__objects_150) $(am__objects_151) \
-	$(am__objects_152) $(am__objects_153) $(am__objects_154) \
-	$(am__objects_155)
+am__objects_156 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_bindaddrs_fin.$(OBJEXT)
+am__objects_157 = $(RTPP_AUTOSRC_DIR)/rtpp_wref_test-rtpp_packetport_fin.$(OBJEXT)
+am__objects_158 = $(am__objects_131) $(am__objects_132) \
+	$(am__objects_133) $(am__objects_134) $(am__objects_135) \
+	$(am__objects_136) $(am__objects_137) $(am__objects_138) \
+	$(am__objects_139) $(am__objects_140) $(am__objects_141) \
+	$(am__objects_142) $(am__objects_143) $(am__objects_144) \
+	$(am__objects_145) $(am__objects_146) $(am__objects_147) \
+	$(am__objects_148) $(am__objects_149) $(am__objects_150) \
+	$(am__objects_151) $(am__objects_152) $(am__objects_153) \
+	$(am__objects_154) $(am__objects_155) $(am__objects_156) \
+	$(am__objects_157)
 am_rtpp_wref_test_OBJECTS = rtpp_wref_test-rtpp_wref_test.$(OBJEXT) \
-	rtpp_wref_test-rtpp_wref.$(OBJEXT) $(am__objects_128) \
-	$(am__objects_156)
+	rtpp_wref_test-rtpp_wref.$(OBJEXT) $(am__objects_130) \
+	$(am__objects_158)
 rtpp_wref_test_OBJECTS = $(am_rtpp_wref_test_OBJECTS)
 rtpp_wref_test_DEPENDENCIES = $(am__DEPENDENCIES_1)
 rtpp_wref_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -708,9 +731,9 @@ rtpp_wref_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(LDFLAGS) -o $@
 am__rtpproxy_SOURCES_DIST = main.c librtpproxy.la rtpp_module_if.c \
 	rtpp_module.h
-@ENABLE_MODULE_IF_TRUE@am__objects_157 =  \
+@ENABLE_MODULE_IF_TRUE@am__objects_159 =  \
 @ENABLE_MODULE_IF_TRUE@	rtpproxy-rtpp_module_if.$(OBJEXT)
-am_rtpproxy_OBJECTS = rtpproxy-main.$(OBJEXT) $(am__objects_157)
+am_rtpproxy_OBJECTS = rtpproxy-main.$(OBJEXT) $(am__objects_159)
 rtpproxy_OBJECTS = $(am_rtpproxy_OBJECTS)
 rtpproxy_DEPENDENCIES = librtpproxy.la $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_2)
@@ -851,12 +874,12 @@ am__rtpproxy_debug_SOURCES_DIST = main.c rtp.h rtpp_server.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_bindaddrs_fin.c \
 	$(RTPP_AUTOSRC_DIR)/rtpp_packetport_fin.h \
 	$(RTPP_AUTOSRC_DIR)/rtpp_packetport_fin.c
-@ENABLE_MODULE_IF_TRUE@am__objects_158 = rtpproxy_debug-rtpp_module_if.$(OBJEXT)
-@BUILD_LOG_STAND_TRUE@am__objects_159 =  \
+@ENABLE_MODULE_IF_TRUE@am__objects_160 = rtpproxy_debug-rtpp_module_if.$(OBJEXT)
+@BUILD_LOG_STAND_TRUE@am__objects_161 =  \
 @BUILD_LOG_STAND_TRUE@	rtpproxy_debug-rtpp_log_stand.$(OBJEXT)
-@BUILD_LOG_STAND_FALSE@am__objects_160 =  \
+@BUILD_LOG_STAND_FALSE@am__objects_162 =  \
 @BUILD_LOG_STAND_FALSE@	rtpproxy_debug-rtpp_log.$(OBJEXT)
-am__objects_161 = rtpproxy_debug-main.$(OBJEXT) \
+am__objects_163 = rtpproxy_debug-main.$(OBJEXT) \
 	rtpproxy_debug-rtpp_server.$(OBJEXT) \
 	rtpproxy_debug-rtpp_record.$(OBJEXT) \
 	rtpproxy_debug-rtpp_util.$(OBJEXT) \
@@ -939,19 +962,19 @@ am__objects_161 = rtpproxy_debug-main.$(OBJEXT) \
 	$(ADV_DIR)/rtpproxy_debug-pproc_manager.$(OBJEXT) \
 	rtpproxy_debug-rtpp_modman.$(OBJEXT) \
 	rtpproxy_debug-rtpp_module_if_static.$(OBJEXT) \
-	$(am__objects_158) $(am__objects_159) $(am__objects_160)
-am__objects_162 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_command_rcache_fin.$(OBJEXT)
-am__objects_163 =  \
+	$(am__objects_160) $(am__objects_161) $(am__objects_162)
+am__objects_164 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_command_rcache_fin.$(OBJEXT)
+am__objects_165 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_log_obj_fin.$(OBJEXT)
-am__objects_164 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_port_table_fin.$(OBJEXT)
-am__objects_165 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_timed_task_fin.$(OBJEXT)
-am__objects_166 =  \
+am__objects_166 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_port_table_fin.$(OBJEXT)
+am__objects_167 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_timed_task_fin.$(OBJEXT)
+am__objects_168 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_modman_fin.$(OBJEXT)
-am__objects_167 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_module_if_fin.$(OBJEXT)
-am__objects_168 = $(am__objects_162) $(am__objects_163) \
-	$(am__objects_164) $(am__objects_165) $(am__objects_166) \
-	$(am__objects_167)
-am__objects_169 = $(MAINSRCDIR)/rtpproxy_debug-rtpp_memdeb.$(OBJEXT) \
+am__objects_169 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_module_if_fin.$(OBJEXT)
+am__objects_170 = $(am__objects_164) $(am__objects_165) \
+	$(am__objects_166) $(am__objects_167) $(am__objects_168) \
+	$(am__objects_169)
+am__objects_171 = $(MAINSRCDIR)/rtpproxy_debug-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpproxy_debug-rtpp_glitch.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpproxy_debug-rtpp_autoglitch.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpproxy_debug-rtpp_refcnt.$(OBJEXT) \
@@ -959,64 +982,64 @@ am__objects_169 = $(MAINSRCDIR)/rtpproxy_debug-rtpp_memdeb.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpproxy_debug-rtpp_mallocs.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpproxy_debug-rtpp_stacktrace.$(OBJEXT) \
 	$(MAINSRCDIR)/rtpproxy_debug-rtpp_coverage.$(OBJEXT)
-am__objects_170 = $(am__objects_169) \
+am__objects_172 = $(am__objects_171) \
 	rtpproxy_debug-rtpp_memdeb_test.$(OBJEXT)
-am__objects_171 = $(am__objects_170)
-am__objects_172 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_netaddr_fin.$(OBJEXT)
-am__objects_173 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_pearson_perfect_fin.$(OBJEXT)
+am__objects_173 = $(am__objects_172)
 am__objects_174 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_refcnt_fin.$(OBJEXT)
-am__objects_175 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_server_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_netaddr_fin.$(OBJEXT)
+am__objects_175 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_pearson_perfect_fin.$(OBJEXT)
 am__objects_176 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_stats_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_refcnt_fin.$(OBJEXT)
 am__objects_177 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_stream_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_server_fin.$(OBJEXT)
 am__objects_178 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_timed_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_stats_fin.$(OBJEXT)
 am__objects_179 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_pcount_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_stream_fin.$(OBJEXT)
 am__objects_180 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_record_fin.$(OBJEXT)
-am__objects_181 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_hash_table_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_timed_fin.$(OBJEXT)
+am__objects_181 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_pcount_fin.$(OBJEXT)
 am__objects_182 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_record_fin.$(OBJEXT)
+am__objects_183 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_hash_table_fin.$(OBJEXT)
+am__objects_184 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_weakref_fin.$(OBJEXT)
-am__objects_183 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_analyzer_fin.$(OBJEXT)
-am__objects_184 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_pcnt_strm_fin.$(OBJEXT)
-am__objects_185 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_ttl_fin.$(OBJEXT)
-am__objects_186 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_pipe_fin.$(OBJEXT)
+am__objects_185 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_analyzer_fin.$(OBJEXT)
+am__objects_186 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_pcnt_strm_fin.$(OBJEXT)
 am__objects_187 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_ringbuf_fin.$(OBJEXT)
-am__objects_188 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_sessinfo_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_ttl_fin.$(OBJEXT)
+am__objects_188 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_pipe_fin.$(OBJEXT)
 am__objects_189 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_ringbuf_fin.$(OBJEXT)
+am__objects_190 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_sessinfo_fin.$(OBJEXT)
+am__objects_191 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_rw_lock_fin.$(OBJEXT)
-am__objects_190 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_proc_servers_fin.$(OBJEXT)
-am__objects_191 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_proc_wakeup_fin.$(OBJEXT)
-am__objects_192 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_socket_fin.$(OBJEXT)
-am__objects_193 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_refproxy_fin.$(OBJEXT)
+am__objects_192 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_proc_servers_fin.$(OBJEXT)
+am__objects_193 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_proc_wakeup_fin.$(OBJEXT)
 am__objects_194 =  \
-	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_wref_fin.$(OBJEXT)
-am__objects_195 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_command_reply_fin.$(OBJEXT)
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_socket_fin.$(OBJEXT)
+am__objects_195 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_refproxy_fin.$(OBJEXT)
 am__objects_196 =  \
+	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_wref_fin.$(OBJEXT)
+am__objects_197 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_command_reply_fin.$(OBJEXT)
+am__objects_198 =  \
 	$(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_genuid_fin.$(OBJEXT)
-am__objects_197 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_bindaddrs_fin.$(OBJEXT)
-am__objects_198 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_packetport_fin.$(OBJEXT)
-am__objects_199 = $(am__objects_172) $(am__objects_173) \
-	$(am__objects_174) $(am__objects_175) $(am__objects_176) \
-	$(am__objects_177) $(am__objects_178) $(am__objects_179) \
-	$(am__objects_180) $(am__objects_181) $(am__objects_182) \
-	$(am__objects_183) $(am__objects_184) $(am__objects_185) \
-	$(am__objects_186) $(am__objects_187) $(am__objects_188) \
-	$(am__objects_189) $(am__objects_190) $(am__objects_191) \
-	$(am__objects_192) $(am__objects_193) $(am__objects_194) \
-	$(am__objects_195) $(am__objects_196) $(am__objects_197) \
-	$(am__objects_198)
-am_rtpproxy_debug_OBJECTS = $(am__objects_161) $(am__objects_168) \
-	$(am__objects_171) $(am__objects_199)
+am__objects_199 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_bindaddrs_fin.$(OBJEXT)
+am__objects_200 = $(RTPP_AUTOSRC_DIR)/rtpproxy_debug-rtpp_packetport_fin.$(OBJEXT)
+am__objects_201 = $(am__objects_174) $(am__objects_175) \
+	$(am__objects_176) $(am__objects_177) $(am__objects_178) \
+	$(am__objects_179) $(am__objects_180) $(am__objects_181) \
+	$(am__objects_182) $(am__objects_183) $(am__objects_184) \
+	$(am__objects_185) $(am__objects_186) $(am__objects_187) \
+	$(am__objects_188) $(am__objects_189) $(am__objects_190) \
+	$(am__objects_191) $(am__objects_192) $(am__objects_193) \
+	$(am__objects_194) $(am__objects_195) $(am__objects_196) \
+	$(am__objects_197) $(am__objects_198) $(am__objects_199) \
+	$(am__objects_200)
+am_rtpproxy_debug_OBJECTS = $(am__objects_163) $(am__objects_170) \
+	$(am__objects_173) $(am__objects_201)
 rtpproxy_debug_OBJECTS = $(am_rtpproxy_debug_OBJECTS)
 rtpproxy_debug_DEPENDENCIES = $(top_srcdir)/libucl/libucl_debug.la \
 	$(XXH_DIR)/libxxHash_debug.la $(RTQ_DIR)/libRTQueue_debug.la \
@@ -1066,6 +1089,14 @@ am__depfiles_remade =  \
 	$(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc_copy.Po \
 	$(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc_set.Po \
 	$(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ver.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_autoglitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_coverage.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_glitch.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_mallocs.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_memdeb.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_stacktrace.Po \
+	$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_threads.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_autoglitch.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_glitch.Po \
@@ -1112,6 +1143,7 @@ am__depfiles_remade =  \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_module_if_fin.Plo \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_port_table_fin.Plo \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_timed_task_fin.Plo \
+	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt_fin.Po \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_analyzer_fin.Po \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_bindaddrs_fin.Po \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_command_rcache_fin.Po \
@@ -1348,6 +1380,8 @@ am__depfiles_remade =  \
 	./$(DEPDIR)/librtpproxy_la-rtpp_wi_pkt.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_wi_sgnl.Plo \
 	./$(DEPDIR)/librtpproxy_la-rtpp_wref.Plo \
+	./$(DEPDIR)/pproc_manager_test-pproc_manager_test.Po \
+	./$(DEPDIR)/pproc_manager_test-rtpp_memdeb_test.Po \
 	./$(DEPDIR)/rtpp_fintest-rtpp_fintest.Po \
 	./$(DEPDIR)/rtpp_fintest-rtpp_memdeb_test.Po \
 	./$(DEPDIR)/rtpp_objck-rtp.Po \
@@ -1488,14 +1522,15 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(librtpproxy_la_SOURCES) $(rtpp_fintest_SOURCES) \
-	$(rtpp_objck_SOURCES) $(rtpp_objck_perf_SOURCES) \
-	$(rtpp_rzmalloc_perf_SOURCES) \
+SOURCES = $(librtpproxy_la_SOURCES) $(pproc_manager_test_SOURCES) \
+	$(rtpp_fintest_SOURCES) $(rtpp_objck_SOURCES) \
+	$(rtpp_objck_perf_SOURCES) $(rtpp_rzmalloc_perf_SOURCES) \
 	$(rtpp_rzmalloc_perf_debug_SOURCES) $(rtpp_wref_test_SOURCES) \
 	$(rtpproxy_SOURCES) $(rtpproxy_debug_SOURCES)
 DIST_SOURCES = $(am__librtpproxy_la_SOURCES_DIST) \
-	$(rtpp_fintest_SOURCES) $(rtpp_objck_SOURCES) \
-	$(rtpp_objck_perf_SOURCES) $(rtpp_rzmalloc_perf_SOURCES) \
+	$(pproc_manager_test_SOURCES) $(rtpp_fintest_SOURCES) \
+	$(rtpp_objck_SOURCES) $(rtpp_objck_perf_SOURCES) \
+	$(rtpp_rzmalloc_perf_SOURCES) \
 	$(rtpp_rzmalloc_perf_debug_SOURCES) $(rtpp_wref_test_SOURCES) \
 	$(am__rtpproxy_SOURCES_DIST) \
 	$(am__rtpproxy_debug_SOURCES_DIST)
@@ -1911,6 +1946,15 @@ rtpp_wref_test_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) $(RTPP_MEMDEB_CPPFLAGS) \
 rtpp_wref_test_CFLAGS = $(NOPT_CFLAGS) $(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
 rtpp_wref_test_LDADD = $(RTPP_MEMDEB_LD_ADD)
 rtpp_wref_test_LDFLAGS = $(LTO_FLAG)
+pproc_manager_test_SOURCES = pproc_manager_test.c $(SRCS_MEMDEB_CORE) \
+  $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+
+pproc_manager_test_CPPFLAGS = -I$(RTPP_AUTOSRC_DIR) $(RTPP_MEMDEB_CPPFLAGS) \
+  -I$(top_srcdir) -DMEMDEB_APP=pproc_manager_test
+
+pproc_manager_test_CFLAGS = $(NOPT_CFLAGS) $(EXTRA_CFLAGS) $(RTPP_MEMDEB_CFLAGS)
+pproc_manager_test_LDADD = $(RTPP_MEMDEB_LD_ADD)
+pproc_manager_test_LDFLAGS = $(LTO_FLAG)
 librtpproxy_la_SOURCES = $(BASE_SOURCES) $(SRCS_AUTOGEN) \
   rtpp_refcnt.c rtpp_refcnt.h rtpp_mallocs.c rtpp_mallocs.h \
   rtpp_coverage.c rtpp_coverage.h \
@@ -2148,6 +2192,37 @@ $(MAINSRCDIR)/$(am__dirstamp):
 $(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) $(MAINSRCDIR)/$(DEPDIR)
 	@: >>$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/pproc_manager_test-rtpp_threads.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.$(OBJEXT):  \
+	$(MAINSRCDIR)/$(am__dirstamp) \
+	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
+$(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.$(OBJEXT):  \
+	$(RTPP_AUTOSRC_DIR)/$(am__dirstamp) \
+	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/$(am__dirstamp)
+
+pproc_manager_test$(EXEEXT): $(pproc_manager_test_OBJECTS) $(pproc_manager_test_DEPENDENCIES) $(EXTRA_pproc_manager_test_DEPENDENCIES) 
+	@rm -f pproc_manager_test$(EXEEXT)
+	$(AM_V_CCLD)$(pproc_manager_test_LINK) $(pproc_manager_test_OBJECTS) $(pproc_manager_test_LDADD) $(LIBS)
 $(MAINSRCDIR)/rtpp_fintest-rtpp_memdeb.$(OBJEXT):  \
 	$(MAINSRCDIR)/$(am__dirstamp) \
 	$(MAINSRCDIR)/$(DEPDIR)/$(am__dirstamp)
@@ -2856,6 +2931,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc_copy.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc_set.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ver.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_autoglitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_coverage.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_glitch.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_mallocs.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_memdeb.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_stacktrace.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_threads.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_autoglitch.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_glitch.Po@am__quote@ # am--include-marker
@@ -2902,6 +2985,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_module_if_fin.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_port_table_fin.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_timed_task_fin.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_analyzer_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_bindaddrs_fin.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_command_rcache_fin.Po@am__quote@ # am--include-marker
@@ -3138,6 +3222,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_wi_pkt.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_wi_sgnl.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtpproxy_la-rtpp_wref.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pproc_manager_test-pproc_manager_test.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pproc_manager_test-rtpp_memdeb_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_fintest-rtpp_fintest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_fintest-rtpp_memdeb_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpp_objck-rtp.Po@am__quote@ # am--include-marker
@@ -3961,6 +4047,160 @@ librtpproxy_la-librtpp_main.lo: librtpp_main.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='librtpp_main.c' object='librtpproxy_la-librtpp_main.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtpproxy_la_CPPFLAGS) $(CPPFLAGS) $(librtpproxy_la_CFLAGS) $(CFLAGS) -c -o librtpproxy_la-librtpp_main.lo `test -f 'librtpp_main.c' || echo '$(srcdir)/'`librtpp_main.c
+
+pproc_manager_test-pproc_manager_test.o: pproc_manager_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT pproc_manager_test-pproc_manager_test.o -MD -MP -MF $(DEPDIR)/pproc_manager_test-pproc_manager_test.Tpo -c -o pproc_manager_test-pproc_manager_test.o `test -f 'pproc_manager_test.c' || echo '$(srcdir)/'`pproc_manager_test.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pproc_manager_test-pproc_manager_test.Tpo $(DEPDIR)/pproc_manager_test-pproc_manager_test.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pproc_manager_test.c' object='pproc_manager_test-pproc_manager_test.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o pproc_manager_test-pproc_manager_test.o `test -f 'pproc_manager_test.c' || echo '$(srcdir)/'`pproc_manager_test.c
+
+pproc_manager_test-pproc_manager_test.obj: pproc_manager_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT pproc_manager_test-pproc_manager_test.obj -MD -MP -MF $(DEPDIR)/pproc_manager_test-pproc_manager_test.Tpo -c -o pproc_manager_test-pproc_manager_test.obj `if test -f 'pproc_manager_test.c'; then $(CYGPATH_W) 'pproc_manager_test.c'; else $(CYGPATH_W) '$(srcdir)/pproc_manager_test.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pproc_manager_test-pproc_manager_test.Tpo $(DEPDIR)/pproc_manager_test-pproc_manager_test.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pproc_manager_test.c' object='pproc_manager_test-pproc_manager_test.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o pproc_manager_test-pproc_manager_test.obj `if test -f 'pproc_manager_test.c'; then $(CYGPATH_W) 'pproc_manager_test.c'; else $(CYGPATH_W) '$(srcdir)/pproc_manager_test.c'; fi`
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.o: $(MAINSRCDIR)/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_memdeb.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.o `test -f '$(MAINSRCDIR)/rtpp_memdeb.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_memdeb.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_memdeb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_memdeb.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.o `test -f '$(MAINSRCDIR)/rtpp_memdeb.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_memdeb.c
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.obj: $(MAINSRCDIR)/rtpp_memdeb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_memdeb.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.obj `if test -f '$(MAINSRCDIR)/rtpp_memdeb.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_memdeb.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_memdeb.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_memdeb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_memdeb.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_memdeb.obj `if test -f '$(MAINSRCDIR)/rtpp_memdeb.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_memdeb.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_memdeb.c'; fi`
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.o: $(MAINSRCDIR)/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_glitch.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.o `test -f '$(MAINSRCDIR)/rtpp_glitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_glitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_glitch.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.o `test -f '$(MAINSRCDIR)/rtpp_glitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_glitch.c
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.obj: $(MAINSRCDIR)/rtpp_glitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_glitch.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.obj `if test -f '$(MAINSRCDIR)/rtpp_glitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_glitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_glitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_glitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_glitch.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_glitch.obj `if test -f '$(MAINSRCDIR)/rtpp_glitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_glitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_glitch.c'; fi`
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.o: $(MAINSRCDIR)/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_autoglitch.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.o `test -f '$(MAINSRCDIR)/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_autoglitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_autoglitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_autoglitch.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.o `test -f '$(MAINSRCDIR)/rtpp_autoglitch.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_autoglitch.c
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.obj: $(MAINSRCDIR)/rtpp_autoglitch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_autoglitch.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.obj `if test -f '$(MAINSRCDIR)/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_autoglitch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_autoglitch.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_autoglitch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_autoglitch.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_autoglitch.obj `if test -f '$(MAINSRCDIR)/rtpp_autoglitch.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_autoglitch.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_autoglitch.c'; fi`
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.o: $(MAINSRCDIR)/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.o `test -f '$(MAINSRCDIR)/rtpp_refcnt.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_refcnt.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.o `test -f '$(MAINSRCDIR)/rtpp_refcnt.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_refcnt.c
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.obj: $(MAINSRCDIR)/rtpp_refcnt.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.obj `if test -f '$(MAINSRCDIR)/rtpp_refcnt.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_refcnt.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_refcnt.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_refcnt.obj `if test -f '$(MAINSRCDIR)/rtpp_refcnt.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_refcnt.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_refcnt.c'; fi`
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_threads.o: $(MAINSRCDIR)/rtpp_threads.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_threads.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_threads.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_threads.o `test -f '$(MAINSRCDIR)/rtpp_threads.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_threads.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_threads.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_threads.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_threads.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_threads.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_threads.o `test -f '$(MAINSRCDIR)/rtpp_threads.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_threads.c
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_threads.obj: $(MAINSRCDIR)/rtpp_threads.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_threads.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_threads.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_threads.obj `if test -f '$(MAINSRCDIR)/rtpp_threads.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_threads.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_threads.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_threads.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_threads.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_threads.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_threads.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_threads.obj `if test -f '$(MAINSRCDIR)/rtpp_threads.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_threads.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_threads.c'; fi`
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.o: $(MAINSRCDIR)/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_mallocs.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.o `test -f '$(MAINSRCDIR)/rtpp_mallocs.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_mallocs.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_mallocs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_mallocs.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.o `test -f '$(MAINSRCDIR)/rtpp_mallocs.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_mallocs.c
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.obj: $(MAINSRCDIR)/rtpp_mallocs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_mallocs.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.obj `if test -f '$(MAINSRCDIR)/rtpp_mallocs.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_mallocs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_mallocs.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_mallocs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_mallocs.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_mallocs.obj `if test -f '$(MAINSRCDIR)/rtpp_mallocs.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_mallocs.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_mallocs.c'; fi`
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.o: $(MAINSRCDIR)/rtpp_stacktrace.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_stacktrace.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.o `test -f '$(MAINSRCDIR)/rtpp_stacktrace.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_stacktrace.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_stacktrace.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_stacktrace.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_stacktrace.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.o `test -f '$(MAINSRCDIR)/rtpp_stacktrace.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_stacktrace.c
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.obj: $(MAINSRCDIR)/rtpp_stacktrace.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_stacktrace.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_stacktrace.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_stacktrace.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_stacktrace.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_stacktrace.obj `if test -f '$(MAINSRCDIR)/rtpp_stacktrace.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_stacktrace.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_stacktrace.c'; fi`
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.o: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.o -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.o `test -f '$(MAINSRCDIR)/rtpp_coverage.c' || echo '$(srcdir)/'`$(MAINSRCDIR)/rtpp_coverage.c
+
+$(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.obj: $(MAINSRCDIR)/rtpp_coverage.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.obj -MD -MP -MF $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_coverage.Tpo -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_coverage.Tpo $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_coverage.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(MAINSRCDIR)/rtpp_coverage.c' object='$(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(MAINSRCDIR)/pproc_manager_test-rtpp_coverage.obj `if test -f '$(MAINSRCDIR)/rtpp_coverage.c'; then $(CYGPATH_W) '$(MAINSRCDIR)/rtpp_coverage.c'; else $(CYGPATH_W) '$(srcdir)/$(MAINSRCDIR)/rtpp_coverage.c'; fi`
+
+pproc_manager_test-rtpp_memdeb_test.o: rtpp_memdeb_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT pproc_manager_test-rtpp_memdeb_test.o -MD -MP -MF $(DEPDIR)/pproc_manager_test-rtpp_memdeb_test.Tpo -c -o pproc_manager_test-rtpp_memdeb_test.o `test -f 'rtpp_memdeb_test.c' || echo '$(srcdir)/'`rtpp_memdeb_test.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pproc_manager_test-rtpp_memdeb_test.Tpo $(DEPDIR)/pproc_manager_test-rtpp_memdeb_test.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_memdeb_test.c' object='pproc_manager_test-rtpp_memdeb_test.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o pproc_manager_test-rtpp_memdeb_test.o `test -f 'rtpp_memdeb_test.c' || echo '$(srcdir)/'`rtpp_memdeb_test.c
+
+pproc_manager_test-rtpp_memdeb_test.obj: rtpp_memdeb_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT pproc_manager_test-rtpp_memdeb_test.obj -MD -MP -MF $(DEPDIR)/pproc_manager_test-rtpp_memdeb_test.Tpo -c -o pproc_manager_test-rtpp_memdeb_test.obj `if test -f 'rtpp_memdeb_test.c'; then $(CYGPATH_W) 'rtpp_memdeb_test.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_memdeb_test.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pproc_manager_test-rtpp_memdeb_test.Tpo $(DEPDIR)/pproc_manager_test-rtpp_memdeb_test.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtpp_memdeb_test.c' object='pproc_manager_test-rtpp_memdeb_test.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o pproc_manager_test-rtpp_memdeb_test.obj `if test -f 'rtpp_memdeb_test.c'; then $(CYGPATH_W) 'rtpp_memdeb_test.c'; else $(CYGPATH_W) '$(srcdir)/rtpp_memdeb_test.c'; fi`
+
+$(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.o: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.o -MD -MP -MF $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt_fin.Tpo -c -o $(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt_fin.Tpo $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='$(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.o `test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' || echo '$(srcdir)/'`$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+
+$(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.obj: $(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -MT $(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.obj -MD -MP -MF $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt_fin.Tpo -c -o $(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt_fin.Tpo $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt_fin.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c' object='$(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pproc_manager_test_CPPFLAGS) $(CPPFLAGS) $(pproc_manager_test_CFLAGS) $(CFLAGS) -c -o $(RTPP_AUTOSRC_DIR)/pproc_manager_test-rtpp_refcnt_fin.obj `if test -f '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; then $(CYGPATH_W) '$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; else $(CYGPATH_W) '$(srcdir)/$(RTPP_AUTOSRC_DIR)/rtpp_refcnt_fin.c'; fi`
 
 rtpp_fintest-rtpp_fintest.o: rtpp_fintest.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtpp_fintest_CPPFLAGS) $(CPPFLAGS) $(rtpp_fintest_CFLAGS) $(CFLAGS) -MT rtpp_fintest-rtpp_fintest.o -MD -MP -MF $(DEPDIR)/rtpp_fintest-rtpp_fintest.Tpo -c -o rtpp_fintest-rtpp_fintest.o `test -f 'rtpp_fintest.c' || echo '$(srcdir)/'`rtpp_fintest.c
@@ -8799,6 +9039,14 @@ distclean: distclean-am
 	-rm -f $(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc_copy.Po
 	-rm -f $(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc_set.Po
 	-rm -f $(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ver.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_coverage.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_glitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_mallocs.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_memdeb.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_stacktrace.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_threads.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_autoglitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_glitch.Po
@@ -8845,6 +9093,7 @@ distclean: distclean-am
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_module_if_fin.Plo
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_port_table_fin.Plo
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_timed_task_fin.Plo
+	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt_fin.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_analyzer_fin.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_bindaddrs_fin.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_command_rcache_fin.Po
@@ -9081,6 +9330,8 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_wi_pkt.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_wi_sgnl.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_wref.Plo
+	-rm -f ./$(DEPDIR)/pproc_manager_test-pproc_manager_test.Po
+	-rm -f ./$(DEPDIR)/pproc_manager_test-rtpp_memdeb_test.Po
 	-rm -f ./$(DEPDIR)/rtpp_fintest-rtpp_fintest.Po
 	-rm -f ./$(DEPDIR)/rtpp_fintest-rtpp_memdeb_test.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtp.Po
@@ -9273,6 +9524,14 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc_copy.Po
 	-rm -f $(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ul_subc_set.Po
 	-rm -f $(CMDSRCDIR)/$(DEPDIR)/rtpproxy_debug-rpcpv1_ver.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_autoglitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_coverage.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_glitch.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_mallocs.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_memdeb.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_stacktrace.Po
+	-rm -f $(MAINSRCDIR)/$(DEPDIR)/pproc_manager_test-rtpp_threads.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_autoglitch.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_coverage.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/rtpp_fintest-rtpp_glitch.Po
@@ -9319,6 +9578,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_module_if_fin.Plo
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_port_table_fin.Plo
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/librtpproxy_la-rtpp_timed_task_fin.Plo
+	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/pproc_manager_test-rtpp_refcnt_fin.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_analyzer_fin.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_bindaddrs_fin.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/rtpp_fintest-rtpp_command_rcache_fin.Po
@@ -9555,6 +9815,8 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_wi_pkt.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_wi_sgnl.Plo
 	-rm -f ./$(DEPDIR)/librtpproxy_la-rtpp_wref.Plo
+	-rm -f ./$(DEPDIR)/pproc_manager_test-pproc_manager_test.Po
+	-rm -f ./$(DEPDIR)/pproc_manager_test-rtpp_memdeb_test.Po
 	-rm -f ./$(DEPDIR)/rtpp_fintest-rtpp_fintest.Po
 	-rm -f ./$(DEPDIR)/rtpp_fintest-rtpp_memdeb_test.Po
 	-rm -f ./$(DEPDIR)/rtpp_objck-rtp.Po
