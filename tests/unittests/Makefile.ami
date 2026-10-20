@@ -2,6 +2,7 @@ unittests_EXTRA_DIST = unittests
 rtcp2json_CLEANFILES = rtcp1.output
 TESTS += unittests/rtcp2json1 unittests/rtpp_sbuf unittests/rtpp_objck \
   unittests/rtpp_rzmalloc_perf unittests/rtpp_fintest \
-  unittests/rtpp_wref_test unittests/pproc_manager_test
+  unittests/rtpp_wref_test unittests/pproc_manager_test \
+  unittests/rptl_pyspawn unittests/rptl_process_io
 CLEANFILES += ${rtcp2json_CLEANFILES}
 EXTRA_DIST += ${unittests_EXTRA_DIST}

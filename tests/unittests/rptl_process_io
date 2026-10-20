@@ -1,0 +1,6 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+exec ${PYINT} "${RPTL_DIR}/test_process_io.py" -v
