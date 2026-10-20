@@ -11,6 +11,7 @@
 .eval: recording.%%SUBTEST%% -> WORK_BASE
 .eval: rtpa_nsent rtpa_nrcvd rtpa_ndups rtpa_nlost rtpa_perrs -> STATS_KEYS
 
+.exec: mkdir -p %%RECORD_SPL_DIR%%
 .exec: rm -f %%REC_BASE%%.*
 
 .eval: -d dbug -b -T2 -W2 -P -r %%RECORD_DIR%% -S %%RECORD_SPL_DIR%% -> RTPPROXY_ARGS
