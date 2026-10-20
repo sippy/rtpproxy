@@ -1,5 +1,0 @@
-%%PORT_A%%
-%%PORT_O%%
-MEMDEB(rtpproxy): all clear
-%%CALL_ID%%=from_tag_1.pcap: 320
-MEMDEB(extractaudio): all clear
