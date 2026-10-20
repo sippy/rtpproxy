@@ -2,12 +2,13 @@
 
 TDIR="`dirname "${0}"`"
 BASEDIR="${TDIR}/.."
-SUDO_REQUIRED=1
+SUDO_REQUIRED=0
 . "${BASEDIR}/functions"
 
 . "${TDIR}/glitch.sub"
 
-disable_aslr
+disable_aslr "${@}"
 
-glitch_test startstop/startstop1 7 startstop.rlog "" 3
+# Optional first argument selects the number of concurrent glitching jobs.
+glitch_test startstop/startstop1 3 startstop.rlog "" 3 "${1:-50}"
 report "glitching startstop/startstop1"

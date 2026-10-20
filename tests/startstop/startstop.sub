@@ -1,3 +1,8 @@
+if [ -z "${STARTSTOP_CONTROL_ARGS}" ]
+then
+  exec ${PYINT} "${BASEDIR}/startstop/control_sockets.py" "${0}" "${@}"
+fi
+
 __beforeexit_cleanup()
 {
   if [ ! -z "${TMP_PIDFILE}" ]
@@ -8,6 +13,10 @@ __beforeexit_cleanup()
   then
     cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
     rm "${TMP_LOGFILE}"
+  fi
+  if [ -n "${STARTSTOP_TMPDIR}" ]
+  then
+    rm -rf "${STARTSTOP_TMPDIR}"
   fi
 }
 
@@ -20,13 +29,24 @@ test_startstop() {
 
   truncate -s 0 "${TS_LOGFILE}"
 
+  # In root CI, MKTEMP_CMD runs as the daemon user. Pre-create the config
+  # too, so shell redirection retains its ownership even with umask 077.
+  STARTSTOP_TMPDIR="`${MKTEMP_CMD} -d "${TMPDIR:-/tmp}/startstop.XXXXXXXX"`" || return 1
+  STARTSTOP_CONF="`${MKTEMP_CMD} "${STARTSTOP_TMPDIR}/rtpproxy.conf.XXXXXXXX"`" || return 1
+  # Module paths in the shared config are relative to the tests directory.
+  # Workers run elsewhere, so render a private config with absolute paths.
+  sed "s|../modules/|${TOP_BUILDDIR}/modules/|g" \
+    "${BASEDIR}/${RTPP_CONF}" > "${STARTSTOP_CONF}" || return 1
+  RTPP_CONF="${STARTSTOP_CONF}"
+
   myuid="`${ID_CMD} -un`"
   mygid="`${ID_CMD} -gn`"
 
+  RTPP_DSO=""
   for dso in ${RTPP_DSOS}
   do
     dso_d="`echo ${dso} | sed 's|_debug||'`"
-    RTPP_DSO="--dso ../modules/${dso_d}/.libs/rtpp_${dso}.so ${RTPP_DSO}"
+    RTPP_DSO="--dso ${TOP_BUILDDIR}/modules/${dso_d}/.libs/rtpp_${dso}.so ${RTPP_DSO}"
   done
 
   for rargs in "--config ${RTPP_CONF} -c fifo -L 100" \
@@ -34,17 +54,12 @@ test_startstop() {
   do
     for sig in TERM HUP
     do
-      randomize_test_sockets
-      assign_test_sockets
-      SOCK_RARGS=""
-      for ts in ${RTPP_TEST_SOCKETS}
-      do
-        if [ "${ts}" = "stdio:" ]
-        then
-          continue
-        fi
-        SOCK_RARGS="-s ${ts} ${SOCK_RARGS}"
-      done
+      # Keep the network listeners reserved by the parent shell, and both
+      # Unix listener types private to this test invocation.
+      RTPP_SOCKFILE="${STARTSTOP_TMPDIR}/default.sock"
+      SOCK_RARGS="${STARTSTOP_CONTROL_ARGS}
+        -s unix:${STARTSTOP_TMPDIR}/ctrl.sock
+        -s cunix:${STARTSTOP_TMPDIR}/cctrl.sock"
 
       rm -f rtpproxy_acct.csv
       echo "rtpproxy_start ${rargs} ${SOCK_RARGS}" >&2
@@ -52,10 +67,14 @@ test_startstop() {
       report "${RTPPROXY}: start"
       rtpproxy_stop ${sig}
       report "${RTPPROXY}: stop (SIG${sig})"
+      rm -f "${TMP_PIDFILE}" "${TMP_SOCKFILE}"
+      TMP_PIDFILE=""
       cat "${TMP_LOGFILE}" >> "${TS_LOGFILE}"
       rm "${TMP_LOGFILE}"
-      ${DIFF} "startstop/${REF_OUTFILE}" "${RTPP_OUTFILE}"
+      ${DIFF} "${BASEDIR}/startstop/${REF_OUTFILE}" "${RTPP_OUTFILE}"
       report "${RTPPROXY}: output"
     done
   done
+  rm -rf "${STARTSTOP_TMPDIR}"
+  STARTSTOP_TMPDIR=""
 }
