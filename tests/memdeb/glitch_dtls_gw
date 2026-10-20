@@ -1,0 +1,13 @@
+#!/bin/sh
+
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
+SUDO_REQUIRED=0
+. "${BASEDIR}/functions"
+. "${TDIR}/glitch.sub"
+
+disable_aslr "${@}"
+
+# Optional first argument selects the number of concurrent glitching jobs.
+glitch_test dtls_gw/basic 0 dtls_gw.rlog 'rtpp_dtls.*\.c\|pproc_manager.c' 0 "${1:-50}"
+report "glitching dtls_gw/basic"
