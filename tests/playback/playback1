@@ -17,13 +17,6 @@ TYPES="1 2 3 4 5 6 7"
 CODECS="0 3 8 18 9"
 PLAYBACK_RFILES="playback1.0 playback1.3 playback1.8 playback1.18 playback1.9"
 
-# The tools may be run under a wrapper, e.g. setpriv when started as root.
-# The RPTL interpreter is wrapped as well, so whatever it starts already
-# runs with the right credentials: give it bare commands.
-strip_wrapper() {
-  echo "${1##* -- }"
-}
-
 # Expected TOS of the captured IPv4 packets, if checked
 expected_tos() {
   case "${1}" in

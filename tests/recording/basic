@@ -13,13 +13,6 @@ BASEDIR="$(readlink -f -- $BASEDIR)"
 
 CD_DIR="${BASEDIR}/recording"
 
-# The tools may be run under a wrapper, e.g. setpriv when started as root.
-# The RPTL interpreter is wrapped as well, so whatever it starts already
-# runs with the right credentials: give it bare commands.
-strip_wrapper() {
-  echo "${1##* -- }"
-}
-
 run_recording() {
   stest="${1}"
   ONAME="recording.${stest}.vars"

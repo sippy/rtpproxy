@@ -50,6 +50,13 @@ then
   done
 fi
 
+# The tools may be run under a wrapper, e.g. setpriv when started as root.
+# The RPTL interpreter is wrapped as well, so whatever it starts already
+# runs with the right credentials: give it bare commands.
+strip_wrapper() {
+  echo "${1##* -- }"
+}
+
 setup_tstart() {
   RTPP_MCLOCK_NAME="`RTPP_GLITCH_ACT="" ${RTPPROXY} -C 2>/dev/null`"
   if [ "${RTPP_MCLOCK_NAME}" = "" ]
@@ -396,7 +403,9 @@ forcefail() {
     ${RC}=1
   fi
   shift
-  echo >&2 "FAILED: (rc=${RC})" "${@}"
+  local message="${*}"
+  message="${message##* -- }"
+  echo >&2 "FAILED: (rc=${RC})" "${message#"${TOP_BUILDDIR}/src/"}"
   if [ -n "$CONTINUE" ] ; then
     return
   fi
@@ -416,7 +425,9 @@ fail() {
 }
 
 ok() {
-  echo >&2 "OK:" "$@"
+  local message="${*}"
+  message="${message##* -- }"
+  echo >&2 "OK:" "${message#"${TOP_BUILDDIR}/src/"}"
 }
 
 report_rc() {
