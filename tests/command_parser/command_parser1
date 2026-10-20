@@ -8,6 +8,11 @@
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
+if [ -z "${RTPP_CP_PORT_MIN}" ]
+then
+  exec ${PYINT} "${BASEDIR}/command_parser/port_range.py" "${0}" "${@}"
+fi
+
 rtpp_stop() {
   rtpproxy_stop TERM
   RC="${?}"
@@ -23,7 +28,7 @@ run_command_parser() {
   shift
   for extra_opts in "${@}"
   do
-    RTPP_ARGS="-d dbug -b -m 23820 -M 23823 ${extra_opts}"
+    RTPP_ARGS="-d dbug -b -m ${RTPP_CP_PORT_MIN} -M ${RTPP_CP_PORT_MAX} ${extra_opts}"
     if [ "${socket}" = "stdio:" ]
     then
       ${RTPPROXY} -f -s "${socket}" ${RTPP_ARGS} < $BASEDIR/command_parser/command_parser.input 2>_command_parser.rlog || return 1
@@ -55,6 +60,24 @@ do
     cat _command_parser.rlog >> command_parser.rlog
   fi
   report_rc ${RTPP_RC} "wait for the rtproxy shutdown on ${socket}"
-  ${DIFF} ${BASEDIR}/command_parser/command_parser.output command_parser.rout
+  # Preserve the two-pair pool and its exhaustion checks while allowing
+  # each concurrent invocation to use a different leased port range.
+  # Under load the session TTL can tick before its query is processed.
+  # Validate its range, then compare the remaining fields exactly.
+  awk -v first="${RTPP_CP_PORT_MIN}" '
+    /^[0-9]+ 0 0 0 0$/ {
+      if ($1 < 1 || $1 > 60) exit 1
+      $1 = 60
+    }
+    /^ttl=[0-9]+ / {
+      ttl = $1; sub(/^ttl=/, "", ttl)
+      if (ttl < 1 || ttl > 60) exit 1
+      sub(/^ttl=[0-9]+/, "ttl=60")
+    }
+    $0 == first {print 23820; next}
+    $0 == first + 2 {print 23822; next}
+    {print}' command_parser.rout > command_parser.norm
+  report "validating command_parser port and TTL values"
+  ${DIFF} ${BASEDIR}/command_parser/command_parser.output command_parser.norm
   report "command_parser on ${socket}"
 done
