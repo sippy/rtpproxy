@@ -317,6 +317,10 @@ bool ucl_hash_insert(ucl_hash_t *hashlin, const ucl_object_t *obj,
 		k = kh_put(ucl_hash_caseless_node, h, obj, &ret);
 		if (ret > 0) {
 			elt = UCL_ALLOC(sizeof(*elt));
+			if (elt == NULL) {
+				kh_del(ucl_hash_caseless_node, h, k);
+				goto e0;
+			}
 			pelt = &kh_value(h, k);
 			*pelt = elt;
 			DL_APPEND(hashlin->head, elt);
@@ -332,6 +336,10 @@ bool ucl_hash_insert(ucl_hash_t *hashlin, const ucl_object_t *obj,
 		k = kh_put(ucl_hash_node, h, obj, &ret);
 		if (ret > 0) {
 			elt = UCL_ALLOC(sizeof(*elt));
+			if (elt == NULL) {
+				kh_del(ucl_hash_node, h, k);
+				goto e0;
+			}
 			pelt = &kh_value(h, k);
 			*pelt = elt;
 			DL_APPEND(hashlin->head, elt);
