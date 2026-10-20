@@ -1,0 +1,14 @@
+#!/bin/sh
+
+TDIR="`dirname "${0}"`"
+BASEDIR="${TDIR}/.."
+SUDO_REQUIRED=0
+. "${BASEDIR}/functions"
+
+. "${TDIR}/glitch.sub"
+
+disable_aslr "${@}"
+
+# Optional first argument selects the number of concurrent glitching jobs.
+glitch_test recording/basic 0 recording.rlog "" 0 "${1:-50}"
+report "glitching recording/basic"
