@@ -93,7 +93,7 @@ do
 done
 
 rm -f ${PLAYBACK_RFILES}
-${MAKEANN} ${BASEDIR}/ringback.sln ${BASEDIR}/playback1
+${MAKEANN} "${BASEDIR}/ringback.sln" playback1
 report "makeann playback1"
 
 ${RPTL_INT} -s "${BASEDIR}/playback/playback1.rptl" \
