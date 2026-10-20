@@ -8,8 +8,8 @@ BASEDIR="`dirname "${0}"`/.."
 
 for ma_cmd in "${MAKEANN_PROD}" "${MAKEANN_DBG}"
 do
-  RB_BASE="${BASEDIR}/ringback"
-  RB_SLN="${RB_BASE}.sln"
+  RB_BASE="ringback"
+  RB_SLN="${BASEDIR}/ringback.sln"
 
   MA_FLAFS_CMN="${RB_SLN} ${RB_BASE}"
   NONEX="/nonsense/nonexisting/crap"
