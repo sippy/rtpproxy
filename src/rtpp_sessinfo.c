@@ -362,8 +362,12 @@ rtpp_sinfo_remove(struct rtpp_sessinfo *sessinfo, struct rtpp_session *sp,
 e1:
     pthread_mutex_unlock(&pvt->hst_rtcp.lock);
 e0:
-    if (fd_rtp != NULL)
+    if (fd_rtp != NULL) {
         pthread_mutex_unlock(&pvt->hst_rtp.lock);
+        RTPP_OBJ_DECREF(fd_rtp);
+    }
+    if (fd_rtcp != NULL)
+        RTPP_OBJ_DECREF(fd_rtcp);
 }
 
 void
