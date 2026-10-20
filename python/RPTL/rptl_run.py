@@ -1,6 +1,5 @@
 import sys, os, getopt, shlex, signal, tempfile, shutil
 from collections import deque
-from threading import Thread
 from socket import socket, socketpair, AF_UNIX, AF_INET, AF_INET6, \
   SOCK_DGRAM, SOCK_STREAM, SHUT_RDWR
 from subprocess import Popen, TimeoutExpired, DEVNULL, PIPE
@@ -255,24 +254,26 @@ class ManagedProcess():
     rc = None
     on_update = None
 
-    def __init__(self, name, cmdline):
+    def __init__(self, name, cmdline, python_script = False):
         self.name = name
         self.cmdline = cmdline
         self.lines = deque()
-        self.proc = Popen(['/bin/sh', '-c', cmdline], stdin = DEVNULL,
-          stdout = PIPE, close_fds = True, start_new_session = True)
+        if python_script:
+            argv = shlex.split(cmdline)
+            if os.environ.get('RPTL_PYSPAWN', '1') == '0':
+                # Keep an exec baseline for comparing the prototype.
+                cmdline = shlex.join(['exec', sys.executable] + argv)
+                self.proc = Popen(['/bin/sh', '-c', cmdline], stdin = DEVNULL,
+                  stdout = PIPE, close_fds = True, start_new_session = True)
+            else:
+                from pyspawn import PythonProcess
+                self.proc = PythonProcess(argv)
+        else:
+            self.proc = Popen(['/bin/sh', '-c', cmdline], stdin = DEVNULL,
+              stdout = PIPE, close_fds = True, start_new_session = True)
         self.pid = self.proc.pid
-        self._reader = Thread(target = self._read_output, daemon = True)
-        self._reader.start()
-
-    def _read_output(self):
-        from sippy.Core.EventDispatcher import ED2
-        for line in self.proc.stdout:
-            line = line.decode(errors = 'replace').rstrip('\r\n')
-            ED2.callFromThread(self._got_line, line)
-        self.proc.stdout.close()
-        rc = self.proc.wait()
-        ED2.callFromThread(self._got_exit, rc)
+        from process_io import process_io
+        self._done = process_io.register(self)
 
     def _got_line(self, line):
         self.lines.append(line)
@@ -296,10 +297,9 @@ class ManagedProcess():
 
     def stop(self):
         self.signal(signal.SIGTERM)
-        self._reader.join(2.0)
-        if self._reader.is_alive():
+        if not self._done.wait(2.0):
             self.signal(signal.SIGKILL)
-            self._reader.join()
+            self._done.wait()
 
 class TransFunction():
     name: str
@@ -373,6 +373,7 @@ class ScriptRunner():
           '.foreach':self.handle_foreach,
           '.exec':self.handle_exec,
           '.spawn':self.handle_spawn,
+          '.pyspawn':self.handle_pyspawn,
           '.readline':self.handle_readline,
           '.wait':self.handle_wait,
           '.kill':self.handle_kill,
@@ -587,17 +588,20 @@ class ScriptRunner():
             return True
         self._wait_proc(mp, check, None, 'completion')
 
-    def handle_spawn(self, cmd, command):
+    def handle_spawn(self, cmd, command, python_script = False):
         name = cmd.output_var
         if not isinstance(name, str):
-            raise Exception('.spawn requires "-> NAME" to be specified')
+            raise Exception('spawn requires "-> NAME" to be specified')
         name = self.expand_vars(name)
         if name in self.procs:
             raise Exception(F'{name}: process has been spawned already')
-        mp = ManagedProcess(name, command)
+        mp = ManagedProcess(name, command, python_script = python_script)
         self.procs[name] = mp
         self.variables[name] = str(mp.pid)
         self.issue_next_cmd()
+
+    def handle_pyspawn(self, cmd, command):
+        self.handle_spawn(cmd, command, python_script = True)
 
     def handle_readline(self, cmd, command):
         mp, timeout = self._parse_proc_args(command)
