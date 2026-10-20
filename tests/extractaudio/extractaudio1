@@ -8,11 +8,19 @@ BASEDIR="`dirname "${0}"`/.."
 
 . "${BASEDIR}/extractaudio/common.sub"
 
+# Read fixtures from the source tree; write decoded files in the worker cwd.
+worker_inputs=""
+for rfile in ${extractaudio_RFILES}
+do
+  worker_inputs="${worker_inputs} ${BASEDIR}/${rfile}"
+done
+extractaudio_RFILES="${worker_inputs}"
+
 CONFS="r8k r16k r16k_nosync"
 TKINDS="mono stereo"
 
 eaud_eargs() {
-  afile="extractaudio/`basename ${1}`.args"
+  afile="${BASEDIR}/extractaudio/`basename ${1}`.args"
   if [ -e "${afile}" ]
   then
     "${afile}" "${1}"
@@ -64,7 +72,7 @@ do
     for rfile in ${extractaudio_RFILES}
     do
       bfile="`basename ${rfile}`"
-      ofile="extractaudio/${bfile}.output"
+      ofile="${BASEDIR}/extractaudio/${bfile}.output"
       EXTRACTAUDIO_EARGS=`eaud_eargs "${rfile}"`
       for ofmt in ${OFMTS}
       do
@@ -72,7 +80,7 @@ do
         then
           DFMTS="${DFMTS_FIXED}"
         else
-          DFMTS=`cat extractaudio/extractaudio.${CHFMT}.${ofmt}.dfmts`
+          DFMTS=`cat "${BASEDIR}/extractaudio/extractaudio.${CHFMT}.${ofmt}.dfmts"`
         fi
         for dfmt in ${DFMTS}
         do
@@ -88,7 +96,7 @@ do
           report "${EXTRACTAUDIO} ${EXTRACTAUDIO_ARGS} ${rfile}"
           test -s ${wfile}
           report "${rfile} -> ${wfile}"
-          sha256_verify ${wfile} extractaudio/extractaudio.checksums
+          sha256_verify ${wfile} "${BASEDIR}/extractaudio/extractaudio.checksums"
           ${DIFF} "${ofile}" "${sfile}"
           report "checking RTP stats for the ${rfile}"
         done
