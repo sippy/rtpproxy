@@ -224,7 +224,7 @@ disable_aslr() {
     fi
     if [ -z "${RTPP_ASLR_REEXEC}" ]
     then
-      RTPP_ASLR_REEXEC=1 exec setarch "`uname -m`" -R /bin/sh "${0}"
+      RTPP_ASLR_REEXEC=1 exec setarch "`uname -m`" -R /bin/sh "${0}" "${@}"
     fi
     echo "disable_aslr: cannot disable address space randomization" >&2
     exit 1
