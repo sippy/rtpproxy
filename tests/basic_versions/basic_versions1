@@ -1,46 +1,38 @@
 #!/bin/sh
 
-# Test basic control protocol info commands. See basic_versions.input and
-# basic_versions.output files for commands and expected results.
-
+# Exercise the same control protocol info commands over every supported
+# transport. RPTL owns the listeners and allocates their ports atomically.
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
 
 BV_LOGFILE=basic_versions.rlog
-BV_TLFILE="_${BV_LOGFILE}"
+truncate -s 0 "${BV_LOGFILE}"
 
-__beforeexit_cleanup()
-{
-  if [ ! -z "${TMP_PIDFILE}" ]
-  then
-    rtpproxy_stop TERM
-  fi
-  if [ -f ${BV_TLFILE} ]
-  then
-    cat ${BV_TLFILE} >>${BV_LOGFILE}
-    rm ${BV_TLFILE}
-  fi
-}
+# Keep the command list and reference output shared with the original test.
+awk '{print "rtpp: " $0}' "${BASEDIR}/basic_versions/basic_versions.input" \
+  > basic_versions.commands.rptl
+report "preparing basic_versions commands"
+sed '/^MEMDEB(rtpproxy): all clear$/d' \
+  "${BASEDIR}/basic_versions/basic_versions.output" > basic_versions.model
+report "preparing basic_versions reference output"
 
-truncate -s 0 ${BV_LOGFILE}
-for socket in ${RTPP_TEST_SOCKETS}
+for transport in stdio udp unix tcp cunix udp6 tcp6
 do
-  if [ "${socket}" = "stdio:" ]
+  out="basic_versions.${transport}"
+  ${RPTL_INT} -s "${BASEDIR}/basic_versions/basic_versions.rptl" \
+    -D RTPPROXY_BIN="`strip_wrapper "${RTPPROXY}"`" \
+    -D CONTROL="${transport}:" -D OUT="${out}" \
+    -D COMMANDS="$(pwd)/basic_versions.commands.rptl" \
+    -D CMD_TIMEOUT=10 > "${out}.vars" 2> "${out}.rptl.rlog"
+  rc=${?}
+  cat "${out}.rlog" "${out}.rptl.rlog" >> "${BV_LOGFILE}"
+  if [ "${rc}" -ne 0 ]
   then
-    ${RTPPROXY} -f -s "${socket}" < $BASEDIR/basic_versions/basic_versions.input 2>>${BV_LOGFILE} | \
-      ${DIFF} ${BASEDIR}/basic_versions/basic_versions.output -
-    report "basic_versions on ${socket}"
-  else
-    RTPP_SOCKFILE="${socket}" RTPP_OUTFILE="basic_versions.rout" RTPP_LOGFILE="${BV_TLFILE}" rtpproxy_start
-    report "rtpproxy start on ${socket}"
-    ${RTPP_QUERY} -t 10  -b -s "${socket}" \
-      -i $BASEDIR/basic_versions/basic_versions.input -o basic_versions.qout
-    report "rtpp_query on ${socket}"
-    rtpproxy_stop HUP
-    report "rtpproxy stop (SIGHUP) on ${socket}"
-    cat basic_versions.qout basic_versions.rout | ${DIFF} ${BASEDIR}/basic_versions/basic_versions.output -
-    report "basic_versions on ${socket}"
-    cat ${BV_TLFILE} >>${BV_LOGFILE}
-    rm ${BV_TLFILE}
+    cat "${out}.rlog" "${out}.rptl.rlog" >&2
   fi
+  report_rc "${rc}" "running basic_versions on ${transport}"
+  ${DIFF} basic_versions.model "${out}.qout"
+  report "basic_versions replies on ${transport}"
+  grep -Fq 'MEMDEB(rtpproxy): all clear' "${out}.rlog"
+  report "basic_versions memory cleanup on ${transport}"
 done
