@@ -1,0 +1,7 @@
+#!/bin/sh
+
+BASEDIR="${BASEDIR:-$(dirname -- $0)/..}"
+. "${BASEDIR}/functions"
+
+"${TOP_BUILDDIR}/src/pproc_manager_test"
+report "Running pproc_manager_test"
