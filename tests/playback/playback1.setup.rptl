@@ -1,4 +1,4 @@
 # Start capturing for one run, see playback1.rptl
 .eval: %%RUN%% -> str_split(:, T, CODEC, NPKTS)
-.spawn: exec %%PYINT%% %%CAPTURE%% -6 -T %%OUT%%.%%T%%.%%CODEC%%.tos %%NPKTS%% %%OUT%%.%%T%%.%%CODEC%%.a.rtp -> CAP_%%T%%_%%CODEC%%
+.pyspawn: %%CAPTURE%% -6 -T %%OUT%%.%%T%%.%%CODEC%%.tos %%NPKTS%% %%OUT%%.%%T%%.%%CODEC%%.a.rtp -> CAP_%%T%%_%%CODEC%%
 .readline: CAP_%%T%%_%%CODEC%% 10 -> PORTS_%%T%%_%%CODEC%%

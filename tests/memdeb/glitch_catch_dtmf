@@ -12,5 +12,5 @@ disable_aslr "${@}"
 MAX_JOBS="${1:-50}"
 
 # Optional first argument selects the number of concurrent glitching jobs.
-glitch_test catch_dtmf/basic 6 catch_dtmf.rlog 'rtpp_catch_dtmf.c\|rtpp_wi_data.c\|rtpp_notify.c\|rtpp_tnotify_set.c\|rtpp_timeout_data.c\|pproc_manager.c' 0 "${MAX_JOBS}"
+glitch_test catch_dtmf/basic 2 catch_dtmf.rlog 'rtpp_catch_dtmf.c\|rtpp_wi_data.c\|rtpp_notify.c\|rtpp_tnotify_set.c\|rtpp_timeout_data.c\|pproc_manager.c' 0 "${MAX_JOBS}"
 report "glitching catch_dtmf/basic"

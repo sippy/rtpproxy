@@ -17,7 +17,7 @@
 # Contains two "%" in a row, which cannot appear in an RPTL statement as is
 .exec: echo 'Hello%2C%B%A%D%''%C%A%T%21%20%3A-%29' -> BAD_TAG
 
-.spawn: exec %%PYINT%% %%NOTIFY_CLIENT%% -s tcp:127.0.0.1:0 -o %%OUT%%.tlog -t 60 -P -> NC
+.pyspawn: %%NOTIFY_CLIENT%% -s tcp:127.0.0.1:0 -o %%OUT%%.tlog -t 60 -P -> NC
 .readline: NC 10 -> validate_port(NC_PORT)
 .eval: tcp:127.0.0.1:%%NC_PORT%% -> NS
 .echo: OK: started rtpp_notify_client.py on %%NS%%
