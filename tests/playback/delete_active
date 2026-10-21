@@ -1,0 +1,10 @@
+#!/bin/sh
+
+BASEDIR="${BASEDIR:-$(dirname -- "$0")/..}"
+. "${BASEDIR}/functions"
+
+${MAKEANN} "${BASEDIR}/ringback.sln" playback_delete
+report "makeann playback_delete"
+${PYINT} "${BASEDIR}/playback/delete_active.py" "${BUILDDIR}/playback_delete" \
+  "${BUILDDIR}/playback_delete.rlog" ${RTPPROXY}
+report "deleting sessions during active playback"

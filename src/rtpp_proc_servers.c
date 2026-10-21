@@ -335,6 +335,6 @@ rtpp_proc_servers_unreg(struct rtpp_proc_servers *self, uint64_t sruid)
     rco = CALL_SMETHOD(stap->inact_servers, unreg, sruid);
     if (rco == NULL)
         rco = CALL_SMETHOD(stap->act_servers, unreg, sruid);
-    RTPP_DBG_ASSERT(rco != NULL);
+    /* Playback may have finished after the caller read the player UID. */
     return (rco != NULL ? 0 : -1);
 }
