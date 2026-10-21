@@ -11,7 +11,7 @@ then
 	${PRE_INSTALL_CMD}
 fi
 
-${SUDO} apt-get -y install ${PKGS}
+${SUDO} env DEBIAN_FRONTEND=noninteractive apt-get -y install ${PKGS}
 
 if [ ! -z "${POST_INSTALL_CMD}" ]
 then
