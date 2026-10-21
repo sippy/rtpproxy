@@ -170,6 +170,7 @@ rtpp_glitch_init(struct rtpp_glitch_opts *glopts)
                 case GLAV_GLTCH:
                     break;
                 case GLAV_RPRT:
+                case GLAV_RPRT_ONCE:
                     do_report = 1;
                     break;
                 default:

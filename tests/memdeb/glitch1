@@ -62,7 +62,7 @@ reportifnotfail "Extracting stack cookie at [-65]"
 for trig in "s0" "${STRIG}" "${SCOOK}" "${SCOOK}:*" "*"
 do
   spin_nc
-  for act in "a" "e" "rg"
+  for act in "a" "e" "rg" "Rg"
   do
     rtpp_glitch "${trig}" "${act}" "${NC_PORT}"
   done

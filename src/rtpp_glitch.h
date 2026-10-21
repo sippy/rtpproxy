@@ -51,6 +51,7 @@ enum glav_act {
   GLAV_HANG  = 'h',
   GLAV_BAIL  = 'e',
   GLAV_RPRT  = 'r',
+  GLAV_RPRT_ONCE = 'R',
   GLAV_GLTCH = 'g'
 };
 
@@ -72,6 +73,10 @@ void rtpp_glitch_callhome(intmax_t step, uintptr_t hash,
             break; \
         case GLAV_BAIL: \
             exit(255); \
+        case GLAV_RPRT_ONCE: \
+            if (nhit != 0) \
+                break; \
+            /* FALLTHROUGH */ \
         case GLAV_RPRT: \
             rtpp_glitch_callhome(step, stack_cook, mlp); \
             break; \
