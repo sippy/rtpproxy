@@ -1,17 +1,25 @@
+# Optional output, daemon log, and timeout (zero disables the timeout).
 spin_nc()
 {
 #  NC_PORT=`${PYINT} -c "from random import random;m=10000;print(m+int(random()*(65536-m)))"`
 #  (nc -k -l 127.0.0.1 ${NC_PORT} > glitch1.ncout)&
 #  (strace -o glitch1.nctrace -f ${RTPP_NOTYFY_CLIENT} -s tcp:127.0.0.1:${NC_PORT} -o glitch1.ncout -t 600 2>glitch1.nclog 1>glitch1.nclog)&
-  GNC_LOG="glitch1.nclog"
-  if [ -e ${GNC_LOG} ]
+  GNC_OUT="${1:-glitch1.ncout}"
+  GNC_LOG="${2:-glitch1.nclog}"
+  if [ -e "${GNC_LOG}" ]
   then
     rm "${GNC_LOG}"
   fi
   # Filtering replaces this file as the test runner (root in CI), while the
   # notification client runs as rtpproxy and cannot truncate that replacement.
-  rm -f glitch1.ncout
-  set -- `${RTPP_NOTYFY_CLIENT} -D -s tcp:127.0.0.1:0 -o glitch1.ncout -t 600 -l "${GNC_LOG}"`
+  rm -f "${GNC_OUT}"
+  if [ "${3:-600}" = 0 ]
+  then
+    set --
+  else
+    set -- -t "${3:-600}"
+  fi
+  set -- `${RTPP_NOTYFY_CLIENT} -G -D -s tcp:127.0.0.1:0 -o "${GNC_OUT}" -l "${GNC_LOG}" "${@}"`
   RTPP_NC_RC=${?}
   NC_PID="${1}"
   NC_PORT="${2}"
@@ -98,7 +106,8 @@ glitch_worker()
     then
       rm -f -- "${rlog}" || return 1
     fi
-    if RTPP_GLITCH_ACT="g" RTPP_GLITCH_TRIG="${tp}" "${test}" 2>/dev/null >/dev/null
+    if RTPP_GLITCH_ACT="Rg" RTPP_GLITCH_TRIG="${tp}" \
+      RTPP_GLITCH_CH_PORT="${NC_PORT}" "${test}" 2>/dev/null >/dev/null
     then
        nok=$((${nok} + 1))
        res="INEFFECTIVE"
@@ -132,6 +141,24 @@ glitch_worker()
   echo "${nok} ${nfail}" > "${counts}"
 }
 
+# Count each cookie once: repeated reports cannot cover an unexercised point.
+glitch_check_coverage()
+{
+  awk '
+    FILENAME == ARGV[1] { expected[$1] = $2; total++; next }
+    $2 in expected { hit[$2] = 1 }
+    END {
+      for (gp in expected) {
+        if (gp in hit)
+          exercised++
+        else
+          printf "%s:*: glitch point not exercised at %s\n", gp, expected[gp]
+      }
+      printf "%d of %d glitch points exercised\n", exercised, total
+      exit (exercised != total)
+    }' "${1}" "${2}"
+}
+
 # Freeze parents before enumerating children, so they cannot start another
 # iteration or reparent a child while interrupt cleanup walks the tree.
 glitch_stop_tree()
@@ -162,6 +189,10 @@ glitch_interrupt()
   do
     wait "${pid}" 2>/dev/null || true
   done
+  if [ -n "${NC_PID}" ]
+  then
+    stop_nc
+  fi
   echo "Glitching interrupted; worker logs retained in ${workdir}" >&2
   exit "${1}"
 }
@@ -181,13 +212,25 @@ glitch_do()
   queue="${workdir}/queue"
   # Preserve first-seen order and avoid rescanning the points for each job.
   awk '!seen[$2]++ {print $2 " " $7}' "${points}" > "${queue}" || return 1
+  if [ ! -s "${queue}" ]
+  then
+    echo "No glitch points selected; logs retained in ${workdir}" >&2
+    return 1
+  fi
 
   pids=""
+  NC_PID=""
   interrupted=0
   # Defer cleanup until the current worker's PID has been recorded.
   trap 'interrupted=130' INT
   trap 'interrupted=143' TERM
   trap 'interrupted=129' HUP
+  # A serial dispatch may take much longer than the initial survey.
+  spin_nc "${workdir}/hits.ncout" "${workdir}/collector.nclog" 0
+  if [ "${interrupted}" -ne 0 ]
+  then
+    glitch_interrupt "${interrupted}"
+  fi
   job=0
   while [ "${job}" -lt "${njobs}" ]
   do
@@ -222,6 +265,20 @@ glitch_do()
       glitch_interrupt "${interrupted}"
     fi
   done
+  # Reports arrive asynchronously. Let the collector flush any final hits
+  # before stopping it, with a bounded wait when a point was never reached.
+  for attempt in 1 2 3
+  do
+    glitch_check_coverage "${queue}" "${workdir}/hits.ncout" >/dev/null && break
+    [ "${attempt}" = 3 ] || sleep 1
+    if [ "${interrupted}" -ne 0 ]
+    then
+      glitch_interrupt "${interrupted}"
+    fi
+  done
+  stop_nc
+  NC_PID=""
+  glitch_check_coverage "${queue}" "${workdir}/hits.ncout" || failed=1
   if [ "${failed}" -ne 0 ]
   then
     echo "Glitching failed; worker logs retained in ${workdir}"
