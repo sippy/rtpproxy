@@ -1,0 +1,13 @@
+// Trace on the runner host so PIDs are comparable across container boundaries.
+BEGIN
+{
+    printf("READY\n");
+}
+
+tracepoint:signal:signal_generate
+/args->sig == 2 || args->sig == 9 || args->sig == 15/
+{
+    printf("sig=%d sender_pid=%d sender_tid=%d sender=%s uid=%d target_tid=%d target=%s code=%d group=%d result=%d\n",
+           args->sig, pid, tid, comm, uid, args->pid, args->comm,
+           args->code, args->group, args->result);
+}

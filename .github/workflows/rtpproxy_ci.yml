@@ -243,9 +243,14 @@ jobs:
           --security-opt seccomp=unconfined \
           --workdir /opt/rtpproxy/glitching rtpproxy-ci:tests
 
+    - name: Install host signal tracer
+      run: |
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends -y bpftrace
+
     - name: test
       id: tests
-      run: docker exec rtpproxy-tests sh -x scripts/do-test.sh
+      run: python3 scripts/monitor-ci-test.py docker exec rtpproxy-tests sh -x scripts/do-test.sh
 
     - name: Collect coverage
       run: |
