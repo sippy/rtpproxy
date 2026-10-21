@@ -235,6 +235,12 @@ rtpp_socket_settimestamp(struct rtpp_socket *self)
         return (rval);
     }
     sval = 1;
+#if defined(IP_RECVTOS)
+    setsockopt(pvt->fd, IPPROTO_IP, IP_RECVTOS, &sval, sizeof(sval));
+#endif
+#if defined(IPV6_RECVTCLASS)
+    setsockopt(pvt->fd, IPPROTO_IPV6, IPV6_RECVTCLASS, &sval, sizeof(sval));
+#endif
 #if defined(IP_RECVDSTADDR)
     setsockopt(pvt->fd, IPPROTO_IP, IP_RECVDSTADDR, &sval, sizeof(sval));
 #else
@@ -306,7 +312,7 @@ rtpp_socket_rtp_recv_simple(const struct rs_recv_arg *ra)
 }
 
 DEFINE_RAW_METHOD(recvfromto, ssize_t, int, void *, size_t, struct sockaddr *,
-  socklen_t *, struct sockaddr *, socklen_t *, struct timespec *);
+  socklen_t *, struct sockaddr *, socklen_t *, struct timespec *, unsigned char *);
 
 static struct rtp_packet *
 _rtpp_socket_rtp_recv(const struct rs_recv_arg *ra, recvfromto_t _recvfromtof, struct timespec *tptr)
@@ -322,7 +328,8 @@ _rtpp_socket_rtp_recv(const struct rs_recv_arg *ra, recvfromto_t _recvfromtof, s
     packet->rlen = sizeof(packet->raddr);
     llen = sizeof(packet->_laddr);
     packet->size = _recvfromtof(ra->pvt->fd, packet->data.buf, sizeof(packet->data.buf),
-      sstosa(&packet->raddr), &packet->rlen, sstosa(&packet->_laddr), &llen, tptr);
+      sstosa(&packet->raddr), &packet->rlen, sstosa(&packet->_laddr), &llen, tptr,
+      &packet->received_tos);
 
     if (packet->size == -1) {
         RTPP_OBJ_DECREF(packet);
