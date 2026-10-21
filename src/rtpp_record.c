@@ -504,6 +504,7 @@ prepare_pkt_hdr_pcap(const struct prepare_pkt_hdr_args *phap)
     if (src_addr->sa_family == AF_INET) {
         ipp.v4->ip_v = 4;
         ipp.v4->ip_hl = sizeof(*ipp.v4) >> 2;
+        ipp.v4->ip_tos = phap->packet->received_tos;
         ipp.v4->ip_len = htons(sizeof(*ipp.v4) + sizeof(*udp) + phap->packet->size);
         ipp.v4->ip_src = satosin(src_addr)->sin_addr;
         ipp.v4->ip_dst = satosin(dst_addr)->sin_addr;
@@ -512,7 +513,8 @@ prepare_pkt_hdr_pcap(const struct prepare_pkt_hdr_args *phap)
         ipp.v4->ip_ttl = 127;
         ipp.v4->ip_sum = rtpp_in_cksum(ipp.v4, sizeof(*ipp.v4));
     } else {
-        ipp.v6->ip6_vfc |= IPV6_VERSION;
+        ipp.v6->ip6_flow = htonl((6U << 28) |
+          ((uint32_t)phap->packet->received_tos << 20));
         ipp.v6->ip6_hlim = IPV6_DEFHLIM;
         ipp.v6->ip6_nxt = IPPROTO_UDP;
         ipp.v6->ip6_src = satosin6(src_addr)->sin6_addr;

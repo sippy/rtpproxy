@@ -45,6 +45,7 @@ struct rtp_packet {
     struct rtp_info *parsed;
     /* ^^^ Elements above are not copied by the rtp_packet_dup() ^^^ */
     rtp_parser_err_t parse_result;
+    unsigned char received_tos;
 
     size_t      size;
 
