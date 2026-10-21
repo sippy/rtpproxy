@@ -554,6 +554,20 @@ jobs:
         JOB_OUTCOME: ${{ job.status }}
       run: python3 scripts/test-summary.py collect --suite glitching
 
+    - name: Collect glitch failure logs
+      if: ${{ failure() && steps.tests.outcome == 'failure' }}
+      run: |
+        docker exec rtpproxy-tests sh -c \
+          'cd /tmp && find . -maxdepth 1 -type d -name "glitch.*" -print0 | tar --null -T - -czf -' \
+          > "${RUNNER_TEMP}/glitch-failures.tar.gz"
+
+    - name: Upload glitch failure logs
+      if: ${{ failure() && steps.tests.outcome == 'failure' }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: glitch-failures-${{ matrix.os }}-${{ matrix.compiler }}
+        path: ${{ runner.temp }}/glitch-failures.tar.gz
+
     - name: Remove test container
       if: ${{ always() }}
       run: docker rm --force rtpproxy-tests 2>/dev/null || true

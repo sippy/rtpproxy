@@ -29,6 +29,7 @@ then
   : > test.rlog
 fi
 cookie="${RTPP_GLITCH_TRIG%%:*}"
+echo "fixture output for ${cookie}"
 test "${RTPP_GLITCH_ACT}" = Rg || exit 2
 ${PYINT:-python3} - "${RTPP_GLITCH_CH_PORT}" "${cookie}" <<'PY'
 import os
@@ -131,6 +132,8 @@ do
   report "identifying the unexercised point"
   grep -q '^5 of 6 glitch points exercised$' "${REPORT_MODE}.log"
   report "counting unique matching reports"
+  grep -q '^fixture output for c0002$' "${REPORT_MODE}.log"
+  report "showing test output for unexercised points"
   failure_workdir="`awk '/^Glitching failed; worker logs retained in / {print $NF}' "${REPORT_MODE}.log"`"
   [ -s "${failure_workdir}/hits.ncout" ] || exit 1
   rm -rf "${failure_workdir}"

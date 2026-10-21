@@ -106,8 +106,10 @@ glitch_worker()
     then
       rm -f -- "${rlog}" || return 1
     fi
+    # Keep each attempt's output: an early setup failure may miss its target,
+    # and later iterations reuse the test's own log files.
     if RTPP_GLITCH_ACT="Rg" RTPP_GLITCH_TRIG="${tp}" \
-      RTPP_GLITCH_CH_PORT="${NC_PORT}" "${test}" 2>/dev/null >/dev/null
+      RTPP_GLITCH_CH_PORT="${NC_PORT}" "${test}" > "${counts}.${gp}.log" 2>&1
     then
        nok=$((${nok} + 1))
        res="INEFFECTIVE"
@@ -144,15 +146,18 @@ glitch_worker()
 # Count each cookie once: repeated reports cannot cover an unexercised point.
 glitch_check_coverage()
 {
-  awk '
+  awk -v missing="${3:-}" '
     FILENAME == ARGV[1] { expected[$1] = $2; total++; next }
     $2 in expected { hit[$2] = 1 }
     END {
       for (gp in expected) {
         if (gp in hit)
           exercised++
-        else
+        else {
           printf "%s:*: glitch point not exercised at %s\n", gp, expected[gp]
+          if (missing != "")
+            print gp > missing
+        }
       }
       printf "%d of %d glitch points exercised\n", exercised, total
       exit (exercised != total)
@@ -278,7 +283,19 @@ glitch_do()
   done
   stop_nc
   NC_PID=""
-  glitch_check_coverage "${queue}" "${workdir}/hits.ncout" || failed=1
+  if ! glitch_check_coverage "${queue}" "${workdir}/hits.ncout" "${workdir}/missing"
+  then
+    failed=1
+    while read -r gp
+    do
+      for logfile in "${workdir}"/*."${gp}".log
+      do
+        [ -f "${logfile}" ] || continue
+        echo "Test output for unexercised point ${gp}:"
+        tail -n 80 "${logfile}"
+      done
+    done < "${workdir}/missing"
+  fi
   if [ "${failed}" -ne 0 ]
   then
     echo "Glitching failed; worker logs retained in ${workdir}"
