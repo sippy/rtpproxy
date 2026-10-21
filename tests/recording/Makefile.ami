@@ -1,6 +1,6 @@
 recording_EXTRA_DIST = recording
 recording_CLEANFILES = recording.* recording/src_srs*.rlog \
   recording/src_srs*.rout recording/call*.rtp
-TESTS += recording/basic recording/src_srs
+TESTS += recording/basic recording/src_srs recording/tos
 CLEANFILES += ${recording_CLEANFILES}
 EXTRA_DIST += ${recording_EXTRA_DIST}

@@ -40,7 +40,7 @@
 static ssize_t
 _recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
   socklen_t *fromlen, struct sockaddr *to, socklen_t *tolen,
-  void *tp, size_t tplen, int mtype)
+  void *tp, size_t tplen, int mtype, unsigned char *tos)
 {
     /* We use a union to make sure hdr is aligned */
     union {
@@ -70,6 +70,7 @@ _recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
         return (rval);
 
     *tolen = 0;
+    *tos = 0;
     for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
       cmsg = CMSG_NXTHDR(&msg, cmsg)) {
 #if defined(IP_RECVDSTADDR)
@@ -79,7 +80,7 @@ _recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
               sizeof(struct in_addr));
             to->sa_family = AF_INET;
             *tolen = sizeof(struct sockaddr_in);
-            break;
+            continue;
         }
 #else
         if (cmsg->cmsg_level == SOL_IP &&
@@ -89,7 +90,24 @@ _recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
               sizeof(struct in_addr));
             to->sa_family = AF_INET;
             *tolen = sizeof(struct sockaddr_in);
-            break;
+            continue;
+        }
+#endif
+#if defined(IP_RECVTOS)
+        if (cmsg->cmsg_level == IPPROTO_IP &&
+          (cmsg->cmsg_type == IP_TOS || cmsg->cmsg_type == IP_RECVTOS) &&
+          cmsg->cmsg_len >= CMSG_LEN(sizeof(*tos))) {
+            memcpy(tos, CMSG_DATA(cmsg), sizeof(*tos));
+        }
+#endif
+#if defined(IPV6_TCLASS)
+        if (cmsg->cmsg_level == IPPROTO_IPV6 &&
+          cmsg->cmsg_type == IPV6_TCLASS &&
+          cmsg->cmsg_len >= CMSG_LEN(sizeof(int))) {
+            int tclass;
+
+            memcpy(&tclass, CMSG_DATA(cmsg), sizeof(tclass));
+            *tos = tclass;
         }
 #endif
         if ((cmsg->cmsg_level == SOL_SOCKET) &&
@@ -104,13 +122,13 @@ _recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
 ssize_t
 recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
   socklen_t *fromlen, struct sockaddr *to, socklen_t *tolen,
-  struct timespec *timeptr)
+  struct timespec *timeptr, unsigned char *tos)
 {
     ssize_t r;
     struct timeval rtime = {0};
 
     r = _recvfromto(s, buf, len, from, fromlen, to, tolen, &rtime,
-      sizeof(rtime), SCM_TIMESTAMP);
+      sizeof(rtime), SCM_TIMESTAMP, tos);
     if (r >= 0) {
         timeptr->tv_sec = rtime.tv_sec;
         timeptr->tv_nsec = rtime.tv_usec * 1000;
@@ -122,10 +140,10 @@ recvfromto(int s, void *buf, size_t len, struct sockaddr *from,
 ssize_t
 recvfromto_mono(int s, void *buf, size_t len, struct sockaddr *from,
   socklen_t *fromlen, struct sockaddr *to, socklen_t *tolen,
-  struct timespec *timeptr)
+  struct timespec *timeptr, unsigned char *tos)
 {
 
     return (_recvfromto(s, buf, len, from, fromlen, to, tolen, timeptr,
-      sizeof(*timeptr), SCM_MONOTONIC));
+      sizeof(*timeptr), SCM_MONOTONIC, tos));
 }
 #endif /* HAVE_SO_TS_CLOCK */
