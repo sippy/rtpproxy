@@ -14,7 +14,9 @@
 .exec: mkdir -p %%RECORD_SPL_DIR%%
 .exec: rm -f %%REC_BASE%%.*
 
-.eval: -d dbug -b -T2 -W2 -P -r %%RECORD_DIR%% -S %%RECORD_SPL_DIR%% -> RTPPROXY_ARGS
+# Concurrent glitch runs can spend seconds scheduling setup/replay helpers.
+# Sessions are closed explicitly; do not expire them during that setup.
+.eval: -d dbug -T60 -W60 -P -r %%RECORD_DIR%% -S %%RECORD_SPL_DIR%% -> RTPPROXY_ARGS
 socket rtpp: stdio: %%RTPPROXY_ARGS%% -> %%WORK_BASE%%.rout
 
 rtpp: U %%CALLID%% 127.0.0.1 12345 from_tag_1 -> validate_port(PORT_A)

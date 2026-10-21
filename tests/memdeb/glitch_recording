@@ -10,5 +10,6 @@ SUDO_REQUIRED=0
 disable_aslr "${@}"
 
 # Optional first argument selects the number of concurrent glitching jobs.
-glitch_test recording/basic 0 recording.rlog "" 0 "${1:-50}"
+# Startup deliberately ignores core-dump getrlimit/setrlimit failures.
+glitch_test recording/basic 5 recording.rlog "" 0 "${1:-50}"
 report "glitching recording/basic"
