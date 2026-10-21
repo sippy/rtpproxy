@@ -309,6 +309,7 @@ class TransFunction():
           'str_split':self.str_split,
           'validate_port':self.validate_port,
           'str_compare':self.str_compare,
+          'str_equal':self.str_equal,
           'deref':self.deref,
         }
         self.name = name
@@ -328,6 +329,11 @@ class TransFunction():
         expected = srun.getvar(srun.expand_vars(self.args[0]))
         if res != expected:
             raise AssertionError(F'"{res}" != "{expected}"')
+
+    def str_equal(self, srun, res):
+        assert(len(self.args) == 2)
+        expected, output = (srun.expand_vars(arg) for arg in self.args)
+        srun.variables[output] = '1' if res == srun.getvar(expected) else '0'
 
     def deref(self, srun, res):
         # Value is a name of a variable, copy that one
@@ -363,6 +369,8 @@ class ScriptRunner():
         from sippy.Time.Timeout import Timeout
         self.sockets = {}
         self.procs = {}
+        self.schedules = []
+        self.pending_socket = None
         self.commands = commands
         self.variables = dict(variables) if variables is not None else {}
         self.internal_ops = {
@@ -376,6 +384,7 @@ class ScriptRunner():
           '.pyspawn':self.handle_pyspawn,
           '.readline':self.handle_readline,
           '.wait':self.handle_wait,
+          '.until':self.handle_until,
           '.kill':self.handle_kill,
           '.close':self.handle_close,
         }
@@ -386,6 +395,12 @@ class ScriptRunner():
         from sippy.Core.EventDispatcher import ED2
         if self.ex_info is not None:
             return
+        for frame in self.schedules:
+            frame['timer'].cancel()
+        if self.cmd_tmo is not None:
+            self.cmd_tmo.cancel()
+            self.cmd_tmo = None
+            self.pending_socket.stuck = True
         ei = ExceptionInfo()
         ei.exception = ex
         ei.cmd = self.cur_cmd
@@ -408,6 +423,9 @@ class ScriptRunner():
         from sippy.Core.EventDispatcher import ED2
         while True:
             if self.i_command == len(self.commands):
+                if self.schedules:
+                    self.finish_schedule_pass()
+                    return
                 ED2.breakLoop()
                 return
             cmd = self.commands[self.i_command]
@@ -443,6 +461,7 @@ class ScriptRunner():
             self.cmd_tmo = None
             socket.stuck = True
             self.fail(TimeoutError(F'no reply from "{sname}" in {timeout} seconds'))
+        self.pending_socket = socket
         self.cmd_tmo = Timeout(on_timeout, timeout)
         socket.rc.send_command(command, self.got_result, cmd, command, socket)
 
@@ -645,6 +664,45 @@ class ScriptRunner():
                 signum = signal.Signals[sname if sname.startswith('SIG') else 'SIG' + sname]
         mp.signal(signum)
         self.issue_next_cmd()
+
+    def handle_until(self, cmd, command):
+        # .until: VAR do FILE every INTERVAL TIMEOUT
+        from math import isfinite
+        from sippy.Time.Timeout import Timeout
+        args = command.split()
+        if len(args) != 6 or args[1] != 'do' or args[3] != 'every':
+            raise ValueError('VAR do FILE every INTERVAL TIMEOUT expected')
+        interval, timeout = map(float, args[4:])
+        if not all(isfinite(x) and x > 0 for x in (interval, timeout)):
+            raise ValueError('until interval and timeout must be positive and finite')
+        rules = load_script(os.path.join(cmd.srcdir, args[2]))
+        frame = dict(commands=self.commands, index=self.i_command,
+          rules=rules, interval=interval, done=args[0])
+        self.variables[frame['done']] = '0'
+
+        def on_timeout():
+            state = self.getvar(frame['done'])
+            self.fail(TimeoutError(F'.until: {command} timed out after '
+              F'{timeout} seconds; {frame["done"]}={state!r}; '
+              F'last action: {self.cur_command!r}'))
+
+        frame['timer'] = Timeout(lambda: self.guarded(on_timeout), timeout)
+        self.schedules.append(frame)
+        self.commands, self.i_command = list(rules), 0
+        Timeout(self.issue_next_cmd, 0.0)
+
+    def finish_schedule_pass(self):
+        from sippy.Time.Timeout import Timeout
+        frame = self.schedules[-1]
+        if self.getvar(frame['done']) not in ('', '0'):
+            frame['timer'].cancel()
+            self.schedules.pop()
+            self.commands, self.i_command = frame['commands'], frame['index']
+            Timeout(self.issue_next_cmd, 0.0)
+        else:
+            # Discard .include/.foreach expansions from the previous pass.
+            self.commands, self.i_command = list(frame['rules']), 0
+            Timeout(self.issue_next_cmd, frame['interval'])
 
     def handle_close(self, cmd, command):
         name = command.strip()

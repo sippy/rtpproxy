@@ -178,6 +178,7 @@ fwd: U %%CALLID_F%% 127.0.0.1 %%PORTA%% %%FT%% && M4:1 S -> str_split(&&, PORT1_
 | Function | Description |
 |----------|-------------|
 | `str_split(SEP, VAR1, VAR2, ...)` | Split the value at `SEP` and assign the pieces, with surrounding whitespace stripped, to `VAR1`, `VAR2`, ... in order. Fails if there are fewer pieces than variables; anything left after the last variable is dropped, so `str_split(\n, FIRST)` takes the first line. `SEP` is taken verbatim (`str_split( , ...)` splits at spaces), may not contain `,` or `)`, and can use backslash escapes such as `\n`. |
+| `str_equal(VAR, RESULT)` | Set `RESULT` to `1` if the value equals `VAR`, otherwise `0`. |
 | `str_compare(VAR)` | Fail unless the value is exactly equal to the value of `VAR`. |
 | `deref(VAR)` | Treat the value as a name of a variable and copy that variable into `VAR`, e.g. `.eval: PORT_%%K%% -> deref(PORT)`. |
 | `validate_port(VAR)` | Fail unless the value is an integer in the 1-65535 range, then assign it to `VAR`. `_` is commonly used when the value is not needed. |
@@ -200,7 +201,31 @@ alice: R call_ab_alice alice_to alice_from -> str_compare(RES_OK)
 | `.foreach: VAR in VALUE... do FILE` | Execute statements from `FILE` (resolved like with `.include:`) once for each `VALUE`, with `VAR` set to it. The values are split at whitespace after variable expansion, so a variable can provide the list. |
 | `.include: FILE` | Execute statements from `FILE` at this point. A relative `FILE` is resolved against the directory of the script containing the `.include:`. The file is read when the statement is reached, so its name can contain variables; included statements share all variables and sockets with the rest of the script. |
 | `.close: SOCKET` | Shut down `SOCKET`. For a `stdio:` socket this waits for the managed rtpproxy to exit and fails if its exit code is non-zero, which is useful to make it flush and close its recordings before they are examined. |
+| `.until: VAR do FILE every INTERVAL TIMEOUT` | Run `FILE` immediately, then repeat until `VAR` is neither empty nor `0`. Initialize `VAR` to `0` on entry. Wait `INTERVAL` seconds after each incomplete pass; fail after `TIMEOUT` seconds overall. Both durations must be positive. |
 | `.exec:`, `.spawn:`, `.readline:`, `.wait:`, `.kill:` | Run external commands, see below. |
+
+Schedules share variables and sockets with their caller. The caller resumes
+when the block completes. Each pass can use `.include:`, `.foreach:`, nested
+schedules, and any other command; changes to variables persist between passes
+and after completion. Errors in the block fail immediately. Commands retain
+their normal reply timeout, and the overall schedule timeout also covers time
+spent executing the block. Timers run in the event loop without blocking it.
+For example:
+
+```
+.eval: npkts_ina=100 -> EXPECTED
+.until: DONE do check.rptl every 0.1 30
+```
+
+With `check.rptl` containing:
+
+```
+recorder: Qv call to_tag from_tag npkts_ina -> COUNT
+.eval: %%COUNT%% -> str_equal(EXPECTED, DONE)
+```
+
+A block can instead iterate over a variable containing active sessions. Each
+pass expands that list again, so updates to the list affect the next pass.
 
 ### External Commands
 
