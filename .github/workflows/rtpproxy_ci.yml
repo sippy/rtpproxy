@@ -555,14 +555,20 @@ jobs:
       run: python3 scripts/test-summary.py collect --suite glitching
 
     - name: Collect glitch failure logs
-      if: ${{ failure() && steps.tests.outcome == 'failure' }}
+      id: glitch_logs
+      if: ${{ !cancelled() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') }}
       run: |
-        docker exec rtpproxy-tests sh -c \
-          'cd /tmp && find . -maxdepth 1 -type d -name "glitch.*" -print0 | tar --null -T - -czf -' \
-          > "${RUNNER_TEMP}/glitch-failures.tar.gz"
+        if docker exec rtpproxy-tests sh -c \
+          'test -n "$(find /tmp -maxdepth 1 -type d -name "glitch.*" -print -quit)"'
+        then
+          docker exec rtpproxy-tests sh -c \
+            'cd /tmp && find . -maxdepth 1 -type d -name "glitch.*" -print0 | tar --null -T - -czf -' \
+            > "${RUNNER_TEMP}/glitch-failures.tar.gz"
+          echo 'present=true' >> "${GITHUB_OUTPUT}"
+        fi
 
     - name: Upload glitch failure logs
-      if: ${{ failure() && steps.tests.outcome == 'failure' }}
+      if: ${{ !cancelled() && steps.glitch_logs.outputs.present == 'true' }}
       uses: actions/upload-artifact@v7
       with:
         name: glitch-failures-${{ matrix.os }}-${{ matrix.compiler }}

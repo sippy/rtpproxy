@@ -94,6 +94,7 @@ glitch_worker()
 
   nfail=0
   nok=0
+  worker_failed=0
 
   while :
   do
@@ -111,9 +112,11 @@ glitch_worker()
     if RTPP_GLITCH_ACT="Rg" RTPP_GLITCH_TRIG="${tp}" \
       RTPP_GLITCH_CH_PORT="${NC_PORT}" "${test}" > "${counts}.${gp}.log" 2>&1
     then
+       point_nok=1
        nok=$((${nok} + 1))
        res="INEFFECTIVE"
     else
+       point_nok=0
        res="OK, caused test to fail"
        nfail=$((${nfail} + 1))
     fi
@@ -127,6 +130,7 @@ glitch_worker()
       if grep -q "MEMDEB(.*): errors found: " "${rlog}"
       then
          res="${res} (LEAKS!)"
+         worker_failed=1
       fi
       if grep -q "^Died on signal" "${rlog}"
       then
@@ -139,8 +143,11 @@ glitch_worker()
       grep -B 5 -A 5 "^Died on signal" "${rlog}"
       return 1
     fi
+    # A retry replaces the unconfirmed attempt rather than counting twice.
+    echo "${point_nok} $((1 - point_nok))" > "${workdir}/${gp}.result"
   done
   echo "${nok} ${nfail}" > "${counts}"
+  return "${worker_failed}"
 }
 
 # Count each cookie once: repeated reports cannot cover an unexercised point.
@@ -202,6 +209,63 @@ glitch_interrupt()
   exit "${1}"
 }
 
+# Keep PID tracking and fatal failures shared across the stress and retry passes.
+glitch_dispatch()
+{
+  local queue="${1}" njobs="${2}" pass="${3}" job pid
+
+  pids=""
+  job=0
+  while [ "${job}" -lt "${njobs}" ]
+  do
+    (
+      if [ "${njobs}" -gt 1 ]
+      then
+        jobdir="`${MKTEMP_CMD} -d "${workdir}/${pass}.${job}.XXXXXXXX"`" || exit 1
+        cd "${jobdir}" || exit 1
+        export BASEDIR TOP_BUILDDIR
+        BUILDDIR="$(pwd)"
+        export BUILDDIR
+      fi
+      glitch_worker "${test}" "${rlog}" \
+        "${queue}" "${workdir}/${pass}.${job}.counts"
+    ) &
+    pids="${pids} ${!}"
+    if [ "${interrupted}" -ne 0 ]
+    then
+      glitch_interrupt "${interrupted}"
+    fi
+    job=$((job + 1))
+  done
+
+  for pid in ${pids}
+  do
+    wait "${pid}" || failed=1
+    if [ "${interrupted}" -ne 0 ]
+    then
+      glitch_interrupt "${interrupted}"
+    fi
+  done
+  pids=""
+}
+
+glitch_wait_coverage()
+{
+  local attempt
+
+  # Reports arrive asynchronously; allow a bounded wait for final hits.
+  for attempt in 1 2 3
+  do
+    glitch_check_coverage "${queue}" "${workdir}/hits.ncout" >/dev/null && return 0
+    [ "${attempt}" = 3 ] || sleep 1
+    if [ "${interrupted}" -ne 0 ]
+    then
+      glitch_interrupt "${interrupted}"
+    fi
+  done
+  return 1
+}
+
 # Parallel execution is opt-in: the test must allocate its ports dynamically
 # and support running in an independent working directory (e.g. via RPTL).
 glitch_do()
@@ -236,51 +300,24 @@ glitch_do()
   then
     glitch_interrupt "${interrupted}"
   fi
-  job=0
-  while [ "${job}" -lt "${njobs}" ]
-  do
-    (
-      if [ "${njobs}" -gt 1 ]
-      then
-        jobdir="`${MKTEMP_CMD} -d "${workdir}/${job}.XXXXXXXX"`" || exit 1
-        cd "${jobdir}" || exit 1
-        # Keep source and binary paths absolute while directing generated
-        # artifacts into this worker's directory.
-        export BASEDIR TOP_BUILDDIR
-        BUILDDIR="$(pwd)"
-        export BUILDDIR
-      fi
-      glitch_worker "${test}" "${rlog}" \
-        "${queue}" "${workdir}/${job}.counts"
-    ) &
-    pids="${pids} ${!}"
-    if [ "${interrupted}" -ne 0 ]
-    then
-      glitch_interrupt "${interrupted}"
-    fi
-    job=$((job + 1))
-  done
-
   failed=0
-  for pid in ${pids}
-  do
-    wait "${pid}" || failed=1
-    if [ "${interrupted}" -ne 0 ]
-    then
-      glitch_interrupt "${interrupted}"
-    fi
-  done
-  # Reports arrive asynchronously. Let the collector flush any final hits
-  # before stopping it, with a bounded wait when a point was never reached.
-  for attempt in 1 2 3
-  do
-    glitch_check_coverage "${queue}" "${workdir}/hits.ncout" >/dev/null && break
-    [ "${attempt}" = 3 ] || sleep 1
-    if [ "${interrupted}" -ne 0 ]
-    then
-      glitch_interrupt "${interrupted}"
-    fi
-  done
+  retried=0
+  glitch_dispatch "${queue}" "${njobs}" stress
+  glitch_wait_coverage || true
+  if [ "${failed}" -eq 0 ] && \
+    ! glitch_check_coverage "${queue}" "${workdir}/hits.ncout" "${workdir}/stress.missing" >/dev/null
+  then
+    retried=1
+    awk 'FILENAME == ARGV[1] {missing[$1] = 1; next} $1 in missing' \
+      "${workdir}/stress.missing" "${queue}" > "${workdir}/retry.queue" || failed=1
+    retry_jobs=$((`wc -l < "${workdir}/retry.queue"`))
+    retry_points="${retry_jobs}"
+    [ "${retry_jobs}" -le 5 ] || retry_jobs=5
+    [ "${retry_jobs}" -le "${njobs}" ] || retry_jobs="${njobs}"
+    echo "Retrying ${retry_points} unexercised glitch points with ${retry_jobs} jobs"
+    glitch_dispatch "${workdir}/retry.queue" "${retry_jobs}" retry
+    glitch_wait_coverage || true
+  fi
   stop_nc
   NC_PID=""
   if ! glitch_check_coverage "${queue}" "${workdir}/hits.ncout" "${workdir}/missing"
@@ -301,7 +338,7 @@ glitch_do()
     echo "Glitching failed; worker logs retained in ${workdir}"
     return 1
   fi
-  set -- `awk '{nok += $1; nfail += $2} END {print nok + 0, nfail + 0}' "${workdir}"/*.counts`
+  set -- `awk '{nok += $1; nfail += $2} END {print nok + 0, nfail + 0}' "${workdir}"/*.result`
   nok="${1}"
   nfail="${2}"
   echo "${nok} times ineffective, ${nfail} times effective"
@@ -311,7 +348,12 @@ glitch_do()
     echo "Worker logs retained in ${workdir}"
     return 1
   fi
-  rm -rf "${workdir}"
+  if [ "${retried}" -ne 0 ]
+  then
+    echo "Glitch coverage recovered on retry; worker logs retained in ${workdir}"
+  else
+    rm -rf "${workdir}"
+  fi
   return 0
 )
 

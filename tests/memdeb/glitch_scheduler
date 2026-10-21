@@ -33,11 +33,18 @@ echo "fixture output for ${cookie}"
 test "${RTPP_GLITCH_ACT}" = Rg || exit 2
 ${PYINT:-python3} - "${RTPP_GLITCH_CH_PORT}" "${cookie}" <<'PY'
 import os
+from pathlib import Path
 import socket
 import sys
 
 cookie = sys.argv[2]
 mode = os.environ.get('REPORT_MODE', '')
+if mode in ('recover', 'retry_ineffective', 'crash', 'leak'):
+    marker = Path(os.environ['RESULTS_ROOT']) / ('attempt-' + cookie)
+    first = not marker.exists()
+    marker.touch()
+    if first and (cookie == 'c0002' or mode == 'recover'):
+        sys.exit(0)
 if cookie == 'c0002':
     if mode == 'missing':
         sys.exit(0)
@@ -50,6 +57,14 @@ PY
 test "${?}" = 0 || exit 2
 printf '%s\n' "${PWD##*/}" >> "${RESULTS_ROOT}/${cookie}"
 printf '%s\n' "${cookie}" >> "${RESULTS_ROOT}/order"
+if [ "${cookie}" = c0002 ]
+then
+  case "${REPORT_MODE:-}" in
+  crash) echo 'Died on signal 11' > test.rlog; exit 1 ;;
+  leak) echo 'MEMDEB(fixture): errors found: 1' > test.rlog; exit 1 ;;
+  retry_ineffective) exit 0 ;;
+  esac
+fi
 if [ "${SLOW_TEST}" = 1 ] && [ "${cookie}" = c0003 ]
 then
   # Hold the first slot until another worker claims the last point.
@@ -136,6 +151,53 @@ do
   report "showing test output for unexercised points"
   failure_workdir="`awk '/^Glitching failed; worker logs retained in / {print $NF}' "${REPORT_MODE}.log"`"
   [ -s "${failure_workdir}/hits.ncout" ] || exit 1
+  rm -rf "${failure_workdir}"
+done
+unset REPORT_MODE
+
+# Keep the stress pass, then retry only its missing points with at most 5 jobs.
+for REPORT_MODE in recover retry_ineffective crash leak
+do
+  export REPORT_MODE
+  RESULTS_ROOT="${fixture_root}/${REPORT_MODE}.results"
+  mkdir "${RESULTS_ROOT}" || exit 1
+  export RESULTS_ROOT
+  glitch_do test 2 test.rlog 50 > "${REPORT_MODE}.log" 2>&1
+  rc=${?}
+  case "${REPORT_MODE}" in
+  recover)
+    report_rc "${rc}" "recovering coverage at lower concurrency"
+    grep -q '^Retrying 6 unexercised glitch points with 5 jobs$' recover.log
+    report "limiting the retry pass to five workers"
+    grep -q '^6 of 6 glitch points exercised$' recover.log
+    grep -q '^2 times ineffective, 4 times effective$' recover.log
+    report "counting each point once after retry"
+    for cookie in c0001 c0002 c0003 c0004 c0005 c0006
+    do
+      [ "`wc -l < "${RESULTS_ROOT}/${cookie}"`" -eq 2 ] || exit 1
+    done
+    ;;
+  retry_ineffective)
+    [ "${rc}" -ne 0 ] || exit 1
+    grep -q '^Retrying 1 unexercised glitch points with 1 jobs$' retry_ineffective.log
+    grep -q '^3 times ineffective, 3 times effective$' retry_ineffective.log
+    grep -q '^Glitching was ineffective 3 times vs expected 2$' retry_ineffective.log
+    report "applying ineffective limits to retry results"
+    [ "`wc -l < "${RESULTS_ROOT}/c0002"`" -eq 2 ] || exit 1
+    for cookie in c0001 c0003 c0004 c0005 c0006
+    do
+      [ "`wc -l < "${RESULTS_ROOT}/${cookie}"`" -eq 1 ] || exit 1
+    done
+    report "retrying only unexercised points"
+    ;;
+  crash|leak)
+    [ "${rc}" -ne 0 ] || exit 1
+    ! grep -q '^Retrying ' "${REPORT_MODE}.log" || exit 1
+    report_rc 0 "preserving ${REPORT_MODE} failures without retry"
+    ;;
+  esac
+  failure_workdir="`awk '/[Ww]orker logs retained in / {print $NF}' "${REPORT_MODE}.log" | tail -n 1`"
+  [ -n "${failure_workdir}" ] || exit 1
   rm -rf "${failure_workdir}"
 done
 unset REPORT_MODE
