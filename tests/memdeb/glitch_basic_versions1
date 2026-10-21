@@ -10,5 +10,5 @@ SUDO_REQUIRED=0
 disable_aslr "${@}"
 
 # Optional first argument selects the number of concurrent glitching jobs.
-glitch_test basic_versions/basic_versions1 30 basic_versions.rlog "" 0 "${1:-50}"
+glitch_test basic_versions/basic_versions1 31 basic_versions.rlog "" 0 "${1:-50}"
 report "glitching basic_versions/basic_versions1"

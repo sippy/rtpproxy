@@ -10,5 +10,5 @@ SUDO_REQUIRED=0
 disable_aslr "${@}"
 
 # Optional first argument selects the number of concurrent glitching jobs.
-glitch_test playback/playback1 23 playback1.rlog "" 0 "${1:-"50"}"
+glitch_test playback/playback1 24 playback1.rlog "" 0 "${1:-"50"}"
 report "glitching playback/playback1"
