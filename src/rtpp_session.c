@@ -297,6 +297,12 @@ rtpp_session_dtor(struct rtpp_session_priv *pvt)
     }
     for (i = 0; i < 2; i++) {
         sports[i] = pub->rtp->stream[i]->port;
+        /*
+         * Stop players while the session still owns both streams. Otherwise
+         * the playback thread can release the last stream reference while
+         * holding the player registry lock, and its destructor reenters it.
+         */
+        CALL_SMETHOD(pub->rtp->stream[i], handle_noplay);
         CALL_SMETHOD(pvt->sessinfo, remove, pub, i);
     }
     RTPP_OBJ_DECREF(pvt->sessinfo);
