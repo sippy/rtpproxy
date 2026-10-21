@@ -136,7 +136,7 @@ jobs:
     name: Build Packages
     needs: [LoadJobs_conf, FullBuild]
     uses: sippy/cimagic/.github/workflows/BuildDPKGs.yml@v3
-    if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_BuildPackages == 'true' &&
+    if: ${{ !cancelled() && needs.LoadJobs_conf.outputs.do_BuildPackages == 'true' &&
         (needs.LoadJobs_conf.outputs.do_FullBuild != 'true' || needs.FullBuild.result == 'success') }}
     with:
       apt_depends: pkg-config libssl-dev libbcg729-dev libgsm1-dev libsndfile1-dev libunwind-dev libsrtp2-dev libsystemd-dev systemd procps
@@ -146,7 +146,7 @@ jobs:
   FullBuild:
     name: Full Build
     needs: [LoadJobs_conf, MinBuild]
-    if: ${{ !cancelled() && (success() || failure()) && (needs.LoadJobs_conf.outputs.do_FullBuild == 'true' ||
+    if: ${{ !cancelled() && (needs.LoadJobs_conf.outputs.do_FullBuild == 'true' ||
         needs.LoadJobs_conf.outputs.do_FuncTest == 'true' || needs.LoadJobs_conf.outputs.do_Glitch == 'true') &&
         (needs.LoadJobs_conf.outputs.do_MinBuild != 'true' || needs.MinBuild.result == 'success') }}
     # The type of runner that the job will run on
@@ -246,7 +246,7 @@ jobs:
   FuncTest:
     name: Functional Testing    
     needs: [LoadJobs_conf, FullBuild]
-    if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_FuncTest == 'true' &&
+    if: ${{ !cancelled() && needs.LoadJobs_conf.outputs.do_FuncTest == 'true' &&
         needs.FullBuild.result == 'success' }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -403,7 +403,7 @@ jobs:
   Glitching:
     name: Glitch Injection
     needs: [LoadJobs_conf, FullBuild, FuncTest]
-    if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_Glitch == 'true' && needs.FullBuild.result == 'success' &&
+    if: ${{ !cancelled() && needs.LoadJobs_conf.outputs.do_Glitch == 'true' && needs.FullBuild.result == 'success' &&
         (needs.LoadJobs_conf.outputs.do_FuncTest != 'true' || needs.FuncTest.result == 'success') }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -596,7 +596,7 @@ jobs:
   Fuzzing:
     name: Fuzz with OSS-Fuzz
     needs: [LoadJobs_conf, Glitching]
-    if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_Fuzzing == 'true' &&
+    if: ${{ !cancelled() && needs.LoadJobs_conf.outputs.do_Fuzzing == 'true' &&
         (needs.LoadJobs_conf.outputs.do_Glitch != 'true' || needs.Glitching.result == 'success') }}
     runs-on: ubuntu-latest
     permissions:
@@ -676,7 +676,7 @@ jobs:
   Docker:
     name: Build&Push to DockerHub
     needs: [LoadJobs_conf, Fuzzing]
-    if: ${{ !cancelled() && (success() || failure()) && needs.LoadJobs_conf.outputs.do_Docker == 'true' &&
+    if: ${{ !cancelled() && needs.LoadJobs_conf.outputs.do_Docker == 'true' &&
         (needs.LoadJobs_conf.outputs.do_Fuzzing != 'true' || needs.Fuzzing.result == 'success') &&
         (github.event_name == 'push' || github.event_name == 'pull_request') }}
     runs-on: ubuntu-latest
