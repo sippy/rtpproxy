@@ -1229,19 +1229,19 @@ _rtpp_main(int argc, const char * const *argv)
     elp = prdic_init(cfsp->target_pfreq / 10.0, 0.0);
     if (elp == NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "prdic_init() failed");
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
 #endif
 
     if (pid_fd >= 0) {
         if (ftruncate(pid_fd, 0) != 0) {
             RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't truncate pidfile");
-            MAIN_EXIT(1);
+            goto startup_failed;
         }
         len = sprintf(buf, "%u\n", (unsigned int)getpid());
         if (write(pid_fd, buf, len) != len) {
             RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't write pidfile");
-            MAIN_EXIT(1);
+            goto startup_failed;
         }
         close(pid_fd);
     }
@@ -1253,7 +1253,7 @@ _rtpp_main(int argc, const char * const *argv)
     if (cfsp->ropts.no_daemon == 0) {
         if (rtpp_daemon_rel_parent(&drop) != 0) {
             RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "parent died prematurely #cry #die");
-            MAIN_EXIT(1);
+            goto startup_failed;
         }
     }
 
@@ -1282,4 +1282,14 @@ _rtpp_main(int argc, const char * const *argv)
 #endif
 
     rtpp_exit(1, 0);
+
+startup_failed:
+    /* Threads are live at this stage. Join them before exit handlers free
+     * the configuration and logging state they still reference. */
+#if !defined(LIBRTPPROXY)
+    if (elp != NULL)
+        prdic_free(elp);
+#endif
+    rtpp_shutdown(cfsp);
+    MAIN_EXIT(1);
 }
