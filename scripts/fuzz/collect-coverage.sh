@@ -31,3 +31,4 @@ docker run --rm \
   > coverage/raw.info
 
 python3 scripts/fuzz/normalize-coverage.py
+python3 scripts/merge-coverage-branches.py coverage/lcov.info

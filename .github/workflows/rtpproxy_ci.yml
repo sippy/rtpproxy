@@ -20,6 +20,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || startsWith(github.ref_name, 'codex/') || github.ref_name == 'wip' }}
 
+env:
+  COVERALLS_REPORTER_VERSION: v0.6.22
+
 jobs:
   LoadJobs_conf:
     name: Load Jobs Settings
@@ -223,16 +226,13 @@ jobs:
         docker cp rtpproxy-tests:/opt/rtpproxy/basic/coverage .
         sed -i "s|^SF:/opt/rtpproxy/basic/|SF:${GITHUB_WORKSPACE}/|" coverage/lcov.info
 
-    - name: Upload coverage to Coveralls
-      uses: coverallsapp/github-action@v2
-      env:
-        TZ: UTC
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v7
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        file: coverage/lcov.info
-        format: lcov
-        flag-name: functest-${{ matrix.os }}-${{ matrix.compiler }}
-        parallel: true
+        name: coverage-functional-${{ matrix.os }}-${{ matrix.compiler }}
+        path: coverage/lcov.info
+        overwrite: true
+        retention-days: 1
 
     - name: Copy test results
       if: ${{ always() && steps.tests.outcome != 'skipped' }}
@@ -322,16 +322,13 @@ jobs:
         docker cp rtpproxy-tests:/opt/rtpproxy/glitching/coverage .
         sed -i "s|^SF:/opt/rtpproxy/glitching/|SF:${GITHUB_WORKSPACE}/|" coverage/lcov.info
 
-    - name: Upload coverage to Coveralls
-      uses: coverallsapp/github-action@v2
-      env:
-        TZ: UTC
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v7
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        file: coverage/lcov.info
-        format: lcov
-        flag-name: glitching-${{ matrix.os }}-${{ matrix.compiler }}
-        parallel: true
+        name: coverage-glitching-${{ matrix.os }}-${{ matrix.compiler }}
+        path: coverage/lcov.info
+        overwrite: true
+        retention-days: 1
 
     - name: Copy test results
       if: ${{ always() && steps.tests.outcome != 'skipped' }}
@@ -443,17 +440,14 @@ jobs:
     - name: Collect fuzzing coverage
       if: matrix.sanitizer == 'coverage'
       run: sh -x scripts/fuzz/collect-coverage.sh
-    - name: Upload fuzzing coverage to Coveralls
+    - name: Upload fuzzing coverage report
       if: matrix.sanitizer == 'coverage'
-      uses: coverallsapp/github-action@v2
-      env:
-        TZ: UTC
+      uses: actions/upload-artifact@v7
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        file: coverage/lcov.info
-        format: lcov
-        flag-name: fuzzing-coverage
-        parallel: true
+        name: fuzzing-coverage
+        path: coverage/lcov.info
+        overwrite: true
+        retention-days: 1
     - name: Upload Crash
       uses: actions/upload-artifact@v7
       if: failure() && steps.build.outcome == 'success'
@@ -468,20 +462,186 @@ jobs:
         sarif_file: cifuzz-sarif/results.sarif
         checkout_path: cifuzz-sarif
 
-  FinishCoverage:
-    name: Finish Coveralls Build
-    needs: [FuncTest, Glitching, Fuzzing]
-    if: ${{ always() && (needs.FuncTest.result != 'skipped' ||
-        needs.Glitching.result != 'skipped' || needs.Fuzzing.result != 'skipped') }}
+  # Fetch the Coveralls reporter once per version, so that the coverage jobs
+  # restore it from the cache instead of all hitting GitHub releases at once.
+  CoverallsReporter:
+    name: Cache Coveralls Reporter
+    needs: LoadJobs_conf
+    if: ${{ needs.LoadJobs_conf.outputs.do_FuncTest == 'true' ||
+        needs.LoadJobs_conf.outputs.do_Glitch == 'true' ||
+        needs.LoadJobs_conf.outputs.do_Fuzzing == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-    - name: Complete parallel coverage build
-      uses: coverallsapp/github-action@v2
+    - name: Look up Coveralls reporter
+      id: cache
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ runner.temp }}/coveralls
+        key: coveralls-reporter-linux-x86_64-${{ env.COVERALLS_REPORTER_VERSION }}
+        lookup-only: true
+
+    - uses: actions/checkout@v7
+      if: steps.cache.outputs.cache-hit != 'true'
+
+    - name: Download Coveralls reporter
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: sh -x scripts/install-coveralls.sh "${COVERALLS_REPORTER_VERSION}" "${RUNNER_TEMP}/coveralls"
+
+    - name: Save Coveralls reporter
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v6
+      with:
+        path: ${{ runner.temp }}/coveralls
+        key: coveralls-reporter-linux-x86_64-${{ env.COVERALLS_REPORTER_VERSION }}
+
+  Coverage:
+    name: Upload Coverage
+    needs: [LoadJobs_conf, CoverallsReporter, FuncTest, Glitching]
+    if: ${{ !cancelled() && (needs.FuncTest.result != 'skipped' ||
+        needs.Glitching.result != 'skipped') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.LoadJobs_conf.outputs.matrix_FullBuild) }}
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Download coverage reports
+      uses: actions/download-artifact@v8
+      with:
+        pattern: coverage-*-${{ matrix.os }}-${{ matrix.compiler }}
+        path: ${{ runner.temp }}/coverage
+
+    # Add up all test suites run with this build, so that its branches are
+    # counted together in one upload.
+    - name: Merge coverage reports
+      id: merge
+      run: |
+        set -- "${RUNNER_TEMP}"/coverage/*/lcov.info
+        if [ ! -e "${1}" ]
+        then
+          echo "No coverage reports for this build"
+          exit 0
+        fi
+        mkdir -p coverage
+        python3 scripts/merge-coverage-branches.py --drop-declarations \
+          -o coverage/lcov.info "${@}"
+        # Branches of different compilers do not match up: they only get to
+        # Coveralls through the fuzzing report, blended into its own ones.
+        python3 scripts/merge-coverage-branches.py --no-branches \
+          -o coverage/coveralls.info coverage/lcov.info
+        echo 'present=true' >> "${GITHUB_OUTPUT}"
+
+    - name: Upload merged coverage report
+      if: steps.merge.outputs.present == 'true'
+      uses: actions/upload-artifact@v7
+      with:
+        name: merged-coverage-${{ matrix.os }}-${{ matrix.compiler }}
+        path: coverage/lcov.info
+        overwrite: true
+        retention-days: 1
+
+    - name: Restore Coveralls reporter
+      if: steps.merge.outputs.present == 'true'
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ runner.temp }}/coveralls
+        key: coveralls-reporter-linux-x86_64-${{ env.COVERALLS_REPORTER_VERSION }}
+        fail-on-cache-miss: true
+
+    - name: Upload coverage to Coveralls
+      if: steps.merge.outputs.present == 'true'
       env:
         TZ: UTC
+        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_FLAG_NAME: tests-${{ matrix.os }}-${{ matrix.compiler }}
+        COVERALLS_PARALLEL: true
+        COVERALLS_SOURCE_HEADER: github-action
+      run: '"${RUNNER_TEMP}/coveralls/coveralls" report --format lcov coverage/coveralls.info'
+
+  FuzzCoverage:
+    name: Upload Fuzzing Coverage
+    needs: [CoverallsReporter, Coverage, Fuzzing]
+    if: ${{ !cancelled() && needs.Fuzzing.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Download coverage reports
+      uses: actions/download-artifact@v8
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        parallel-finished: true
+        pattern: '{fuzzing,merged}-coverage*'
+        path: ${{ runner.temp }}/coverage
+
+    # Source-based fuzzing coverage does not match the tests' gcov records.
+    # Keep its own records and count what the tests covered in them.
+    - name: Blend test coverage into fuzzing coverage
+      id: merge
+      run: |
+        FUZZ="${RUNNER_TEMP}/coverage/fuzzing-coverage/lcov.info"
+        if [ ! -e "${FUZZ}" ]
+        then
+          echo "No fuzzing coverage report"
+          exit 0
+        fi
+        sed -i "s|^SF:\([^/]\)|SF:${GITHUB_WORKSPACE}/\1|" "${FUZZ}"
+        set --
+        for report in "${RUNNER_TEMP}"/coverage/merged-coverage-*/lcov.info
+        do
+          if [ -e "${report}" ]
+          then
+            set -- "${@}" --blend "${report}"
+          fi
+        done
+        mkdir -p coverage
+        python3 scripts/merge-coverage-branches.py --drop-declarations \
+          -o coverage/lcov.info "${@}" "${FUZZ}"
+        echo 'present=true' >> "${GITHUB_OUTPUT}"
+
+    - name: Restore Coveralls reporter
+      if: steps.merge.outputs.present == 'true'
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ runner.temp }}/coveralls
+        key: coveralls-reporter-linux-x86_64-${{ env.COVERALLS_REPORTER_VERSION }}
+        fail-on-cache-miss: true
+
+    - name: Upload fuzzing coverage to Coveralls
+      if: steps.merge.outputs.present == 'true'
+      env:
+        TZ: UTC
+        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_FLAG_NAME: fuzzing-coverage
+        COVERALLS_PARALLEL: true
+        COVERALLS_SOURCE_HEADER: github-action
+      run: '"${RUNNER_TEMP}/coveralls/coveralls" report --format lcov coverage/lcov.info'
+
+  FinishCoverage:
+    name: Finish Coveralls Build
+    needs: [CoverallsReporter, Coverage, FuzzCoverage]
+    if: ${{ always() && (needs.Coverage.result != 'skipped' ||
+        needs.FuzzCoverage.result != 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Restore Coveralls reporter
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ runner.temp }}/coveralls
+        key: coveralls-reporter-linux-x86_64-${{ env.COVERALLS_REPORTER_VERSION }}
+        fail-on-cache-miss: true
+
+    - name: Complete parallel coverage build
+      env:
+        TZ: UTC
+        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_SOURCE_HEADER: github-action
+      run: '"${RUNNER_TEMP}/coveralls/coveralls" done'
 
   Docker:
     name: Build&Push to DockerHub
