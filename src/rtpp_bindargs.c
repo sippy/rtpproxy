@@ -120,7 +120,8 @@ init_bindaddrs(struct rtpp_cfg *cfsp, struct bindarg bargs[], int banum,
                 iaddr = bargs[i];
                 bargs[i].h = NULL;
             }
-            if (iaddr.h == NULL || eaddr.h == NULL) {
+            assert(eaddr.h != NULL);
+            if (iaddr.h == NULL) {
                 RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "incomplete configuration of the bridging mode - exactly "
                   "2 listen addresses required");
                 return (-1);
