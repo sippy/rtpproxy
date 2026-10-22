@@ -1,0 +1,8 @@
+# Query both families on each pass; keep the results available for diagnostics.
+c: Qv %%OUT%%.%%T%%.%%CODEC%% to_tag_1 from_tag_1 npkts_ina -> SESSION4
+c: Qv %%OUT%%.%%T%%.%%CODEC%%_ipv6 to_tag_1 from_tag_1 npkts_ina -> SESSION6
+.eval: %%SESSION4%% %%SESSION6%% -> str_equal(EXPECTED_PACKETS, PACKETS_DONE)
+.eval: %%SESSION4%% %%SESSION6%% -> str_equal(SESSIONS_EXPIRED, SESSIONS_DONE)
+# Keep waiting only while neither completion condition holds.
+.eval: %%PACKETS_DONE%% %%SESSIONS_DONE%% -> str_equal(NEITHER_DONE, RECORDING_PENDING)
+.eval: %%RECORDING_PENDING%% -> str_equal(RES_OK, RECORDING_DONE)
