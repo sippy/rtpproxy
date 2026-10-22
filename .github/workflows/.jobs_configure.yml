@@ -25,6 +25,19 @@ on:
         description: "Whether the current workflow should continue"
         value: ${{ jobs.check_disabled_actions.outputs.do_BuildPackages }}
 
+      matrix_MinBuild:
+        description: "OS/compiler pairs for MinBuild"
+        value: ${{ jobs.check_disabled_actions.outputs.matrix_MinBuild }}
+      matrix_FullBuild:
+        description: "OS/compiler pairs for FullBuild"
+        value: ${{ jobs.check_disabled_actions.outputs.matrix_FullBuild }}
+      matrix_FuncTest:
+        description: "OS/compiler pairs for FuncTest"
+        value: ${{ jobs.check_disabled_actions.outputs.matrix_FuncTest }}
+      matrix_Glitching:
+        description: "OS/compiler pairs for Glitching"
+        value: ${{ jobs.check_disabled_actions.outputs.matrix_Glitching }}
+
 jobs:
   check_disabled_actions:
     name: Disabled Actions
@@ -37,6 +50,10 @@ jobs:
       do_Glitch: ${{ steps.check_status.outputs.do_Glitch }}
       do_MinBuild: ${{ steps.check_status.outputs.do_MinBuild }}
       do_BuildPackages: ${{ steps.check_status.outputs.do_BuildPackages }}
+      matrix_MinBuild: ${{ steps.matrix.outputs.matrix_MinBuild }}
+      matrix_FullBuild: ${{ steps.matrix.outputs.matrix_FullBuild }}
+      matrix_FuncTest: ${{ steps.matrix.outputs.matrix_FuncTest }}
+      matrix_Glitching: ${{ steps.matrix.outputs.matrix_Glitching }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -47,3 +64,7 @@ jobs:
         set -x
         DIS_FILE=".github/workflows.cfg"
         grep -v '#' ${DIS_FILE} >> $GITHUB_OUTPUT
+
+    - name: Load build matrices
+      id: matrix
+      run: python3 scripts/ci_matrix.py >> "$GITHUB_OUTPUT"
