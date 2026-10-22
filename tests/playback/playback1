@@ -6,8 +6,8 @@
 #
 # The commands are issued by playback1.rptl to a single rtpproxy instance,
 # with all ports allocated dynamically and all playbacks running in
-# parallel. The streams are captured by udp_capture.py, so no root
-# privileges are required.
+# parallel. A second RTPProxy instance records each playback session,
+# including across source-port changes, without root privileges.
 
 BASEDIR="`dirname "${0}"`/.."
 . "${BASEDIR}/functions"
@@ -85,14 +85,14 @@ do
   done
 done
 
-rm -f ${PLAYBACK_RFILES}
+rm -f ${PLAYBACK_RFILES} "${OUT}".*=from_tag_1.*
 ${MAKEANN} "${BASEDIR}/ringback.sln" playback1
 report "makeann playback1"
 
 ${RPTL_INT} -s "${BASEDIR}/playback/playback1.rptl" \
  -D RTPPROXY_BIN="`strip_wrapper "${RTPPROXY}"`" -D RUNS="${RUNS}" \
  -D RUNS_ST2="${RUNS_ST2}" \
- -D PYINT="${PYINT}" -D CAPTURE="${PYTHON_DIR}/tools/udp_capture.py" \
+ -D RECORDER_BIN="`strip_wrapper "${RTPPROXY_PROD}"`" -D RECORD_DIR="${BUILDDIR}" \
  -D OUT="${OUT}" > ${OUT}.vars 2> ${OUT}.rptl.rlog
 RPTL_RC=${?}
 if [ ${RPTL_RC} -ne 0 ]
@@ -136,13 +136,16 @@ do
   for codec in ${CODECS}
   do
     ofile="playback1.${codec}.wav"
-    ${EXTRACTAUDIO} -n playback1.${ttype}.${codec} ${ofile} | grep -v 'delta '
+    ${EXTRACTAUDIO} -n playback1.${ttype}.${codec}=from_tag_1 ${ofile} | grep -v 'delta '
     report "extractaudio playback1.${ttype}.${codec} -> ${ofile}"
     sha256_verify ${ofile} ${BASEDIR}/playback/playback1.checksums
     tos="`expected_tos ${ttype}`"
     if [ -n "${tos}" ]
     then
-      RES="`cat playback1.${ttype}.${codec}.tos`"
+      ${TCPDUMP} -n -v -r playback1.${ttype}.${codec}=from_tag_1.a.rtp \
+       > playback1.${ttype}.${codec}.tcpdump 2> playback1.${ttype}.${codec}.tcpdump.log
+      report "reading playback1.${ttype}.${codec} TOS"
+      RES="`sed -n 's/.*tos \(0x[0-9a-f]*\).*/\1/p' playback1.${ttype}.${codec}.tcpdump | sort -u`"
       test "${RES}" = "${tos}"
       report "checking TOS [${RES}]"
     fi

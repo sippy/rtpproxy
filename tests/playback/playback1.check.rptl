@@ -1,0 +1,4 @@
+# Query both families on each pass; keep the results available for diagnostics.
+c: Qv %%OUT%%.%%T%%.%%CODEC%% to_tag_1 from_tag_1 npkts_ina -> COUNT4
+c: Qv %%OUT%%.%%T%%.%%CODEC%%_ipv6 to_tag_1 from_tag_1 npkts_ina -> COUNT6
+.eval: %%COUNT4%% %%COUNT6%% -> str_equal(EXPECTED_PACKETS, RECORDING_DONE)

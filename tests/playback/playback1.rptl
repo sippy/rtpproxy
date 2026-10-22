@@ -1,16 +1,15 @@
-# Plays the prompt out of a single rtpproxy instance towards capturing
-# sockets, for all of the RUNS (list of TYPE:CODEC:NPKTS) at once. Each
-# stage of the playback is issued for all runs in turn, followed by the
-# next stage and so on. The ports are allocated dynamically, the replies
-# are logged into OUT.rout and the IPv4 packets received for each run are
-# saved into OUT.TYPE.CODEC.a.rtp, together with their TOS in
-# OUT.TYPE.CODEC.tos, to be examined by playback1.
-#
-# Expects RTPPROXY_BIN, RUNS, RUNS_ST2 (the RUNS that have the second
-# stage), PYINT, CAPTURE and OUT to be defined.
+# Play all RUNS through an independent RTPProxy recorder. Recorder session
+# ports are allocated on demand; asymmetric mode accepts source-port changes.
+# Expects RTPPROXY_BIN, RECORDER_BIN, RUNS, RUNS_ST2, RECORD_DIR and OUT.
 
+.eval: %%RTPPROXY_BIN%% -> PLAYER_BIN
+.eval: %%RECORDER_BIN%% -> RTPPROXY_BIN
+.eval: %%OUT%%.recorder.rlog -> RTPPROXY_STDERR
+socket c: stdio: -l 0.0.0.0 -6 /:: -T60 -W60 -d info -P -r %%RECORD_DIR%% -> %%OUT%%.recorder.rout
+.eval: %%PLAYER_BIN%% -> RTPPROXY_BIN
 .eval: %%OUT%%.rlog -> RTPPROXY_STDERR
-socket r: stdio: -l 0.0.0.0 -6 /:: -T10 -b -d info -> %%OUT%%.rout
+socket r: stdio: -l 0.0.0.0 -6 /:: -T10 -d info -> %%OUT%%.rout
+.eval: 0 -> RES_OK
 
 .foreach: RUN in %%RUNS%% do playback1.setup.rptl
 .eval: st1 -> STAGE
@@ -23,3 +22,4 @@ socket r: stdio: -l 0.0.0.0 -6 /:: -T10 -b -d info -> %%OUT%%.rout
 .foreach: RUN in %%RUNS%% do playback1.teardown.rptl
 
 .close: r
+.close: c
