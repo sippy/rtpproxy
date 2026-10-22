@@ -43,62 +43,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        os: [22.04]
-        compiler: ['gcc-i386-cross', 'clang-i386-cross', 'gcc-mips64-cross', 'gcc-arm32-cross', 'gcc-arm64-cross', 'gcc', 'clang']
-        include:
-        # Stock compilers are GCC 13 and Clang 18 on Ubuntu 24.04.
-        - os: 24.04
-          compiler: 'gcc'
-        - os: 24.04
-          compiler: 'clang'
-        - os: 24.04
-          compiler: 'gcc-9'
-        - os: 24.04
-          compiler: 'gcc-10'
-        - os: 24.04
-          compiler: 'gcc-11'
-        - os: 24.04
-          compiler: 'gcc-12'
-        - os: 24.04
-          compiler: 'gcc-14'
-        - os: 24.04
-          compiler: 'clang-14'
-        - os: 24.04
-          compiler: 'clang-15'
-        - os: 24.04
-          compiler: 'clang-16'
-        - os: 24.04
-          compiler: 'clang-17'
-        - os: 24.04
-          compiler: 'clang-19'
-        - os: 24.04
-          compiler: 'clang-20'
-        # Stock compilers are GCC 15 and Clang 21 on Ubuntu 26.04.
-        - os: 26.04
-          compiler: 'gcc'
-        - os: 26.04
-          compiler: 'clang'
-        - os: 26.04
-          compiler: 'gcc-11'
-        - os: 26.04
-          compiler: 'gcc-12'
-        - os: 26.04
-          compiler: 'gcc-13'
-        - os: 26.04
-          compiler: 'gcc-14'
-        - os: 26.04
-          compiler: 'gcc-16'
-        - os: 26.04
-          compiler: 'clang-17'
-        - os: 26.04
-          compiler: 'clang-18'
-        - os: 26.04
-          compiler: 'clang-19'
-        - os: 26.04
-          compiler: 'clang-20'
-        - os: 26.04
-          compiler: 'clang-22'
+      matrix: ${{ fromJSON(needs.LoadJobs_conf.outputs.matrix_MinBuild) }}
 
     steps:
     - name: Install git
@@ -106,7 +51,7 @@ jobs:
         apt-get update
         apt-get install -y git lsb-release gnupg2 wget
 
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         submodules: 'recursive'
 
@@ -115,7 +60,7 @@ jobs:
       run: sh -x scripts/build/start_container.sh
 
     - name: Cache apt-get packages
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: /var/cache/apt/archives
         key: cleanbuild-${{ matrix.os }}-apt-get-${{ github.run_id }}
@@ -151,72 +96,21 @@ jobs:
         (needs.LoadJobs_conf.outputs.do_MinBuild != 'true' || needs.MinBuild.result == 'success') }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     env:
       COMPILER: ${{ matrix.compiler }}
       TAR_CMD: tar
       GHA_OS: ubuntu-${{ matrix.os }}
+      CI_IMAGE: ghcr.io/${{ github.repository }}:ci-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.compiler }}
 
     strategy:
       fail-fast: false
-      matrix:
-        os: [22.04]
-        compiler: ['gcc', 'clang']
-        include:
-        # Stock compilers are GCC 13 and Clang 18 on Ubuntu 24.04.
-        - os: 24.04
-          compiler: 'gcc'
-        - os: 24.04
-          compiler: 'clang'
-        - os: 24.04
-          compiler: 'gcc-9'
-        - os: 24.04
-          compiler: 'gcc-10'
-        - os: 24.04
-          compiler: 'gcc-11'
-        - os: 24.04
-          compiler: 'gcc-12'
-        - os: 24.04
-          compiler: 'gcc-14'
-        - os: 24.04
-          compiler: 'clang-14'
-        - os: 24.04
-          compiler: 'clang-15'
-        - os: 24.04
-          compiler: 'clang-16'
-        - os: 24.04
-          compiler: 'clang-17'
-        - os: 24.04
-          compiler: 'clang-19'
-        - os: 24.04
-          compiler: 'clang-20'
-        # Stock compilers are GCC 15 and Clang 21 on Ubuntu 26.04.
-        - os: 26.04
-          compiler: 'gcc'
-        - os: 26.04
-          compiler: 'clang'
-        - os: 26.04
-          compiler: 'gcc-11'
-        - os: 26.04
-          compiler: 'gcc-12'
-        - os: 26.04
-          compiler: 'gcc-13'
-        - os: 26.04
-          compiler: 'gcc-14'
-        - os: 26.04
-          compiler: 'gcc-16'
-        - os: 26.04
-          compiler: 'clang-17'
-        - os: 26.04
-          compiler: 'clang-18'
-        - os: 26.04
-          compiler: 'clang-19'
-        - os: 26.04
-          compiler: 'clang-20'
-        - os: 26.04
-          compiler: 'clang-22'
+      matrix: ${{ fromJSON(needs.LoadJobs_conf.outputs.matrix_FullBuild) }}
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         submodules: 'recursive'
         persist-credentials: false
@@ -226,21 +120,42 @@ jobs:
         docker build --file docker/Dockerfile.ci \
           --build-arg BASE_IMAGE=ubuntu:${{ matrix.os }} \
           --build-arg COMPILER=${{ matrix.compiler }} \
+          --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
           --tag rtpproxy-ci:tests .
 
+    - name: Log in to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push CI image
+      if: github.event_name != 'pull_request'
+      run: |
+        docker tag rtpproxy-ci:tests "${CI_IMAGE}"
+        docker push "${CI_IMAGE}"
+
     - name: Save CI image
+      if: github.event_name == 'pull_request'
       run: |
         docker image inspect rtpproxy-ci:tests --format 'Uncompressed CI image size: {{.Size}} bytes'
-        docker save rtpproxy-ci:tests | zstd -T0 -3 -c > "${RUNNER_TEMP}/rtpproxy-ci.tar.zst"
-        du -h "${RUNNER_TEMP}/rtpproxy-ci.tar.zst"
+        mkdir -p "${RUNNER_TEMP}/ci-image"
+        docker save rtpproxy-ci:tests | zstd -T0 -3 -c > "${RUNNER_TEMP}/ci-image/rtpproxy-ci.tar.zst"
+        du -h "${RUNNER_TEMP}/ci-image/rtpproxy-ci.tar.zst"
 
-    - name: Upload CI image
+    # PRs use artifacts so their builds do not need registry write access.
+    - name: Upload CI image for test jobs
+      if: github.event_name == 'pull_request'
       uses: actions/upload-artifact@v7
       with:
         name: ci-image-${{ matrix.os }}-${{ matrix.compiler }}
-        path: ${{ runner.temp }}/rtpproxy-ci.tar.zst
+        path: ${{ runner.temp }}/ci-image/rtpproxy-ci.tar.zst
         compression-level: 0
-        retention-days: 1
+        if-no-files-found: error
+        retention-days: 3
+        # Stable names also let failed-job reruns reuse an earlier build.
         overwrite: true
 
   FuncTest:
@@ -250,114 +165,49 @@ jobs:
         needs.FullBuild.result == 'success' }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     env:
       COMPILER: ${{ matrix.compiler }}
       TAR_CMD: tar
       GHA_OS: ubuntu-${{ matrix.os }}
-
-    # BEGIN GENERATED TEST OUTPUTS: FuncTest
-    # Regenerate: python3 scripts/test-summary.py generate
-    outputs:
-      result_ubuntu_22_04_gcc: ${{ steps.summary.outputs.result_ubuntu_22_04_gcc }}
-      result_ubuntu_22_04_clang: ${{ steps.summary.outputs.result_ubuntu_22_04_clang }}
-      result_ubuntu_24_04_gcc: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc }}
-      result_ubuntu_24_04_clang: ${{ steps.summary.outputs.result_ubuntu_24_04_clang }}
-      result_ubuntu_24_04_gcc_9: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_9 }}
-      result_ubuntu_24_04_gcc_10: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_10 }}
-      result_ubuntu_24_04_gcc_11: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_11 }}
-      result_ubuntu_24_04_gcc_12: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_12 }}
-      result_ubuntu_24_04_gcc_14: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_14 }}
-      result_ubuntu_24_04_clang_14: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_14 }}
-      result_ubuntu_24_04_clang_15: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_15 }}
-      result_ubuntu_24_04_clang_16: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_16 }}
-      result_ubuntu_24_04_clang_17: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_17 }}
-      result_ubuntu_24_04_clang_19: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_19 }}
-      result_ubuntu_24_04_clang_20: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_20 }}
-      result_ubuntu_26_04_gcc: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc }}
-      result_ubuntu_26_04_clang: ${{ steps.summary.outputs.result_ubuntu_26_04_clang }}
-      result_ubuntu_26_04_gcc_11: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_11 }}
-      result_ubuntu_26_04_gcc_12: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_12 }}
-      result_ubuntu_26_04_gcc_13: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_13 }}
-      result_ubuntu_26_04_gcc_14: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_14 }}
-      result_ubuntu_26_04_gcc_16: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_16 }}
-      result_ubuntu_26_04_clang_17: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_17 }}
-      result_ubuntu_26_04_clang_18: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_18 }}
-      result_ubuntu_26_04_clang_19: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_19 }}
-      result_ubuntu_26_04_clang_20: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_20 }}
-      result_ubuntu_26_04_clang_22: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_22 }}
-    # END GENERATED TEST OUTPUTS: FuncTest
+      CI_IMAGE: ghcr.io/${{ github.repository }}:ci-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.compiler }}
 
     strategy:
       fail-fast: false
-      matrix:
-        os: [22.04]
-        compiler: ['gcc', 'clang']
-        include:
-        # Stock compilers are GCC 13 and Clang 18 on Ubuntu 24.04.
-        - os: 24.04
-          compiler: 'gcc'
-        - os: 24.04
-          compiler: 'clang'
-        - os: 24.04
-          compiler: 'gcc-9'
-        - os: 24.04
-          compiler: 'gcc-10'
-        - os: 24.04
-          compiler: 'gcc-11'
-        - os: 24.04
-          compiler: 'gcc-12'
-        - os: 24.04
-          compiler: 'gcc-14'
-        - os: 24.04
-          compiler: 'clang-14'
-        - os: 24.04
-          compiler: 'clang-15'
-        - os: 24.04
-          compiler: 'clang-16'
-        - os: 24.04
-          compiler: 'clang-17'
-        - os: 24.04
-          compiler: 'clang-19'
-        - os: 24.04
-          compiler: 'clang-20'
-        # Stock compilers are GCC 15 and Clang 21 on Ubuntu 26.04.
-        - os: 26.04
-          compiler: 'gcc'
-        - os: 26.04
-          compiler: 'clang'
-        - os: 26.04
-          compiler: 'gcc-11'
-        - os: 26.04
-          compiler: 'gcc-12'
-        - os: 26.04
-          compiler: 'gcc-13'
-        - os: 26.04
-          compiler: 'gcc-14'
-        - os: 26.04
-          compiler: 'gcc-16'
-        - os: 26.04
-          compiler: 'clang-17'
-        - os: 26.04
-          compiler: 'clang-18'
-        - os: 26.04
-          compiler: 'clang-19'
-        - os: 26.04
-          compiler: 'clang-20'
-        - os: 26.04
-          compiler: 'clang-22'
+      matrix: ${{ fromJSON(needs.LoadJobs_conf.outputs.matrix_FuncTest) }}
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
+
+    - name: Log in to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Pull CI image
+      if: github.event_name != 'pull_request'
+      run: |
+        docker pull "${CI_IMAGE}"
+        docker tag "${CI_IMAGE}" rtpproxy-ci:tests
 
     - name: Download CI image
-      uses: actions/download-artifact@v4
+      if: github.event_name == 'pull_request'
+      uses: actions/download-artifact@v8
       with:
         name: ci-image-${{ matrix.os }}-${{ matrix.compiler }}
         path: ${{ runner.temp }}/ci-image
 
+    - name: Load CI image
+      if: github.event_name == 'pull_request'
+      run: docker load --input "${RUNNER_TEMP}/ci-image/rtpproxy-ci.tar.zst"
+
     - name: Start CI image
       run: |
-        docker load --input "${RUNNER_TEMP}/ci-image/rtpproxy-ci.tar.zst"
         sudo sysctl -w kernel.core_pattern=core
         docker run --detach --name rtpproxy-tests --init \
           --sysctl net.ipv4.ip_unprivileged_port_start=1024 \
@@ -393,8 +243,14 @@ jobs:
       if: ${{ always() }}
       env:
         TEST_OUTCOME: ${{ steps.tests.outcome }}
-        JOB_OUTCOME: ${{ job.status }}
-      run: python3 scripts/test-summary.py collect --suite functional
+      run: python3 scripts/test-summary.py collect --suite functional --output "${RUNNER_TEMP}/test-summary.json"
+
+    - name: Upload test summary
+      if: ${{ always() && steps.summary.outcome == 'success' }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: test-summary-${{ github.run_attempt }}-functional-${{ matrix.os }}-${{ matrix.compiler }}
+        path: ${{ runner.temp }}/test-summary.json
 
     - name: Remove test container
       if: ${{ always() }}
@@ -407,114 +263,49 @@ jobs:
         (needs.LoadJobs_conf.outputs.do_FuncTest != 'true' || needs.FuncTest.result == 'success') }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     env:
       COMPILER: ${{ matrix.compiler }}
       TAR_CMD: tar
       GHA_OS: ubuntu-${{ matrix.os }}
-
-    # BEGIN GENERATED TEST OUTPUTS: Glitching
-    # Regenerate: python3 scripts/test-summary.py generate
-    outputs:
-      result_ubuntu_22_04_gcc: ${{ steps.summary.outputs.result_ubuntu_22_04_gcc }}
-      result_ubuntu_22_04_clang: ${{ steps.summary.outputs.result_ubuntu_22_04_clang }}
-      result_ubuntu_24_04_gcc: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc }}
-      result_ubuntu_24_04_clang: ${{ steps.summary.outputs.result_ubuntu_24_04_clang }}
-      result_ubuntu_24_04_gcc_9: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_9 }}
-      result_ubuntu_24_04_gcc_10: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_10 }}
-      result_ubuntu_24_04_gcc_11: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_11 }}
-      result_ubuntu_24_04_gcc_12: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_12 }}
-      result_ubuntu_24_04_gcc_14: ${{ steps.summary.outputs.result_ubuntu_24_04_gcc_14 }}
-      result_ubuntu_24_04_clang_14: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_14 }}
-      result_ubuntu_24_04_clang_15: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_15 }}
-      result_ubuntu_24_04_clang_16: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_16 }}
-      result_ubuntu_24_04_clang_17: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_17 }}
-      result_ubuntu_24_04_clang_19: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_19 }}
-      result_ubuntu_24_04_clang_20: ${{ steps.summary.outputs.result_ubuntu_24_04_clang_20 }}
-      result_ubuntu_26_04_gcc: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc }}
-      result_ubuntu_26_04_clang: ${{ steps.summary.outputs.result_ubuntu_26_04_clang }}
-      result_ubuntu_26_04_gcc_11: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_11 }}
-      result_ubuntu_26_04_gcc_12: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_12 }}
-      result_ubuntu_26_04_gcc_13: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_13 }}
-      result_ubuntu_26_04_gcc_14: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_14 }}
-      result_ubuntu_26_04_gcc_16: ${{ steps.summary.outputs.result_ubuntu_26_04_gcc_16 }}
-      result_ubuntu_26_04_clang_17: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_17 }}
-      result_ubuntu_26_04_clang_18: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_18 }}
-      result_ubuntu_26_04_clang_19: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_19 }}
-      result_ubuntu_26_04_clang_20: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_20 }}
-      result_ubuntu_26_04_clang_22: ${{ steps.summary.outputs.result_ubuntu_26_04_clang_22 }}
-    # END GENERATED TEST OUTPUTS: Glitching
+      CI_IMAGE: ghcr.io/${{ github.repository }}:ci-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.compiler }}
 
     strategy:
       fail-fast: false
-      matrix:
-        os: [22.04]
-        compiler: ['gcc', 'clang']
-        include:
-        # Stock compilers are GCC 13 and Clang 18 on Ubuntu 24.04.
-        - os: 24.04
-          compiler: 'gcc'
-        - os: 24.04
-          compiler: 'clang'
-        - os: 24.04
-          compiler: 'gcc-9'
-        - os: 24.04
-          compiler: 'gcc-10'
-        - os: 24.04
-          compiler: 'gcc-11'
-        - os: 24.04
-          compiler: 'gcc-12'
-        - os: 24.04
-          compiler: 'gcc-14'
-        - os: 24.04
-          compiler: 'clang-14'
-        - os: 24.04
-          compiler: 'clang-15'
-        - os: 24.04
-          compiler: 'clang-16'
-        - os: 24.04
-          compiler: 'clang-17'
-        - os: 24.04
-          compiler: 'clang-19'
-        - os: 24.04
-          compiler: 'clang-20'
-        # Stock compilers are GCC 15 and Clang 21 on Ubuntu 26.04.
-        - os: 26.04
-          compiler: 'gcc'
-        - os: 26.04
-          compiler: 'clang'
-        - os: 26.04
-          compiler: 'gcc-11'
-        - os: 26.04
-          compiler: 'gcc-12'
-        - os: 26.04
-          compiler: 'gcc-13'
-        - os: 26.04
-          compiler: 'gcc-14'
-        - os: 26.04
-          compiler: 'gcc-16'
-        - os: 26.04
-          compiler: 'clang-17'
-        - os: 26.04
-          compiler: 'clang-18'
-        - os: 26.04
-          compiler: 'clang-19'
-        - os: 26.04
-          compiler: 'clang-20'
-        - os: 26.04
-          compiler: 'clang-22'
+      matrix: ${{ fromJSON(needs.LoadJobs_conf.outputs.matrix_Glitching) }}
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
+
+    - name: Log in to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Pull CI image
+      if: github.event_name != 'pull_request'
+      run: |
+        docker pull "${CI_IMAGE}"
+        docker tag "${CI_IMAGE}" rtpproxy-ci:tests
 
     - name: Download CI image
-      uses: actions/download-artifact@v4
+      if: github.event_name == 'pull_request'
+      uses: actions/download-artifact@v8
       with:
         name: ci-image-${{ matrix.os }}-${{ matrix.compiler }}
         path: ${{ runner.temp }}/ci-image
 
+    - name: Load CI image
+      if: github.event_name == 'pull_request'
+      run: docker load --input "${RUNNER_TEMP}/ci-image/rtpproxy-ci.tar.zst"
+
     - name: Start CI image
       run: |
-        docker load --input "${RUNNER_TEMP}/ci-image/rtpproxy-ci.tar.zst"
         sudo sysctl -w kernel.core_pattern=core
         docker run --detach --name rtpproxy-tests --init \
           --sysctl net.ipv4.ip_unprivileged_port_start=1024 \
@@ -551,8 +342,34 @@ jobs:
       if: ${{ always() }}
       env:
         TEST_OUTCOME: ${{ steps.tests.outcome }}
-        JOB_OUTCOME: ${{ job.status }}
-      run: python3 scripts/test-summary.py collect --suite glitching
+      run: python3 scripts/test-summary.py collect --suite glitching --output "${RUNNER_TEMP}/test-summary.json"
+
+    - name: Upload test summary
+      if: ${{ always() && steps.summary.outcome == 'success' }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: test-summary-${{ github.run_attempt }}-glitching-${{ matrix.os }}-${{ matrix.compiler }}
+        path: ${{ runner.temp }}/test-summary.json
+
+    - name: Collect glitch failure logs
+      id: glitch_logs
+      if: ${{ failure() && !cancelled() }}
+      run: |
+        if docker exec rtpproxy-tests sh -c \
+          'test -n "$(find /tmp -maxdepth 1 -type d -name "glitch.*" -print -quit)"'
+        then
+          docker exec rtpproxy-tests sh -c \
+            'cd /tmp && find . -maxdepth 1 -type d -name "glitch.*" -print0 | tar --null -T - -czf -' \
+            > "${RUNNER_TEMP}/glitch-failures.tar.gz"
+          echo 'present=true' >> "${GITHUB_OUTPUT}"
+        fi
+
+    - name: Upload glitch failure logs
+      if: ${{ failure() && !cancelled() && steps.glitch_logs.outputs.present == 'true' }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: glitch-failures-${{ matrix.os }}-${{ matrix.compiler }}
+        path: ${{ runner.temp }}/glitch-failures.tar.gz
 
     - name: Remove test container
       if: ${{ always() }}
@@ -565,13 +382,26 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
+
+    - name: Download test summaries
+      uses: actions/download-artifact@v8
+      with:
+        pattern: test-summary-*
+        path: ${{ runner.temp }}/test-results
 
     - name: Publish combined test summary
+      if: ${{ always() }}
       env:
         TEST_RESULTS: ${{ toJSON(needs) }}
-      run: python3 scripts/test-summary.py render >> "$GITHUB_STEP_SUMMARY"
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh api --paginate --slurp \
+          "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?filter=latest&per_page=100" \
+          > "${RUNNER_TEMP}/test-jobs.json"
+        python3 scripts/test-summary.py render --jobs "${RUNNER_TEMP}/test-jobs.json" --results "${RUNNER_TEMP}/test-results" >> "$GITHUB_STEP_SUMMARY"
 
   Fuzzing:
     name: Fuzz with OSS-Fuzz
@@ -587,7 +417,7 @@ jobs:
       matrix:
         sanitizer: [address, undefined, memory, coverage]
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         submodules: 'recursive'
     - name: Build Fuzzers (${{ matrix.sanitizer }})
@@ -717,7 +547,7 @@ jobs:
         done
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         submodules: 'recursive'
 
