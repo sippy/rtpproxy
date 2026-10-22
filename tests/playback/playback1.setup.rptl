@@ -1,4 +1,11 @@
-# Start capturing for one run, see playback1.rptl
+# Allocate both recorder legs. Their ports receive playback traffic (P)
+# or hold the unused destination (T); no auxiliary UDP sockets are needed.
 .eval: %%RUN%% -> str_split(:, T, CODEC, NPKTS)
-.pyspawn: %%CAPTURE%% -6 -T %%OUT%%.%%T%%.%%CODEC%%.tos %%NPKTS%% %%OUT%%.%%T%%.%%CODEC%%.a.rtp -> CAP_%%T%%_%%CODEC%%
-.readline: CAP_%%T%%_%%CODEC%% 10 -> PORTS_%%T%%_%%CODEC%%
+.eval: %%OUT%%.%%T%%.%%CODEC%% -> RECID
+c: U %%RECID%% 0.0.0.0 0 from_tag_1 -> validate_port(P4)
+c: La %%RECID%% 127.0.0.1 0 from_tag_1 to_tag_1 -> validate_port(T4)
+c: R %%RECID%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+c: U6 %%RECID%%_ipv6 :: 0 from_tag_1 -> validate_port(P6)
+c: L6a %%RECID%%_ipv6 ::1 0 from_tag_1 to_tag_1 -> validate_port(T6)
+c: R %%RECID%%_ipv6 to_tag_1 from_tag_1 -> str_compare(RES_OK)
+.eval: %%P4%% %%P6%% %%T4%% %%T6%% -> PORTS_%%T%%_%%CODEC%%

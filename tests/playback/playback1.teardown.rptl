@@ -1,6 +1,9 @@
-# Wait for the capture of one run to complete and stop the playback, so
-# that nothing is sent into a re-used port later on, see playback1.rptl
-.eval: %%RUN%% -> str_split(:, T, CODEC, NPKTS)
-.wait: CAP_%%T%%_%%CODEC%% 30
-r: D callid_%%T%%_%%CODEC%% from_tag_1
-r: D callid_%%T%%_%%CODEC%%_ipv6 from_tag_1
+# Wait for both recordings to receive exactly the expected packet count.
+# Closing the player sessions stops traffic before the recordings are closed.
+.include: playback1.restore.rptl
+.eval: npkts_ina=%%NPKTS%% npkts_ina=%%NPKTS%% -> EXPECTED_PACKETS
+.until: RECORDING_DONE do playback1.check.rptl every 0.1 30
+r: D %%CID%% from_tag_1
+r: D %%CID%%_ipv6 from_tag_1
+c: D %%OUT%%.%%T%%.%%CODEC%% from_tag_1 -> str_compare(RES_OK)
+c: D %%OUT%%.%%T%%.%%CODEC%%_ipv6 from_tag_1 -> str_compare(RES_OK)
