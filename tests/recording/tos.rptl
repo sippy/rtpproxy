@@ -1,0 +1,13 @@
+.eval: recording.tos.proxy.rlog -> RTPPROXY_STDERR
+socket r: stdio: -l 0.0.0.0 -6 /:: -T60 -P -r %%RECORD_DIR%% -> recording.tos.rout
+.eval: 0 -> RES_OK
+r: U recording.tos4 0.0.0.0 0 from_tag_1 -> validate_port(P4)
+r: La recording.tos4 127.0.0.1 0 from_tag_1 to_tag_1 -> validate_port(_)
+r: R recording.tos4 to_tag_1 from_tag_1 -> str_compare(RES_OK)
+r: U6 recording.tos6 :: 0 from_tag_1 -> validate_port(P6)
+r: L6a recording.tos6 ::1 0 from_tag_1 to_tag_1 -> validate_port(_)
+r: R recording.tos6 to_tag_1 from_tag_1 -> str_compare(RES_OK)
+.exec: %%PYINT%% -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.setsockopt(socket.IPPROTO_IP,socket.IP_TOS,0x2a); s.sendto(bytes.fromhex('800000010000000100000001')+bytes(80),('127.0.0.1',%%P4%%)); s.setsockopt(socket.IPPROTO_IP,socket.IP_TOS,0xb8); s.sendto(bytes.fromhex('800000020000005100000001')+bytes(80),('127.0.0.1',%%P4%%)); s.close(); s=socket.socket(socket.AF_INET6,socket.SOCK_DGRAM); s.setsockopt(socket.IPPROTO_IPV6,socket.IPV6_TCLASS,0x2b); s.sendto(bytes.fromhex('800000010000000100000001')+bytes(80),('::1',%%P6%%))"
+.eval: npkts_ina=2 npkts_ina=1 -> EXPECTED
+.until: RECORDING_DONE do tos.check.rptl every 0.1 5
+.close: r
