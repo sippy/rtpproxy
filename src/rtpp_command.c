@@ -350,7 +350,7 @@ rtpp_command_guard_retrans(struct rtpp_command *cmd,
         return (0);
     }
     len = cres->reply->len;
-    int r = rtpp_anetio_sendto_na(pvt->ctx.cfs->rtpp_proc_cf->netio, pvt->ctx.controlfd,
+    int r = rtpp_anetio_sendto(pvt->ctx.cfs->rtpp_proc_cf->netio, pvt->ctx.controlfd,
       cres->reply->s, len, 0, sstosa(pvt->ctx.raddr.a), pvt->ctx.raddr.l, cres->rcnt);
     if (r != 0)
         RTPP_OBJ_DECREF(cres);

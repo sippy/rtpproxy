@@ -151,7 +151,7 @@ rtpc_reply_deliver(struct rtpc_reply *self, int errd)
               self->rcnt, pvt->ctx->dtime.mono);
         }
         RTPP_OBJ_INCREF(self);
-        if (rtpp_anetio_sendto_na(pvt->ctx->cfs->rtpp_proc_cf->netio, pvt->ctx->controlfd,
+        if (rtpp_anetio_sendto(pvt->ctx->cfs->rtpp_proc_cf->netio, pvt->ctx->controlfd,
           pvt->buf.r, pvt->buf.clen, 0, sstosa(pvt->ctx->raddr.a), pvt->ctx->raddr.l,
           self->rcnt) != 0)
         {

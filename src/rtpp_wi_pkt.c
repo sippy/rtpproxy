@@ -49,7 +49,6 @@
 struct rtpp_wi_sendto {
     struct rtpp_wi_pvt wip;
     struct sockaddr_storage to;
-    char msg[0];
 };
 
 static void rtpp_wi_free(struct rtpp_wi_sendto *);
@@ -57,36 +56,6 @@ static void rtpp_wi_pkt_free(struct rtpp_wi_pvt *);
 
 struct rtpp_wi *
 rtpp_wi_malloc(int sock, const void *msg, size_t msg_len, int flags,
-  const struct sockaddr *sendto, size_t tolen)
-{
-    struct rtpp_wi_sendto *wis;
-
-    wis = rtpp_rmalloc(sizeof(struct rtpp_wi_sendto) + msg_len, PVT_RCOFFS(&wis->wip));
-    if (wis == NULL) {
-        return (NULL);
-    }
-    wis->wip.pub = (const struct rtpp_wi) {
-        .wi_type = RTPP_WI_TYPE_OPKT,
-        .rcnt = wis->wip.pub.rcnt
-    };
-    wis->wip.sendargs = (const struct rtpp_wi_sendargs) {
-        .nsend = 1,
-        .sock = sock,
-        .flags = flags,
-        .msg = &(wis->msg),
-        .sendto = sstosa(&(wis->to)),
-        .msg_len = msg_len,
-        .tolen = tolen
-    };
-    memcpy(wis->msg, msg, msg_len);
-    memcpy(&(wis->to), sendto, tolen);
-    RTPP_OBJ_DTOR_ATTACH_s(&wis->wip.pub, (rtpp_refcnt_dtor_t)&rtpp_wi_free,
-      wis);
-    return (&(wis->wip.pub));
-}
-
-struct rtpp_wi *
-rtpp_wi_malloc_na(int sock, const void *msg, size_t msg_len, int flags,
   const struct sockaddr *sendto, size_t tolen, struct rtpp_refcnt *data_rcnt)
 {
     struct rtpp_wi_sendto *wis;
