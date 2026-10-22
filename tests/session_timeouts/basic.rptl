@@ -8,7 +8,7 @@
 #
 # Expects CTYPE, J, NS, OUT and RTPPROXY_BIN to be defined.
 
-.eval: -n %%NS%% -d dbug -T10 -b -> ARGS
+.eval: -n %%NS%% -d dbug -T10 -> ARGS
 
 .eval: %%OUT%%.rlog%%J%%.1 -> RTPPROXY_STDERR
 socket r1: %%CTYPE%% %%ARGS%% -W5 -> %%OUT%%.rout%%J%%.1

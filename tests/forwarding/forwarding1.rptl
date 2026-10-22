@@ -15,7 +15,7 @@
 # OUT to be defined.
 
 .eval: 0 -> RES_OK
-.eval: -T5 --bridge_symmetric -b -d dbug -l 0.0.0.0 -6 /:: --config %%CONF%% -> ARGS
+.eval: -T5 --bridge_symmetric -d dbug -l 0.0.0.0 -6 /:: --config %%CONF%% -> ARGS
 
 .eval: %%OUT%%.rlog -> RTPPROXY_STDERR
 socket fwd: stdio: -i -s cunix:%%CTRL_SOCK%% %%ARGS%% -> %%OUT%%.rout
