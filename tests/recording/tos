@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# Verify that native recordings retain received IPv4 TOS and IPv6 traffic class.
+BASEDIR="$(dirname -- "$0")/.."
+. "${BASEDIR}/functions"
+
+rm -f recording.tos4=from_tag_1.* recording.tos6=from_tag_1.*
+${RPTL_INT} -s "${BASEDIR}/recording/tos.rptl" \
+ -D RTPPROXY_BIN="`strip_wrapper "${RTPPROXY}"`" \
+ -D RECORD_DIR="${BUILDDIR}" -D PYINT="${PYINT}" \
+ > recording.tos.vars 2> recording.tos.rlog
+RPTL_RC=${?}
+if [ ${RPTL_RC} -ne 0 ]
+then
+  cat recording.tos.rlog >&2
+fi
+report_rc ${RPTL_RC} "recording received TOS"
+
+for family in 4 6
+do
+  ${TCPDUMP} -n -v -r recording.tos${family}=from_tag_1.a.rtp \
+   > recording.tos${family}.dump 2> recording.tos${family}.dump.log
+  report "reading IPv${family} recording"
+done
+grep -q 'tos 0x2a' recording.tos4.dump
+report "retaining first IPv4 TOS"
+grep -q 'tos 0xb8' recording.tos4.dump
+report "retaining changed IPv4 TOS"
+grep -q 'class 0x2b' recording.tos6.dump
+report "retaining IPv6 traffic class"

@@ -1,0 +1,3 @@
+r: Qv recording.tos4 to_tag_1 from_tag_1 npkts_ina -> COUNT4
+r: Qv recording.tos6 to_tag_1 from_tag_1 npkts_ina -> COUNT6
+.eval: %%COUNT4%% %%COUNT6%% -> str_equal(EXPECTED, RECORDING_DONE)
