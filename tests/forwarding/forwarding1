@@ -154,7 +154,7 @@ run_set() {
    -D RECORD_DIR="${RECORD_DIR}" -D RECORD_SPL_DIR="${RECORD_SPL_DIR}" \
    -D CONF="forwarding/rtpproxy.conf" -D CTRL_SOCK="/tmp/forwarding1.$$.sock" \
    -D CALLS="${CALLS}" -D COPIES="${COPIES}" -D DELETES="${DELETES}" \
-   -D TRASH="${TRASH_PORT1}" -D PYINT="${PYINT}" -D OUT="${OUT}" \
+   -D PYINT="${PYINT}" -D OUT="${OUT}" \
    > ${OUT}.vars 2> ${OUT}.rptl.rlog
   RPTL_RC=${?}
   if [ ${RPTL_RC} -ne 0 ]
