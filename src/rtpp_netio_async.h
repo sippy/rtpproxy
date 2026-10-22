@@ -37,8 +37,6 @@ struct rtpp_netaddr;
 struct rtpp_cfg;
 
 int rtpp_anetio_sendto(struct rtpp_anetio_cf *, int, const void *, \
-  size_t, int, const struct sockaddr *, socklen_t);
-int rtpp_anetio_sendto_na(struct rtpp_anetio_cf *, int, const void *, \
   size_t, int, const struct sockaddr *, socklen_t, struct rtpp_refcnt *);
 
 #if 0
