@@ -141,8 +141,14 @@ rtpc_reply_deliver(struct rtpc_reply *self, int errd)
           pvt->buf.clen, pvt->buf.r);
     }
     if (pvt->ctx->umode == 0) {
-        if (write(pvt->ctx->controlfd, pvt->buf.r, pvt->buf.clen) < 0) {
-            RTPP_DBG_ASSERT(!IS_WEIRD_ERRNO(errno));
+        ssize_t n;
+
+        do {
+            n = write(pvt->ctx->controlfd, pvt->buf.r, pvt->buf.clen);
+        } while (n == -1 && errno == EINTR);
+        if (n < 0) {
+            RTPP_ELOG(pvt->ctx->cfs->glog, RTPP_LOG_ERR,
+              "can't write command reply");
         }
     } else {
         if (pvt->ctx->cookie.s != NULL) {

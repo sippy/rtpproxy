@@ -30,6 +30,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <errno.h>
 #include <netdb.h>
 #include <poll.h>
 #include <stdint.h>
@@ -121,7 +122,9 @@ process_rtp_only(const struct rtpp_cfg *cfsp, struct rtpp_polltbl *ptbl,
         if (ep->data.ptr == NULL) {
             int nudge_data, rsize;
 
-            rsize = read(ptbl->wakefd[0], &nudge_data, sizeof(nudge_data));
+            do {
+                rsize = read(ptbl->wakefd[0], &nudge_data, sizeof(nudge_data));
+            } while (rsize == -1 && errno == EINTR);
             RTPP_DBG_ASSERT(rsize == sizeof(nudge_data) || rsize == 0);
             if (rsize > 0 && rsize == sizeof(nudge_data)) {
                 atomic_store(&ptbl->served_i_wake, nudge_data);
