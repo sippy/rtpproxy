@@ -138,7 +138,7 @@ controlfd_probe_inherited(struct rtpp_ctrl_sock *csp, int controlfd)
 static int
 controlfd_init_ifsun(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
 {
-    int controlfd, reuse;
+    int controlfd;
     struct sockaddr_un *ifsun;
 
     if (strlen(csp->cmd_sock) >= sizeof(ifsun->sun_path)) {
@@ -159,8 +159,6 @@ controlfd_init_ifsun(const struct rtpp_cfg *cfsp, struct rtpp_ctrl_sock *csp)
         warn("can't create socket");
         return (-1);
     }
-    reuse = 1;
-    setsockopt(controlfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
     if (bind(controlfd, sstosa(ifsun), sizeof(struct sockaddr_un)) < 0) {
         warn("can't bind to a socket: %s", csp->cmd_sock);
         goto e0;
