@@ -131,21 +131,6 @@ glitched:
     return (-1);
 }
 
-#undef send
-
-ssize_t
-rtpp_glitch_send(int s, const void *msg, size_t len, int flags,
-  HERETYPEARG)
-{
-
-    GLITCH_INJECT(HEREARG, glitched);
-    return (send(s, msg, len, flags));
-glitched:
-    shutdown(s, SHUT_WR);
-    errno = EHOSTDOWN;
-    return (-1);
-}
-
 #undef connect
 
 int
@@ -337,16 +322,169 @@ glitched:
     return (-1);
 }
 
+/* Return a synthetic errno, or zero to perform the real operation. */
+static int
+rtpp_glitch_io_errno(int fd, int nonblock, struct rtpp_glitch_io_state *state,
+  unsigned int nstates)
+{
+    unsigned int outcome;
+    int flags;
+
+    if (state->fd != fd) {
+        flags = fcntl(fd, F_GETFL);
+        if (flags == -1)
+            return (0);
+        state->fd = fd;
+        state->nonblock = (flags & O_NONBLOCK) != 0;
+    }
+    /* Selected calls cycle through normal, EINTR, EAGAIN, normal. */
+    outcome = state->phase;
+    state->phase = (outcome + 1) % nstates;
+    switch (outcome) {
+    case 1:
+        return (EINTR);
+    case 2:
+        if (state->nonblock || nonblock)
+            return (EAGAIN);
+        /* Blocking operations proceed normally in this phase. */
+        return (0);
+    case 4:
+        /* send() retains its terminal shutdown as a fifth state. */
+        return (EHOSTDOWN);
+    default:
+        return (0);
+    }
+}
+
+#undef read
+
+ssize_t
+rtpp_glitch_read(int fd, void *buf, size_t nbytes, HERETYPEARG,
+  struct rtpp_glitch_io_state *state)
+{
+    int error;
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (read(fd, buf, nbytes));
+glitched:
+    error = rtpp_glitch_io_errno(fd, 0, state, 4);
+    if (error == 0)
+        return (read(fd, buf, nbytes));
+    errno = error;
+    return (-1);
+}
+
+#undef recv
+
+ssize_t
+rtpp_glitch_recv(int s, void *buf, size_t len, int flags, HERETYPEARG,
+  struct rtpp_glitch_io_state *state)
+{
+    int error;
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (recv(s, buf, len, flags));
+glitched:
+    error = rtpp_glitch_io_errno(s, (flags & MSG_DONTWAIT) != 0, state, 4);
+    if (error == 0)
+        return (recv(s, buf, len, flags));
+    errno = error;
+    return (-1);
+}
+
+#undef recvfrom
+
+ssize_t
+rtpp_glitch_recvfrom(int s, void *buf, size_t len, int flags,
+  struct sockaddr *from, socklen_t *fromlen, HERETYPEARG,
+  struct rtpp_glitch_io_state *state)
+{
+    int error;
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (recvfrom(s, buf, len, flags, from, fromlen));
+glitched:
+    error = rtpp_glitch_io_errno(s, (flags & MSG_DONTWAIT) != 0, state, 4);
+    if (error == 0)
+        return (recvfrom(s, buf, len, flags, from, fromlen));
+    errno = error;
+    return (-1);
+}
+
 #undef write
 
 ssize_t
-rtpp_glitch_write(int fd, const void *buf, size_t nbytes, HERETYPEARG)
+rtpp_glitch_write(int fd, const void *buf, size_t nbytes, HERETYPEARG,
+  struct rtpp_glitch_io_state *state)
 {
+    int error;
 
     GLITCH_INJECT(HEREARG, glitched);
     return (write(fd, buf, nbytes));
 glitched:
-    errno = EDQUOT;
+    error = rtpp_glitch_io_errno(fd, 0, state, 4);
+    if (error == 0)
+        return (write(fd, buf, nbytes));
+    errno = error;
+    return (-1);
+}
+
+#undef send
+
+ssize_t
+rtpp_glitch_send(int s, const void *msg, size_t len, int flags, HERETYPEARG,
+  struct rtpp_glitch_io_state *state)
+{
+    int error;
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (send(s, msg, len, flags));
+glitched:
+    error = rtpp_glitch_io_errno(s, (flags & MSG_DONTWAIT) != 0, state, 5);
+    if (error == 0)
+        return (send(s, msg, len, flags));
+    if (error == EHOSTDOWN)
+        shutdown(s, SHUT_WR);
+    errno = error;
+    return (-1);
+}
+
+#undef sendto
+
+ssize_t
+rtpp_glitch_sendto(int s, const void *msg, size_t len, int flags,
+  const struct sockaddr *to, socklen_t tolen, HERETYPEARG,
+  struct rtpp_glitch_io_state *state)
+{
+    int error;
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (sendto(s, msg, len, flags, to, tolen));
+glitched:
+    error = rtpp_glitch_io_errno(s, (flags & MSG_DONTWAIT) != 0, state, 4);
+    if (error == 0)
+        return (sendto(s, msg, len, flags, to, tolen));
+    errno = error;
+    return (-1);
+}
+
+#undef poll
+
+int
+rtpp_glitch_poll(struct pollfd *fds, nfds_t nfds, int timeout, HERETYPEARG,
+  unsigned int *phase)
+{
+    unsigned int outcome;
+
+    GLITCH_INJECT(HEREARG, glitched);
+    return (poll(fds, nfds, timeout));
+glitched:
+    /* Alternate normal polls and EINTR without starving the caller. */
+    outcome = *phase;
+    *phase = outcome ^ 1;
+    if (outcome == 0)
+        return (poll(fds, nfds, timeout));
+    errno = EINTR;
     return (-1);
 }
 
