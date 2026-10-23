@@ -107,9 +107,12 @@ static void
 rcs_reply_nomem(struct rtpp_log *log, int controlfd, struct rtpp_command_stats *csp)
 {
     static const char buf[] = ENM_STR "\n";
+    ssize_t n;
 
-    if (write(controlfd, buf, sizeof(buf) - 1) < 0) {
-        RTPP_DBG_ASSERT(!IS_WEIRD_ERRNO(errno));
+    do {
+        n = write(controlfd, buf, sizeof(buf) - 1);
+    } while (n == -1 && errno == EINTR);
+    if (n < 0) {
         RTPP_ELOG(log, RTPP_LOG_ERR, "ENOMEM: failure sending \"" ENM_PSTR "\"");
     } else {
         RTPP_LOG(log, RTPP_LOG_ERR, "ENOMEM: sending \"" ENM_PSTR "\"");
