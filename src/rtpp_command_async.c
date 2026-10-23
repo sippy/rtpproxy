@@ -579,8 +579,10 @@ init_pollset(const struct rtpp_cfg *cfsp, struct rtpp_cmd_pollset *psp, int wake
         if (psp->rccs[i] == NULL) {
             int j;
 
-            for (j = i - 1; j >= 0; j --)
+            /* Slot zero is the wakeup descriptor, with no connection. */
+            for (j = i - 1; j >= 1; j --)
                 rtpp_cmd_connection_dtor(psp->rccs[j]);
+            pthread_mutex_destroy(&psp->pfds_mutex);
             goto e1;
         }
         i++;
