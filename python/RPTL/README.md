@@ -242,8 +242,8 @@ to `/dev/null` and stderr inherited from the RPTL runner.
 | `.spawn: CMDLINE -> NAME` | Start `CMDLINE` in background under handle `NAME` and continue right away. The `NAME` variable is set to its PID. Like other output names, `NAME` can contain variable references, e.g. `-> CAP_%%K%%`, to keep several processes running at once. |
 | `.pyspawn: SCRIPT [ARGS ...] -> NAME` | Start a Python script from a dedicated fork server, using the runner's interpreter. Arguments are split shell-style; shell expansions and redirections are not supported. The handle supports `.readline:`, `.wait:` and `.kill:` like `.spawn:`. |
 | `.readline: NAME [TIMEOUT] [-> OUTPUT]` | Wait for the next line printed by the spawned process `NAME`. Output is buffered from the moment the process is started, so no lines are lost. Fails if the process exits without printing another line, or on timeout. |
-| `.wait: NAME [TIMEOUT] [-> OUTPUT]` | Wait for the spawned process `NAME` to exit and release its handle, so `NAME` can be reused. A non-zero exit code fails the script unless it is captured with `-> OUTPUT` (a negative value means it was killed by that signal). Fails on timeout. |
-| `.kill: NAME [SIGNAL]` | Send `SIGNAL` (name such as `TERM`, `SIGUSR1`, or number; `TERM` by default) to the process group of `NAME`. Does nothing if it has already exited; use `.wait:` afterwards to collect it. |
+| `.wait: NAME [TIMEOUT] [-> OUTPUT]` | Wait for a spawned process or managed RTPProxy instance to exit and release its handle, so `NAME` can be reused. For an instance this also closes its control client. A non-zero exit code fails the script unless it is captured with `-> OUTPUT` (a negative value means it was killed by that signal). Fails on timeout. |
+| `.kill: NAME [SIGNAL]` | Send `SIGNAL` (name such as `TERM`, `SIGUSR1`, or number; `TERM` by default) to a managed RTPProxy instance, or to a spawned process's group. Does nothing if it has already exited; use `.wait:` afterwards to collect it. |
 
 `TIMEOUT` is in seconds; without it `.readline:` and `.wait:` wait forever.
 
@@ -258,6 +258,22 @@ Python helper may pay more startup cost than the exec path.
 Managed commands share one I/O thread per runner. It multiplexes their stdout
 pipes, preserves line order within each process, and collects exit statuses
 without blocking output from other commands.
+
+Managed RTPProxy instances use the same exit tracking without reading their
+control sockets or log streams. They support `.kill:` and `.wait:` as well
+as `.close:`. For example:
+
+```
+socket rtpp: udp:
+rtpp: V
+.kill: rtpp
+.wait: rtpp 10
+```
+
+When `RPTL_EXIT_STATUS` names a file, each reaped child appends its PID,
+return code and last signal sent by the runner (zero if none). This includes
+children collected during failure cleanup. A test harness can use these
+statuses to distinguish unexpected signal exits from intentional termination.
 
 Every spawned process must be collected with `.wait:`. Processes still
 running when the script ends, or when it fails, are terminated, and if the
