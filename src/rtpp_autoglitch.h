@@ -85,15 +85,6 @@ int rtpp_glitch_accept(int, struct sockaddr *, socklen_t *, HERETYPE);
 
 #define accept(s, addr, addrlen) rtpp_glitch_accept(s, addr, addrlen, HEREVAL)
 
-ssize_t rtpp_glitch_send(int s, const void *msg, size_t len, int flags, HERETYPE)
-  RTPP_EXPORT;
-
-#ifdef send
-# undef send
-#endif
-
-#define send(s, msg, len, flags) rtpp_glitch_send(s, msg, len, flags, HEREVAL)
-
 int rtpp_glitch_connect(int s, const struct sockaddr *name, socklen_t namelen, HERETYPE)
   RTPP_EXPORT;
 
@@ -216,14 +207,115 @@ int rtpp_glitch_pipe(int [2], HERETYPE);
 
 #define pipe(fildes) rtpp_glitch_pipe(fildes, HEREVAL)
 
-ssize_t rtpp_glitch_write(int, const void *, size_t, HERETYPE)
+struct rtpp_glitch_io_state {
+    unsigned int phase;
+    int fd;
+    int nonblock;
+};
+
+ssize_t rtpp_glitch_read(int, void *, size_t, HERETYPE,
+  struct rtpp_glitch_io_state *)
+  RTPP_EXPORT;
+
+#ifdef read
+# undef read
+#endif
+
+/* Keep independent cycles for each call site and each calling thread. */
+#define read(fildes, buf, nbytes) ({ \
+    static _Thread_local struct rtpp_glitch_io_state _rtpp_read_state = { \
+        .fd = -1 \
+    }; \
+    rtpp_glitch_read(fildes, buf, nbytes, HEREVAL, &_rtpp_read_state); \
+})
+
+ssize_t rtpp_glitch_recv(int, void *, size_t, int, HERETYPE,
+  struct rtpp_glitch_io_state *) RTPP_EXPORT;
+
+#ifdef recv
+# undef recv
+#endif
+
+#define recv(s, buf, len, flags) ({ \
+    static _Thread_local struct rtpp_glitch_io_state _rtpp_recv_state = { \
+        .fd = -1 \
+    }; \
+    rtpp_glitch_recv(s, buf, len, flags, HEREVAL, &_rtpp_recv_state); \
+})
+
+ssize_t rtpp_glitch_recvfrom(int, void *, size_t, int, struct sockaddr *,
+  socklen_t *, HERETYPE, struct rtpp_glitch_io_state *) RTPP_EXPORT;
+
+#ifdef recvfrom
+# undef recvfrom
+#endif
+
+#define recvfrom(s, buf, len, flags, from, fromlen) ({ \
+    static _Thread_local struct rtpp_glitch_io_state _rtpp_recvfrom_state = { \
+        .fd = -1 \
+    }; \
+    rtpp_glitch_recvfrom(s, buf, len, flags, from, fromlen, HEREVAL, \
+      &_rtpp_recvfrom_state); \
+})
+
+ssize_t rtpp_glitch_write(int, const void *, size_t, HERETYPE,
+  struct rtpp_glitch_io_state *)
   RTPP_EXPORT;
 
 #ifdef write
 # undef write
 #endif
 
-#define write(fd, buf, nbytes) rtpp_glitch_write(fd, buf, nbytes, HEREVAL)
+#define write(fildes, buf, nbytes) ({ \
+    static _Thread_local struct rtpp_glitch_io_state _rtpp_write_state = { \
+        .fd = -1 \
+    }; \
+    rtpp_glitch_write(fildes, buf, nbytes, HEREVAL, &_rtpp_write_state); \
+})
+
+ssize_t rtpp_glitch_send(int, const void *, size_t, int, HERETYPE,
+  struct rtpp_glitch_io_state *) RTPP_EXPORT;
+
+#ifdef send
+# undef send
+#endif
+
+#define send(s, msg, len, flags) ({ \
+    static _Thread_local struct rtpp_glitch_io_state _rtpp_send_state = { \
+        .fd = -1 \
+    }; \
+    rtpp_glitch_send(s, msg, len, flags, HEREVAL, &_rtpp_send_state); \
+})
+
+ssize_t rtpp_glitch_sendto(int, const void *, size_t, int,
+  const struct sockaddr *, socklen_t, HERETYPE,
+  struct rtpp_glitch_io_state *) RTPP_EXPORT;
+
+#ifdef sendto
+# undef sendto
+#endif
+
+#define sendto(s, msg, len, flags, to, tolen) ({ \
+    static _Thread_local struct rtpp_glitch_io_state _rtpp_sendto_state = { \
+        .fd = -1 \
+    }; \
+    rtpp_glitch_sendto(s, msg, len, flags, to, tolen, HEREVAL, \
+      &_rtpp_sendto_state); \
+})
+
+#include <poll.h>
+
+int rtpp_glitch_poll(struct pollfd *, nfds_t, int, HERETYPE, unsigned int *)
+  RTPP_EXPORT;
+
+#ifdef poll
+# undef poll
+#endif
+
+#define poll(fds, nfds, timeout) ({ \
+    static _Thread_local unsigned int _rtpp_poll_phase; \
+    rtpp_glitch_poll(fds, nfds, timeout, HEREVAL, &_rtpp_poll_phase); \
+})
 
 pid_t rtpp_glitch_setsid(HERETYPE);
 
