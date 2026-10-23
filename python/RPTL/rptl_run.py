@@ -3,6 +3,7 @@ from collections import deque
 from socket import socket, socketpair, AF_UNIX, AF_INET, AF_INET6, \
   SOCK_DGRAM, SOCK_STREAM, SHUT_RDWR
 from subprocess import Popen, TimeoutExpired, DEVNULL, PIPE
+from threading import Lock
 
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import Node, NodeVisitor
@@ -83,12 +84,12 @@ class CommandRunner():
         self._outfd.write(response + '\n')
         self._outfd.flush()
 
-    def shutdown(self):
+    def shutdown(self, check_exit = True):
         if self.rc is None:
             return
         rc, self.rc = self.rc, None
         if isinstance(rc, (StdioRtpProxyClient, ManagedRtpProxy)):
-            rc.shutdown(abandon = self.stuck)
+            rc.shutdown(abandon = self.stuck, check_exit = check_exit)
         elif not self.stuck:
             # Worker threads are daemons, so a stuck client can be left as is
             rc.shutdown()
@@ -109,21 +110,22 @@ class StdioRtpProxyClient(Rtp_proxy_client_stream):
                 self._stderr = open(rtpproxy_stderr, 'w')
             self.proc = Popen(cmd, stdin = child_sock, stdout = child_sock,
               stderr = self._stderr, close_fds = True)
+            self.process = ManagedProcess.from_proc(instance_name, self.proc)
             child_sock.close()
             super().__init__({'_sip_address': '127.0.0.1'}, address = parent_sock,
               bind_address = None, nworkers = nworkers, family = AF_UNIX)
         except Exception:
             parent_sock.close()
             child_sock.close()
-            if hasattr(self, 'proc') and self.proc is not None and self.proc.poll() is None:
-                self.proc.kill()
-                self.proc.wait()
+            if hasattr(self, 'proc') and self.proc is not None:
+                self.process.signal(signal.SIGKILL)
+                self.process.wait()
             if self._stderr is not None:
                 self._stderr.close()
                 self._stderr = None
             raise
 
-    def shutdown(self, abandon = False):
+    def shutdown(self, abandon = False, check_exit = True):
         proc_rc = None
         if self._stdio_sock is not None:
             try:
@@ -140,19 +142,19 @@ class StdioRtpProxyClient(Rtp_proxy_client_stream):
             if self.proc is not None:
                 try:
                     # EOF on the control socket makes rtpproxy exit by itself
-                    proc_rc = self.proc.wait(timeout = 5.0)
+                    proc_rc = self.process.wait(timeout = 5.0)
                 except TimeoutExpired:
-                    self.proc.terminate()
+                    self.process.signal(signal.SIGTERM)
                     try:
-                        proc_rc = self.proc.wait(timeout = 2.0)
+                        proc_rc = self.process.wait(timeout = 2.0)
                     except TimeoutExpired:
-                        self.proc.kill()
-                        proc_rc = self.proc.wait()
+                        self.process.signal(signal.SIGKILL)
+                        proc_rc = self.process.wait()
                 self.proc = None
             if self._stderr is not None:
                 self._stderr.close()
                 self._stderr = None
-        if proc_rc is not None and proc_rc != 0:
+        if check_exit and proc_rc is not None and proc_rc != 0:
             raise RuntimeError(
               F'managed rtpproxy instance "{self.instance_name}" exited with return code {proc_rc}')
 
@@ -202,6 +204,7 @@ class ManagedRtpProxy():
             out = self._stderr if self._stderr is not None else sys.stderr
             self.proc = Popen(cmd, stdin = DEVNULL, stdout = out,
               stderr = self._stderr, pass_fds = (csock.fileno(),))
+            self.process = ManagedProcess.from_proc(instance_name, self.proc)
             csock.close()
             self.client = Rtp_proxy_client({'_sip_address': '127.0.0.1'},
               spath = self.spath, nworkers = 1, no_version_check = True)
@@ -214,9 +217,10 @@ class ManagedRtpProxy():
         return self.client.send_command(*args, **kwargs)
 
     def _cleanup(self):
-        if self.proc is not None and self.proc.poll() is None:
-            self.proc.kill()
-            self.proc.wait()
+        if self.proc is not None:
+            self.process.signal(signal.SIGKILL)
+            self.process.wait()
+            self.proc = None
         if self._stderr is not None:
             self._stderr.close()
             self._stderr = None
@@ -224,7 +228,7 @@ class ManagedRtpProxy():
             shutil.rmtree(self.tmpdir, ignore_errors = True)
             self.tmpdir = None
 
-    def shutdown(self, abandon = False):
+    def shutdown(self, abandon = False, check_exit = True):
         proc_rc = None
         try:
             if self.client is not None:
@@ -233,21 +237,21 @@ class ManagedRtpProxy():
                 self.client = None
         finally:
             if self.proc is not None:
-                self.proc.terminate()
+                self.process.signal(signal.SIGTERM)
                 try:
-                    proc_rc = self.proc.wait(timeout = 5.0)
+                    proc_rc = self.process.wait(timeout = 5.0)
                 except TimeoutExpired:
-                    self.proc.kill()
-                    proc_rc = self.proc.wait()
+                    self.process.signal(signal.SIGKILL)
+                    proc_rc = self.process.wait()
                 self.proc = None
             self._cleanup()
-        if proc_rc is not None and proc_rc != 0:
+        if check_exit and proc_rc is not None and proc_rc != 0:
             raise RuntimeError(
               F'managed rtpproxy instance "{self.instance_name}" exited with return code {proc_rc}')
 
 class ManagedProcess():
-    # External command run via "/bin/sh -c" in its own process group, its
-    # stdout is collected line by line and delivered to the main thread
+    # Shared handle for spawned commands and native managed instances.
+    # Spawned commands have their own process group and collected stdout.
     name: str
     cmdline: str
     lines: deque
@@ -257,7 +261,6 @@ class ManagedProcess():
     def __init__(self, name, cmdline, python_script = False):
         self.name = name
         self.cmdline = cmdline
-        self.lines = deque()
         if python_script:
             argv = shlex.split(cmdline)
             if os.environ.get('RPTL_PYSPAWN', '1') == '0':
@@ -271,7 +274,28 @@ class ManagedProcess():
         else:
             self.proc = Popen(['/bin/sh', '-c', cmdline], stdin = DEVNULL,
               stdout = PIPE, close_fds = True, start_new_session = True)
-        self.pid = self.proc.pid
+        self._attach(self.proc, process_group = True)
+
+    @classmethod
+    def from_proc(cls, name, proc):
+        # Adopt an already launched child whose I/O belongs to its client.
+        process = cls.__new__(cls)
+        process.name = name
+        process.cmdline = shlex.join(proc.args)
+        process._attach(proc, process_group = False)
+        return process
+
+    def _attach(self, proc, process_group):
+        self.proc = proc
+        self.pid = proc.pid
+        self.process_group = process_group
+        self.lines = deque()
+        self.rc = None
+        self.returncode = None
+        self.on_update = None
+        self.expected_signal = 0
+        self._signal_lock = Lock()
+        self.exit_error = None
         from process_io import process_io
         self._done = process_io.register(self)
 
@@ -280,6 +304,22 @@ class ManagedProcess():
         self._notify()
 
     def _got_exit(self, rc):
+        from sippy.Core.EventDispatcher import ED2
+        # This runs when the child is reaped, even after the event loop stops.
+        status_path = os.environ.get('RPTL_EXIT_STATUS')
+        with self._signal_lock:
+            expected_signal = self.expected_signal
+        if status_path is not None:
+            try:
+                with open(status_path, 'a') as status:
+                    status.write(f'{self.pid} {rc} {int(expected_signal)}\n')
+            except OSError as ex:
+                self.exit_error = ex
+        self.returncode = rc
+        ED2.callFromThread(self._deliver_exit, rc)
+
+    def _deliver_exit(self, rc):
+        # Deliver exit after the stdout callbacks already queued by the reader.
         self.rc = rc
         self._notify()
 
@@ -288,18 +328,31 @@ class ManagedProcess():
             self.on_update()
 
     def signal(self, signum):
-        if self.proc.returncode is not None:
-            return
-        try:
-            os.killpg(self.pid, signum)
-        except ProcessLookupError:
-            pass
+        with self._signal_lock:
+            if self.proc.returncode is not None:
+                return
+            try:
+                if self.process_group:
+                    os.killpg(self.pid, signum)
+                else:
+                    self.proc.send_signal(signum)
+                self.expected_signal = signum
+            except ProcessLookupError:
+                pass
+
+    def wait(self, timeout = None):
+        if not self._done.wait(timeout):
+            raise TimeoutExpired(self.cmdline, timeout)
+        if self.exit_error is not None:
+            raise self.exit_error
+        return self.returncode
 
     def stop(self):
         self.signal(signal.SIGTERM)
         if not self._done.wait(2.0):
             self.signal(signal.SIGKILL)
             self._done.wait()
+        self.wait()
 
 class TransFunction():
     name: str
@@ -438,6 +491,8 @@ class ScriptRunner():
                 for raw_param in cmd.params:
                     params.extend(shlex.split(self.expand_vars(raw_param)))
                 outfile = self.expand_vars(cmd.outfile) if cmd.outfile else None
+                if cmd.name in self.procs:
+                    raise Exception(F'{cmd.name}: process has been spawned already')
                 if cmd.name in self.sockets:
                     self.sockets[cmd.name].shutdown()
                 self.sockets[cmd.name] = CommandRunner(cmd.name, address, outfile,
@@ -554,6 +609,8 @@ class ScriptRunner():
         # proceeds to the next command, which may start waiting on the same
         # process again, so the handler is re-armed only if check() says so.
         from sippy.Time.Timeout import Timeout
+        if mp.exit_error is not None:
+            raise mp.exit_error
         if check():
             return
         tmo = None
@@ -561,6 +618,8 @@ class ScriptRunner():
             mp.on_update = None
             done = True
             try:
+                if mp.exit_error is not None:
+                    raise mp.exit_error
                 done = check()
             finally:
                 if not done:
@@ -576,9 +635,12 @@ class ScriptRunner():
             tmo = Timeout(on_timeout, timeout)
 
     def _getproc(self, name):
-        if name not in self.procs:
-            raise Exception(F'{name}: no such spawned process')
-        return self.procs[name]
+        if name in self.procs:
+            return self.procs[name]
+        socket = self.sockets.get(name)
+        if socket is not None and socket.proc is not None:
+            return socket.rc.process
+        raise Exception(F'{name}: no such managed process')
 
     def _parse_proc_args(self, command):
         args = command.split()
@@ -612,7 +674,7 @@ class ScriptRunner():
         if not isinstance(name, str):
             raise Exception('spawn requires "-> NAME" to be specified')
         name = self.expand_vars(name)
-        if name in self.procs:
+        if name in self.procs or name in self.sockets:
             raise Exception(F'{name}: process has been spawned already')
         mp = ManagedProcess(name, command, python_script = python_script)
         self.procs[name] = mp
@@ -624,6 +686,8 @@ class ScriptRunner():
 
     def handle_readline(self, cmd, command):
         mp, timeout = self._parse_proc_args(command)
+        if mp.proc.stdout is None:
+            raise Exception(F'{mp.name}: stdout belongs to its control client')
         def check():
             if len(mp.lines) == 0:
                 if mp.rc is not None:
@@ -641,7 +705,11 @@ class ScriptRunner():
         def check():
             if mp.rc is None:
                 return False
-            del self.procs[mp.name]
+            if mp.name in self.procs:
+                del self.procs[mp.name]
+            else:
+                # The wait below validates (or captures) the exit status.
+                self.sockets.pop(mp.name).shutdown(check_exit = False)
             if cmd.output_var is not None:
                 self.setvar(cmd.output_var, str(mp.rc))
             elif mp.rc != 0:

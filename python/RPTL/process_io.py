@@ -41,6 +41,10 @@ class ProcessIO:
                 process, done = self.incoming.get_nowait()
             except Empty:
                 break
+            if process.proc.stdout is None:
+                # Native managed clients own their sockets and log streams.
+                self.pending_exit.append((process, done))
+                continue
             os.set_blocking(process.proc.stdout.fileno(), False)
             self.selector.register(process.proc.stdout, EVENT_READ,
               (process, done, bytearray()))
@@ -68,7 +72,6 @@ class ProcessIO:
         self.pending_exit.append((process, done))
 
     def _run(self):
-        from sippy.Core.EventDispatcher import ED2
         while True:
             # EOF can precede exit (a helper may close stdout and keep running).
             # Never block the other helpers while waiting to reap that process.
@@ -86,7 +89,7 @@ class ProcessIO:
                 except TimeoutExpired:
                     self.pending_exit.append((process, done))
                     continue
-                ED2.callFromThread(process._got_exit, rc)
+                process._got_exit(rc)
                 done.set()
 
 
