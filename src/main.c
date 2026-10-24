@@ -992,6 +992,10 @@ _rtpp_main(int argc, const char * const *argv)
         .no_pid = 1, .no_chdir = 1, .no_daemon = 1, .no_sigtrap = 1
     };
 #endif
+    if (cfsp->ropts.no_sigtrap == 0) {
+        /* Early exits may still write to a stdio: peer that has gone away. */
+        signal(SIGPIPE, SIG_IGN);
+    }
 
 #ifdef RTPP_CHECK_LEAKS
     RTPP_MEMDEB_APP_INIT();
@@ -1243,7 +1247,6 @@ _rtpp_main(int argc, const char * const *argv)
         signal(SIGHUP, sighup);
         signal(SIGINT, fatsignal);
         signal(SIGKILL, fatsignal);
-        signal(SIGPIPE, SIG_IGN);
         signal(SIGTERM, fatsignal);
         signal(SIGXCPU, fatsignal);
         signal(SIGXFSZ, fatsignal);
