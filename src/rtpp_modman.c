@@ -51,6 +51,7 @@ static void rtpp_modman_dtor(struct rtpp_modman_priv *);
 static void rtpp_modman_insert(struct rtpp_modman *, struct rtpp_module_if *);
 static int rtpp_modman_startall(struct rtpp_modman *, const struct rtpp_cfg *,
   const char **);
+static void rtpp_modman_stopall(struct rtpp_modman *);
 static unsigned int rtpp_modman_get_next_id(struct rtpp_modman *, unsigned int);
 static void rtpp_modman_do_acct(struct rtpp_modman *, struct rtpp_acct *);
 static int rtpp_modman_get_ul_subc_h(struct rtpp_modman *, unsigned int,
@@ -67,6 +68,7 @@ rtpp_modman_ctor(void)
     }
     pvt->pub.insert = rtpp_modman_insert;
     pvt->pub.startall = rtpp_modman_startall;
+    pvt->pub.stopall = rtpp_modman_stopall;
     pvt->pub.get_next_id = rtpp_modman_get_next_id;
     pvt->pub.do_acct = rtpp_modman_do_acct;
     pvt->pub.get_ul_subc_h = rtpp_modman_get_ul_subc_h;
@@ -81,14 +83,9 @@ e0:
 static void
 rtpp_modman_dtor(struct rtpp_modman_priv *pvt)
 {
-    struct rtpp_module_if *mif, *tmp;
 
     rtpp_modman_fin(&(pvt->pub));
-    for (mif = RTPP_LIST_HEAD(&pvt->all); mif != NULL; mif = tmp) {
-        tmp = RTPP_ITER_NEXT(mif);
-        CALL_METHOD(mif, kaput);
-        RTPP_OBJ_DECREF(mif);
-    }
+    rtpp_modman_stopall(&(pvt->pub));
 }
 
 static void
@@ -124,6 +121,21 @@ rtpp_modman_startall(struct rtpp_modman *self, const struct rtpp_cfg *cfp,
 failed:
     *failedmod = mif->descr->name;
     return (-1);
+}
+
+static void
+rtpp_modman_stopall(struct rtpp_modman *self)
+{
+    struct rtpp_module_if *mif, *tmp;
+    struct rtpp_modman_priv *pvt;
+
+    PUB2PVT(self, pvt);
+    for (mif = RTPP_LIST_HEAD(&pvt->all); mif != NULL; mif = tmp) {
+        tmp = RTPP_ITER_NEXT(mif);
+        CALL_METHOD(mif, kaput);
+        RTPP_OBJ_DECREF(mif);
+    }
+    RTPP_LIST_RESET(&pvt->all);
 }
 
 static unsigned int

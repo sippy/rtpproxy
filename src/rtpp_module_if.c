@@ -496,6 +496,7 @@ rtpp_mif_construct(struct rtpp_module_if *self, const struct rtpp_cfg *cfsp)
             if (pvt->mi.proc.dtor != NULL) {
                 pvt->mi.proc.dtor(pvt->mpvt);
             }
+            pvt->mpvt = NULL;
             return (-1);
         }
     }

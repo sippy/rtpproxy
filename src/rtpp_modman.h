@@ -36,6 +36,7 @@ struct after_success_h;
 DEFINE_METHOD(rtpp_modman, rtpp_modman_insert, void, struct rtpp_module_if *);
 DEFINE_METHOD(rtpp_modman, rtpp_modman_startall, int, const struct rtpp_cfg *,
   const char **);
+DEFINE_METHOD(rtpp_modman, rtpp_modman_stopall, void);
 DEFINE_METHOD(rtpp_modman, rtpp_modman_get_next_id, unsigned int,
   unsigned int);
 DEFINE_METHOD(rtpp_modman, rtpp_modman_do_acct, void, struct rtpp_acct *);
@@ -50,6 +51,7 @@ struct rtpp_modman {
     } count;
     METHOD_ENTRY(rtpp_modman_insert, insert);
     METHOD_ENTRY(rtpp_modman_startall, startall);
+    METHOD_ENTRY(rtpp_modman_stopall, stopall);
     METHOD_ENTRY(rtpp_modman_get_next_id, get_next_id);
     METHOD_ENTRY(rtpp_modman_do_acct, do_acct);
     METHOD_ENTRY(rtpp_modman_get_ul_subc_h, get_ul_subc_h);
