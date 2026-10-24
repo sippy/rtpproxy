@@ -856,22 +856,27 @@ update_derived_stats(double dtime, void *argp)
     return (CB_MORE);
 }
 
-#if !defined(LIBRTPPROXY)
 static void
-#else
-void
-#endif
-rtpp_shutdown(struct rtpp_cfg *cfsp)
+rtpp_cfg_purge_sessions(struct rtpp_cfg *cfsp)
 {
-    struct rtpp_ctrl_sock *ctrl_sock, *ctrl_sock_next;
 
-    CALL_METHOD(cfsp->rtpp_cmd_cf, dtor);
     CALL_SMETHOD(cfsp->sessions_wrt, purge);
     CALL_SMETHOD(cfsp->sessions_ht, purge);
 
     while ((CALL_SMETHOD(cfsp->rtp_streams_wrt, get_length) > 0) ||
       (CALL_SMETHOD(cfsp->rtcp_streams_wrt, get_length) > 0))
         continue;
+}
+
+/*
+ * Releases the base configuration built before any worker threads exist.
+ * Subsystems constructed later attach their own destructors to cfsp->rcnt,
+ * so they are torn down in reverse order before this runs.
+ */
+static void
+rtpp_cfg_dtor(struct rtpp_cfg *cfsp)
+{
+    struct rtpp_ctrl_sock *ctrl_sock, *ctrl_sock_next;
 
 #if ENABLE_MODULE_IF
     RTPP_OBJ_DECREF(cfsp->modules_cf);
@@ -879,17 +884,10 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
     assert(cfsp->_pad == (void *)0x12345678);
     cfsp->_pad = (void *)((uintptr_t)cfsp->_pad ^ 0x87654321);
 #endif
-    RTPP_OBJ_DECREF(cfsp->pproc_manager);
     free(cfsp->runcreds);
-    RTPP_OBJ_DECREF(cfsp->rtpp_notify_cf);
     RTPP_OBJ_DECREF(cfsp->bindaddrs_cf);
     free(cfsp->locks);
     CALL_METHOD(cfsp->rtpp_tnset_cf, dtor);
-    CALL_SMETHOD(cfsp->rtpp_timed_cf, shutdown);
-    RTPP_OBJ_DECREF(cfsp->rtpp_timed_cf);
-    CALL_METHOD(cfsp->rtpp_proc_ttl_cf, dtor);
-    RTPP_OBJ_DECREF(cfsp->proc_servers);
-    RTPP_OBJ_DECREF(cfsp->rtpp_proc_cf);
     RTPP_OBJ_DECREF(cfsp->sessinfo);
     RTPP_OBJ_DECREF(cfsp->rtpp_stats);
     for (int i = 0; i <= RTPP_PT_MAX; i++) {
@@ -912,6 +910,17 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
 #if defined(LIBRTPPROXY)
     RTPP_OBJ_DECREF(cfsp->glog);
 #endif
+}
+
+#if !defined(LIBRTPPROXY)
+static void
+#else
+void
+#endif
+rtpp_shutdown(struct rtpp_cfg *cfsp)
+{
+
+    RTPP_OBJ_DECREF(cfsp);
 }
 
 #ifdef LIBRTPPROXY
@@ -938,6 +947,25 @@ rtpp_shutdown(struct rtpp_cfg *cfsp)
 } while (0)
 #endif
 
+/*
+ * Hand ownership of a late subsystem over to cfsp. On failure the step is
+ * undone right away, since cfsp will not do it on our behalf.
+ */
+#define CFG_ATTACH(f, p) do { \
+    if (RTPP_OBJ_DTOR_ATTACH(cfsp, (f), (p)) != 0) { \
+        RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't attach %s()", #f); \
+        ((rtpp_refcnt_dtor_t)(f))(p); \
+        goto startup_failed; \
+    } \
+} while (0)
+#define CFG_ATTACH_OBJ(obj) do { \
+    if (RTPP_OBJ_DTOR_ATTACH_OBJ(cfsp, (obj)) != 0) { \
+        RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "can't attach %s", #obj); \
+        RTPP_OBJ_DECREF(obj); \
+        goto startup_failed; \
+    } \
+} while (0)
+
 #if !defined(LIBRTPPROXY)
 int
 main(int argc, const char * const *argv)
@@ -950,7 +978,7 @@ _rtpp_main(int argc, const char * const *argv)
     struct rtpp_cfg *cfsp;
     char buf[256];
     struct sched_param sparam;
-    void *elp;
+    void *elp = NULL;
     struct rtpp_timed_task *tp;
     struct rtpp_daemon_rope drop;
 
@@ -1070,6 +1098,11 @@ _rtpp_main(int argc, const char * const *argv)
           cfsp->ctrl_socks->len > 1 ? "s" : "");
     }
 
+    cfsp->rcnt = rtpp_refcnt_ctor(cfsp, (rtpp_refcnt_dtor_t)rtpp_cfg_dtor);
+    if (cfsp->rcnt == NULL) {
+        MAIN_ERR(1, "can't allocate memory for the struct rtpp_cfg refcnt");
+    }
+
     if (cfsp->ropts.no_daemon == 0) {
         if (cfsp->ropts.no_chdir == 0) {
             cfsp->cwd_orig = getcwd(NULL, 0);
@@ -1106,7 +1139,7 @@ _rtpp_main(int argc, const char * const *argv)
         if (setpriority(PRIO_PROCESS, 0, cfsp->sched_nice) == -1) {
             RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't set scheduling "
               "priority to %d", cfsp->sched_nice);
-            MAIN_EXIT(1);
+            goto startup_failed;
         }
     }
 
@@ -1123,7 +1156,7 @@ _rtpp_main(int argc, const char * const *argv)
 	if (drop_privileges(cfsp) != 0) {
 	    RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR,
 	      "can't switch to requested user/group");
-	    MAIN_EXIT(1);
+	    goto startup_failed;
 	}
     }
     set_rlimits(cfsp);
@@ -1132,29 +1165,34 @@ _rtpp_main(int argc, const char * const *argv)
     if (cfsp->pproc_manager == NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR,
           "can't init packet prosessing subsystem");
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
+    CFG_ATTACH_OBJ(cfsp->pproc_manager);
 
     cfsp->rtpp_proc_cf = rtpp_proc_async_ctor(cfsp);
     if (cfsp->rtpp_proc_cf == NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR,
           "can't init RTP processing subsystem");
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
+    CFG_ATTACH_OBJ(cfsp->rtpp_proc_cf);
 
     cfsp->proc_servers = rtpp_proc_servers_ctor(cfsp, cfsp->rtpp_proc_cf->netio);
     if (cfsp->proc_servers == NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR,
           "can't init RTP playback subsystem");
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
+    CFG_ATTACH_OBJ(cfsp->proc_servers);
 
     cfsp->rtpp_timed_cf = rtpp_timed_ctor(0.01);
     if (cfsp->rtpp_timed_cf == NULL) {
         RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR,
           "can't init scheduling subsystem");
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
+    CFG_ATTACH_OBJ(cfsp->rtpp_timed_cf);
+    CFG_ATTACH(GET_SMETHOD(cfsp->rtpp_timed_cf, shutdown), cfsp->rtpp_timed_cf);
 
     tp = CALL_SMETHOD(cfsp->rtpp_timed_cf, schedule_rc, 1.0,
       cfsp->rtpp_stats->rcnt, update_derived_stats, NULL,
@@ -1162,7 +1200,7 @@ _rtpp_main(int argc, const char * const *argv)
     if (tp == NULL) {
         RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR,
           "can't schedule notification to derive stats");
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
     RTPP_OBJ_DECREF(tp);
 
@@ -1170,31 +1208,36 @@ _rtpp_main(int argc, const char * const *argv)
     if (cfsp->rtpp_notify_cf == NULL) {
         RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR,
           "can't init timeout notification subsystem");
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
+    CFG_ATTACH_OBJ(cfsp->rtpp_notify_cf);
 
     cfsp->rtpp_proc_ttl_cf = rtpp_proc_ttl_ctor(cfsp);
     if (cfsp->rtpp_proc_ttl_cf == NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR,
           "can't init TTL processing subsystem");
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
+    CFG_ATTACH(cfsp->rtpp_proc_ttl_cf->dtor, cfsp->rtpp_proc_ttl_cf);
 
 #if ENABLE_MODULE_IF
     const char *failmod;
+    CFG_ATTACH(cfsp->modules_cf->stopall, cfsp->modules_cf);
     if (CALL_METHOD(cfsp->modules_cf, startall, cfsp, &failmod) != 0) {
         RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR,
           "%s: dymanic module start has failed", failmod);
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
 #endif
 
+    CFG_ATTACH(rtpp_cfg_purge_sessions, cfsp);
     cfsp->rtpp_cmd_cf = rtpp_command_async_ctor(cfsp);
     if (cfsp->rtpp_cmd_cf == NULL) {
         RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR,
           "can't init command processing subsystem");
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
+    CFG_ATTACH(cfsp->rtpp_cmd_cf->dtor, cfsp->rtpp_cmd_cf);
 
     if (cfsp->ropts.no_sigtrap == 0) {
         signal(SIGHUP, sighup);
@@ -1229,19 +1272,19 @@ _rtpp_main(int argc, const char * const *argv)
     elp = prdic_init(cfsp->target_pfreq / 10.0, 0.0);
     if (elp == NULL) {
         RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "prdic_init() failed");
-        MAIN_EXIT(1);
+        goto startup_failed;
     }
 #endif
 
     if (pid_fd >= 0) {
         if (ftruncate(pid_fd, 0) != 0) {
             RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't truncate pidfile");
-            MAIN_EXIT(1);
+            goto startup_failed;
         }
         len = sprintf(buf, "%u\n", (unsigned int)getpid());
         if (write(pid_fd, buf, len) != len) {
             RTPP_ELOG(cfsp->glog, RTPP_LOG_ERR, "can't write pidfile");
-            MAIN_EXIT(1);
+            goto startup_failed;
         }
         close(pid_fd);
     }
@@ -1253,7 +1296,7 @@ _rtpp_main(int argc, const char * const *argv)
     if (cfsp->ropts.no_daemon == 0) {
         if (rtpp_daemon_rel_parent(&drop) != 0) {
             RTPP_LOG(cfsp->glog, RTPP_LOG_ERR, "parent died prematurely #cry #die");
-            MAIN_EXIT(1);
+            goto startup_failed;
         }
     }
 
@@ -1282,4 +1325,14 @@ _rtpp_main(int argc, const char * const *argv)
 #endif
 
     rtpp_exit(1, 0);
+
+startup_failed:
+    /* Worker threads may be live at this stage. Join them before exit
+     * handlers free the configuration and logging state they reference. */
+#if !defined(LIBRTPPROXY)
+    if (elp != NULL)
+        prdic_free(elp);
+#endif
+    rtpp_shutdown(cfsp);
+    MAIN_EXIT(1);
 }

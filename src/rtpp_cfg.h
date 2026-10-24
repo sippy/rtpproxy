@@ -46,6 +46,7 @@ typedef enum rtpp_ttl_mode rtpp_ttl_mode;
 
 extern const int rtpp_is_lib;
 
+struct rtpp_refcnt;
 struct rtpp_timed;
 struct rtpp_sessinfo;
 struct rtpp_log;
@@ -78,6 +79,7 @@ struct rtpp_run_options {
 };
 
 struct rtpp_cfg {
+    struct rtpp_refcnt *rcnt;
     const char *pid_file;
 
     struct rtpp_run_options ropts;
