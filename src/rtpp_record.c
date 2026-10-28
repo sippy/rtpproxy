@@ -171,6 +171,7 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
     struct rtpp_record_channel *rrc;
     const char *sdir, *suffix1, *suffix2;
     int rval, remote;
+    size_t len;
     pcap_hdr_t pcap_hdr;
 
     remote = (rname != NULL && strncmp("udp:", rname, 4) == 0) ? 1 : 0;
@@ -210,6 +211,13 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
         goto e2;
     }
 
+    if (rname == NULL && (memchr(sp->call_id->s, '/', sp->call_id->len) != NULL ||
+      memchr(sp->from_tag_nmn->s, '/', sp->from_tag_nmn->len) != NULL)) {
+        RTPP_LOG(sp->log, RTPP_LOG_ERR, "call-id or from-tag contains '/', "
+          "refusing to use it in the recording file name");
+        goto e2;
+    }
+
     if (cfsp->record_pcap != 0) {
         rrc->mode = MODE_LOCAL_PCAP;
     } else {
@@ -232,19 +240,29 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
         sdir = cfsp->sdir;
         rrc->needspool = 1;
         if (rname == NULL) {
-            sprintf(rrc->rpath, "%s/%.*s=%.*s%s%s", cfsp->rdir, (int)sp->call_id->len,
-              sp->call_id->s, (int)sp->from_tag_nmn->len, sp->from_tag_nmn->s,
-              suffix1, suffix2);
+            len = snprintf(rrc->rpath, sizeof(rrc->rpath), "%s/%.*s=%.*s%s%s",
+              cfsp->rdir, (int)sp->call_id->len, sp->call_id->s,
+              (int)sp->from_tag_nmn->len, sp->from_tag_nmn->s, suffix1, suffix2);
         } else {
-            sprintf(rrc->rpath, "%s/%s%s", cfsp->rdir, rname, suffix2);
+            len = snprintf(rrc->rpath, sizeof(rrc->rpath), "%s/%s%s",
+              cfsp->rdir, rname, suffix2);
+        }
+        if (len >= sizeof(rrc->rpath)) {
+            RTPP_LOG(sp->log, RTPP_LOG_ERR, "recording file name is too long");
+            goto e2;
         }
     }
     if (rname == NULL) {
-        sprintf(rrc->spath, "%s/%.*s=%.*s%s%s", sdir, (int)sp->call_id->len,
-          sp->call_id->s, (int)sp->from_tag_nmn->len, sp->from_tag_nmn->s,
-          suffix1, suffix2);
+        len = snprintf(rrc->spath, sizeof(rrc->spath), "%s/%.*s=%.*s%s%s",
+          sdir, (int)sp->call_id->len, sp->call_id->s,
+          (int)sp->from_tag_nmn->len, sp->from_tag_nmn->s, suffix1, suffix2);
     } else {
-        sprintf(rrc->spath, "%s/%s%s", sdir, rname, suffix2);
+        len = snprintf(rrc->spath, sizeof(rrc->spath), "%s/%s%s", sdir, rname,
+          suffix2);
+    }
+    if (len >= sizeof(rrc->spath)) {
+        RTPP_LOG(sp->log, RTPP_LOG_ERR, "recording file name is too long");
+        goto e2;
     }
     rrc->fd = open(rrc->spath, O_WRONLY | O_CREAT | O_TRUNC, DEFFILEMODE);
     if (rrc->fd == -1) {

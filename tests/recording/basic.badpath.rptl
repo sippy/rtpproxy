@@ -1,0 +1,23 @@
+# Call-ID is copied from SIP, where '/' is a legal character. Recording
+# (R, Rs) must be refused rather than create files outside of the
+# recording directory.
+
+.eval: E50 -> RES_E50
+.eval: recording.%%SUBTEST%% -> WORK_BASE
+.eval: ../%%WORK_BASE%%.rec. -> CALLID
+.eval: %%RECORD_SPL_DIR%%/%%CALLID%%=from_tag_1 -> REC_BASE
+
+.exec: mkdir -p %%RECORD_SPL_DIR%%
+.exec: rm -f %%REC_BASE%%.*
+
+.eval: -d dbug -T60 -W60 -P -r %%RECORD_SPL_DIR%% -> RTPPROXY_ARGS
+socket rtpp: stdio: %%RTPPROXY_ARGS%% -> %%WORK_BASE%%.rout
+
+rtpp: U %%CALLID%% 127.0.0.1 12345 from_tag_1 -> validate_port(PORT_A)
+rtpp: L %%CALLID%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(PORT_O)
+
+rtpp: R %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
+rtpp: Rs %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
+
+.close: rtpp
+.exec: for f in %%REC_BASE%%.*; do test ! -e "$f" || exit 1; done
