@@ -37,7 +37,7 @@ run_recording() {
   report_rc ${RPTL_RC} "running basic.${stest}.rptl RPTL script"
 }
 
-SUB_TESTS="${SUB_TESTS:-"files singlefile singlefile_c stopall files_stophalf singlefile_stophalf remote remote_p"}"
+SUB_TESTS="${SUB_TESTS:-"files singlefile singlefile_c stopall files_stophalf singlefile_stophalf remote remote_p badpath"}"
 
 for stest in ${SUB_TESTS}
 do
