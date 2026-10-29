@@ -1,0 +1,2 @@
+fwd: Qv %%OS_CALLID%% from_tag_1 to_tag_1 npkts_ina nrelayed ndropped -> OS_STATS
+.eval: %%OS_STATS%% -> str_equal(OS_EXPECTED, OS_DONE)

@@ -14,7 +14,7 @@ rm -f dtls_gw.?.rlog
  -D DSO="${TOP_BUILDDIR}/modules/dtls_gw/.libs/rtpp_dtls_gw_debug.so" \
  -D RECORD_DIR="${RECORD_DIR}" -D RECORD_SPL_DIR="${RECORD_SPL_DIR}" \
  -D SCENARIO="${RPTL_DIR}/examples/dtls.scenario.rptl" \
- -D PROMPT_NAME="${BUILDDIR}/dtls_gw.prompt" \
+ -D PROMPT_NAME="${BUILDDIR}/dtls_gw.prompt" -D PYINT="${PYINT}" \
  2>&1 > dtls_gw.vars
   echo ${?} > dtls_gw.rptl.rc
 } | tee dtls_gw.rlog
