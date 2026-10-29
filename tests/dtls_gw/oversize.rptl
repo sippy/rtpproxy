@@ -1,0 +1,16 @@
+# A plain RTP datagram that fills the whole receive buffer leaves no room
+# for the SRTP trailer: Fwd has to drop it instead of protecting it in place.
+.eval: dtls_gw_oversize -> OS_CALLID
+fwd: U %%OS_CALLID%% 0.0.0.0 0 from_tag_1 && M4:1 S -> str_split(&&, OS_PORT1, DTLS_PARAMS)
+.eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+geno: U %%OS_CALLID%% 127.0.0.1 %%OS_PORT1%% from_tag_1 && M4:1 A %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(_)
+geno: L %%OS_CALLID%% 0.0.0.0 0 from_tag_1 to_tag_1 && M4:1 S -> str_split(&&, OS_PORTO, DTLS_PARAMS)
+.eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+fwd: L %%OS_CALLID%% 127.0.0.1 %%OS_PORTO%% from_tag_1 to_tag_1 && M4:1 P %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(OS_PORT2)
+.sleep: 1
+.exec: %%PYINT%% -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); [s.sendto(bytes.fromhex('8000%04x%08x00000001' % (q, q * 160))+bytes(n),('127.0.0.1',%%OS_PORT2%%)) for q, n in ((1, 160), (2, 9000), (3, 160))]"
+.eval: npkts_ina=3 nrelayed=2 ndropped=1 -> OS_EXPECTED
+.until: OS_DONE do oversize.check.rptl every 0.1 5
+.eval: 0 -> RES_OK
+fwd: D %%OS_CALLID%% from_tag_1 to_tag_1 -> str_compare(RES_OK)
+geno: D %%OS_CALLID%% from_tag_1 to_tag_1 -> str_compare(RES_OK)

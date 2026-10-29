@@ -472,6 +472,11 @@ out:
 #define SRTCP_PROTECT(a, b, c) srtp_protect_rtcp(a, b, c)
 #endif
 
+/* libsrtp2 < 2.6.0 only documents it as SRTP_MAX_TRAILER_LEN+4 */
+#if !defined(SRTP_MAX_SRTCP_TRAILER_LEN)
+#define SRTP_MAX_SRTCP_TRAILER_LEN (SRTP_MAX_TRAILER_LEN + 4)
+#endif
+
 static struct res_loc
 rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
 {
@@ -486,6 +491,15 @@ rtpp_dtls_conn_rtp_send(struct rtpp_dtls_conn *self, struct pkt_proc_ctx *pktxp)
     PUB2PVT(self, pvt);
 
     if (pvt->state != RDC_UP) {
+        return (RES_HERE(-1));
+    }
+
+    /*
+     * srtp_protect() and srtp_protect_rtcp() append the trailer in place,
+     * make sure it fits in data.buf (the SRTCP one is the larger of the two).
+     */
+    if (pktxp->pktp->size > sizeof(pktxp->pktp->data.buf) -
+      SRTP_MAX_SRTCP_TRAILER_LEN) {
         return (RES_HERE(-1));
     }
 

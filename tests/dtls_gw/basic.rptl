@@ -13,6 +13,7 @@ socket fwd: stdio: %%RTPPROXY_ARGS%% -i -> dtls_gw.f.creplies
 socket geno: stdio: %%RTPPROXY_ARGS%% -P -r %%RECORD_DIR%% -S %%RECORD_SPL_DIR%% -> dtls_gw.o.creplies
 .echo: OK: rtpproxy GenO started
 .include: %%SCENARIO%%
+.include: oversize.rptl
 .close: geno
 .echo: OK: wait for rtpproxy GenO shutdown
 .close: fwd
