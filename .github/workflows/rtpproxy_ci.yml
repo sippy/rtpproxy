@@ -395,9 +395,24 @@ jobs:
         TEST_RESULTS: ${{ toJSON(needs) }}
         GH_TOKEN: ${{ github.token }}
       run: |
-        gh api --paginate --slurp \
-          "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?filter=latest&per_page=100" \
-          > "${RUNNER_TEMP}/test-jobs.json"
+        delay=5
+        for attempt in 1 2 3 4 5; do
+          if gh api --paginate --slurp \
+            "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?filter=latest&per_page=100" \
+            > "${RUNNER_TEMP}/test-jobs.json"
+          then
+            break
+          else
+            status=$?
+          fi
+          if [ "$attempt" -eq 5 ]; then
+            echo "::error::Failed to fetch test jobs after ${attempt} attempts"
+            exit "$status"
+          fi
+          echo "::warning::Failed to fetch test jobs (attempt ${attempt}/5); retrying in ${delay}s"
+          sleep "$delay"
+          delay=$((delay * 2))
+        done
         python3 scripts/test-summary.py render --jobs "${RUNNER_TEMP}/test-jobs.json" --results "${RUNNER_TEMP}/test-results" >> "$GITHUB_STEP_SUMMARY"
 
   Fuzzing:
