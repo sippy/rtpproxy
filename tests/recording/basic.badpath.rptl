@@ -1,14 +1,26 @@
 # Call-ID is copied from SIP, where '/' is a legal character. Recording
 # (R, Rs) must be refused rather than create files outside of the
 # recording directory.
+#
+# Recording file name built from a Call-ID (R, Rs) or given explicitly
+# (C, Cs) that does not fit into PATH_MAX must be refused as well, both
+# for the spool (no -S) and for the final (-S) path.
 
+.eval: 0 -> RES_OK
 .eval: E50 -> RES_E50
+.eval: E65 -> RES_E65
 .eval: recording.%%SUBTEST%% -> WORK_BASE
 .eval: ../%%WORK_BASE%%.rec. -> CALLID
 .eval: %%RECORD_SPL_DIR%%/%%CALLID%%=from_tag_1 -> REC_BASE
 
 .exec: mkdir -p %%RECORD_SPL_DIR%%
 .exec: rm -f %%REC_BASE%%.*
+
+# Longer than PATH_MAX on any supported platform, yet short enough for
+# the commands carrying it to fit into the RTPP_CMD_BUFLEN.
+.exec: printf '%4200s' '' | tr ' ' x -> LONG_NAME
+.eval: %%WORK_BASE%%.long.%%LONG_NAME%% -> CALLID_LONG
+.eval: %%WORK_BASE%%.short -> CALLID_SHORT
 
 .eval: -d dbug -T60 -W60 -P -r %%RECORD_SPL_DIR%% -> RTPPROXY_ARGS
 socket rtpp: stdio: %%RTPPROXY_ARGS%% -> %%WORK_BASE%%.rout
@@ -19,5 +31,35 @@ rtpp: L %%CALLID%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(PORT_O)
 rtpp: R %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
 rtpp: Rs %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
 
+rtpp: U %%CALLID_LONG%% 127.0.0.1 12345 from_tag_1 -> validate_port(_)
+rtpp: L %%CALLID_LONG%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: R %%CALLID_LONG%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
+rtpp: Rs %%CALLID_LONG%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
+
+rtpp: U %%CALLID_SHORT%% 127.0.0.1 12345 from_tag_1 -> validate_port(_)
+rtpp: L %%CALLID_SHORT%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: C %%CALLID_SHORT%% %%LONG_NAME%% to_tag_1 from_tag_1 -> str_compare(RES_E65)
+rtpp: Cs %%CALLID_SHORT%% %%LONG_NAME%% to_tag_1 from_tag_1 -> str_compare(RES_E65)
+
 .close: rtpp
 .exec: for f in %%REC_BASE%%.*; do test ! -e "$f" || exit 1; done
+
+.eval: -d dbug -T60 -W60 -P -r %%RECORD_DIR%% -S %%RECORD_SPL_DIR%% -> RTPPROXY_ARGS
+socket rtpp: stdio: %%RTPPROXY_ARGS%% -> %%WORK_BASE%%.S.rout
+
+rtpp: U %%CALLID_LONG%% 127.0.0.1 12345 from_tag_1 -> validate_port(_)
+rtpp: L %%CALLID_LONG%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: R %%CALLID_LONG%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
+rtpp: Rs %%CALLID_LONG%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
+
+rtpp: U %%CALLID_SHORT%% 127.0.0.1 12345 from_tag_1 -> validate_port(_)
+rtpp: L %%CALLID_SHORT%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: C %%CALLID_SHORT%% %%LONG_NAME%% to_tag_1 from_tag_1 -> str_compare(RES_E65)
+rtpp: Cs %%CALLID_SHORT%% %%LONG_NAME%% to_tag_1 from_tag_1 -> str_compare(RES_E65)
+
+# Sanity check: the same session still records fine with a sane name.
+rtpp: Cs %%CALLID_SHORT%% %%WORK_BASE%%.ok.pcap to_tag_1 from_tag_1 -> str_compare(RES_OK)
+
+.close: rtpp
+.exec: test -e %%RECORD_DIR%%/%%WORK_BASE%%.ok.pcap
+.exec: rm -f %%RECORD_DIR%%/%%WORK_BASE%%.ok.pcap
