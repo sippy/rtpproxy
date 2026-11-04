@@ -78,14 +78,15 @@ fwd: L %%CALLID_F%% 127.0.0.1 %%PORTO_IPv4%% %%FT%% %%TT%% && M4:1 S -> str_spli
 .eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
 gena: Uc%%CODEC%% %%CALLID_A%% 127.0.0.1 %%PORT2_IPv4%% %%FT%% && M4:1 P %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(_)
 
-fwd: U6 %%CALLID_F%%_ipv6 ::1 %%PORTA_IPv6%% %%TT%% %%FT%% && M4:1 S -> str_split(&&, _, DTLS_PARAMS)
+fwd: U6 %%CALLID_F%%_ipv6 ::1 %%PORTA_IPv6%% %%TT%% %%FT%% && M4:1 S -> str_split(&&, _, DTLS_PARAMS_AB)
 .eval: %%_%% -> str_compare(PORT2_IPv6)
-.eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
-gena: U6c%%CODEC%% %%CALLID_A%%_ipv6 ::1 %%PORT2_IPv6%% %%FT%% && M4:1 P %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(_)
-gena: L6z60 %%CALLID_A%%_ipv6 %%TRASH_IPv6%% %%TRASH_PORT%% %%FT%% %%TT%% && M4:1 S -> str_split(&&, _, DTLS_PARAMS)
+gena: L6z60 %%CALLID_A%%_ipv6 %%TRASH_IPv6%% %%TRASH_PORT%% %%FT%% %%TT%% && M4:1 S -> str_split(&&, _, DTLS_PARAMS_BA)
 .eval: %%_%% -> str_compare(PORTA_IPv6)
-.eval: %%DTLS_PARAMS%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+.eval: %%DTLS_PARAMS_BA%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+fwd: U6 %%CALLID_F%%_ipv6 ::1 %%PORTA_IPv6%% %%FT%% && M4:1 A %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> str_compare(PORT1_IPv6)
 fwd: L6 %%CALLID_F%%_ipv6 ::1 %%PORTO_IPv6%% %%FT%% %%TT%% && M4:1 A %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> str_compare(PORT2_IPv6)
+.eval: %%DTLS_PARAMS_AB%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
+gena: U6c%%CODEC%% %%CALLID_A%%_ipv6 ::1 %%PORT2_IPv6%% %%FT%% && M4:1 P %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(_)
 
 .sleep: 0.1
 
