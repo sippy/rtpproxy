@@ -381,6 +381,12 @@ rtpp_dtls_conn_dtls_recv(struct rtpp_dtls_conn *self,
 
     switch (pvt->state) {
     case RDC_INIT:
+        /*
+         * No peer fingerprint until the A or P command, so the handshake
+         * could not be verified. Drop it, the peer retransmits.
+         */
+        if (pvt->fingerprint[0] == '\0')
+            goto out;
         pvt->state = RDC_CONNECTING;
         break;
     case RDC_CONNECTING:
@@ -429,8 +435,7 @@ rtpp_dtls_conn_dtls_recv(struct rtpp_dtls_conn *self,
             goto godead;
         }
 
-        if (pvt->fingerprint[0] != '\0' &&
-          strcmp(pvt->fingerprint, srv_fingerprint) != 0) {
+        if (strcmp(pvt->fingerprint, srv_fingerprint) != 0) {
             RTPP_LOG(pvt->mself->log, RTPP_LOG_ERR, "fingerprint verification failed");
             goto godead;
         }
