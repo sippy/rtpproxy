@@ -37,3 +37,18 @@ ${EXTRACTAUDIO} -D pcm_16 -C 0.5 extractaudio/call1_alaw ${wfile}
 reportifnotfail "extractaudio start with bad argumens: -D pcm_16 -C 0.5"
 test ! -e ${wfile}
 report "${wfile} is removed"
+
+# A PCAP record whose incl_len runs past the end of the file has to be
+# rejected, not read.
+rbase="badargs.trunc"
+dd if=extractaudio/call1_g722_srtp.a.rtp of=${rbase}.a.rtp bs=264 count=1 \
+ 2>/dev/null
+# incl_len = 0x10000000, RTP P bit set so that the parser reads the last byte
+printf '\000\000\000\020' | dd of=${rbase}.a.rtp bs=1 seek=32 conv=notrunc \
+ 2>/dev/null
+printf '\240' | dd of=${rbase}.a.rtp bs=1 seek=82 conv=notrunc 2>/dev/null
+cp ${rbase}.a.rtp ${rbase}.o.rtp
+${EXTRACTAUDIO} ${rbase} ${rbase}.wav >/dev/null 2>&1
+test ${?} -eq 1
+report "extractaudio rejects a truncated PCAP record"
+rm -f ${rbase}.a.rtp ${rbase}.o.rtp ${rbase}.wav
