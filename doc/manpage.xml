@@ -186,6 +186,7 @@
       <arg choice="opt"><option>--bridge_symmetric</option></arg>
 
       <arg choice="opt"><option>--no_resolve</option></arg>
+      <arg choice="opt"><option>--record_fname_encode</option></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
@@ -817,6 +818,22 @@
           <para>Only accept numeric IP addresses, in the command line
           arguments and in the control commands, instead of resolving host
           names.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--record_fname_encode</option></term>
+
+        <listitem>
+          <para>When the recording file name is built from the Call-ID and
+          from-tag (the <command>R</command> command and the
+          <option>-a</option> option), percent-encode the <quote>/</quote>
+          and <quote>%</quote> characters as <quote>%2F</quote> and
+          <quote>%25</quote> instead of refusing to record calls whose
+          Call-ID or from-tag contains <quote>/</quote>, which is a legal
+          character in SIP. The original value can be recovered by decoding
+          the <quote>%XX</quote> sequences. File names given explicitly with
+          the <command>C</command> command are not affected.</para>
         </listitem>
       </varlistentry>
     </variablelist>
