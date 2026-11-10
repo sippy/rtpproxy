@@ -67,6 +67,9 @@ eaud_pcap_dissect(unsigned char *bp, size_t blen, int network,
         }
         memcpy(&family, &pcp->null.family, sizeof(family));
         memcpy(&incl_len, &pcp->null.pcaprec_hdr.incl_len, sizeof(incl_len));
+        if (incl_len > blen - sizeof(pcaprec_hdr_t)) {
+            return (PCP_DSCT_TRNK);
+        }
         if (family != AF_INET) {
             dp->pcap_hdr_len = sizeof(pcaprec_hdr_t) + incl_len;
             return (PCP_DSCT_UNKN);
@@ -82,6 +85,9 @@ eaud_pcap_dissect(unsigned char *bp, size_t blen, int network,
         }
         memcpy(&ether_type, &pcp->en10t.ether.type, sizeof(ether_type));
         memcpy(&incl_len, &pcp->en10t.pcaprec_hdr.incl_len, sizeof(incl_len));
+        if (incl_len > blen - sizeof(pcaprec_hdr_t)) {
+            return (PCP_DSCT_TRNK);
+        }
         if (ether_type != ETHERTYPE_INET) {
             dp->pcap_hdr_len = sizeof(pcaprec_hdr_t) + incl_len;
             return (PCP_DSCT_UNKN);
