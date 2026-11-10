@@ -116,7 +116,7 @@ do
   OBJS="${OBJS} ${obj}"
 done
 
-ALL="command_parser rtp_parser rtcp_parser rtp_session"
+ALL="command_parser rtp_parser rtcp_parser rtp_session config_file"
 OBJS0="${OBJS}"
 for fz in ${ALL}
 do
@@ -145,6 +145,29 @@ do
     fi
   done
 done
+
+# fuzz_config_file support: ship the module DSOs next to the fuzzers so that
+# seed corpora with relative "load" paths can exercise the module
+# configuration loading paths (dlopen + module conf parsing), and pack the
+# seed corpus from the existing UCL test fixtures plus the fuzzer-specific
+# seeds.
+if [ -e modules/Makefile -a -d scripts/fuzz/config_fuzzer_seeds ]
+then
+  for mod in acct_csv acct_rtcp_hep ice_lite catch_dtmf
+  do
+    if [ -e modules/${mod}/.libs/rtpp_${mod}.so ]
+    then
+      cp -p modules/${mod}/.libs/rtpp_${mod}.so ${OUT}/
+    fi
+  done
+  SEEDTMP="`mktemp -d ${OUT}/cfg_seed_corpus.XXXXXXXX`"
+  cp tests/acct_rtcp_hep/*.conf tests/forwarding/rtpproxy.conf \
+     tests/libucl/libucl_test*.conf scripts/fuzz/config_fuzzer_seeds/*.conf \
+     "${SEEDTMP}/"
+  (cd "${SEEDTMP}" && zip -q -r "${OUT}/fuzz_config_file_seed_corpus.zip" .)
+  rm -rf "${SEEDTMP}"
+fi
+
 if [ "${OUT}" != "." ]
 then
   cp -Rp ${OUT} build-out
