@@ -7,8 +7,8 @@ key negotiation and SRTP encryption/decryption.
 
 ## Command Protocol
 
-The module supports 5 basic commands, those can be combined with the
-respective U or L command with sub-command extension (&&) and module
+The module supports 6 basic commands, those can be combined with the
+respective U, L or Q command with sub-command extension (&&) and module
 index:instance (e.g. " && M4:1" for the case of just a single instance
 loaded).
 
@@ -41,6 +41,26 @@ loaded).
  - `U`
 
    Detach and destroy DTLS context created by the `S` command.
+
+ - `Q`
+
+   Query the incoming stream's DTLS state without creating or reconfiguring
+   an endpoint. Returns `none` when no endpoint is attached, otherwise `init`,
+   `connecting`, `up`, or `dead`. `up` means the peer fingerprint has been
+   verified and both SRTP contexts are installed. State is read under the
+   same lock used by the handshake and media paths.
+
+   Use as a subcommand of the session query, for example:
+
+   ```
+   Q CALL-ID FROM-TAG TO-TAG npkts_ina && M4:1 Q
+   ```
+
+   The response ends with ` && STATE`. The query selects the incoming
+   stream for `FROM-TAG`; swap the tags to inspect the other leg. Poll both
+   DTLS peers with a bounded timeout before starting loss-sensitive traffic:
+   completing the signaling commands does not mean the handshake is done.
+   The returned state is a snapshot, not a guarantee against later failure.
 
 ## Supported Scenarios with examples:
 

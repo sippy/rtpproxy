@@ -66,6 +66,7 @@ DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_srtp_recv, struct res_loc,
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_setmode, enum rtpp_dtls_mode,
   const struct rdc_peer_spec *);
 DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_godead, void);
+DEFINE_METHOD(rtpp_dtls_conn, rtpp_dtls_conn_getstate, const char *);
 
 DECLARE_SMETHODS(rtpp_dtls_conn)
 {
@@ -74,6 +75,7 @@ DECLARE_SMETHODS(rtpp_dtls_conn)
     METHOD_ENTRY(rtpp_dtls_conn_srtp_recv, srtp_recv);
     METHOD_ENTRY(rtpp_dtls_conn_setmode, setmode);
     METHOD_ENTRY(rtpp_dtls_conn_godead, godead);
+    METHOD_ENTRY(rtpp_dtls_conn_getstate, getstate);
 };
 
 DECLARE_CLASS_PUBTYPE(rtpp_dtls_conn, {});
