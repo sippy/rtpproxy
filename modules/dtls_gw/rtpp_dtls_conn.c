@@ -169,6 +169,7 @@ static struct res_loc rtpp_dtls_conn_srtp_recv(struct rtpp_dtls_conn *,
 static enum rtpp_dtls_mode rtpp_dtls_conn_setmode(struct rtpp_dtls_conn *,
   const struct rdc_peer_spec *rdfsp);
 static void rtpp_dtls_conn_godead(struct rtpp_dtls_conn *);
+static const char *rtpp_dtls_conn_getstate(struct rtpp_dtls_conn *);
 
 static int tls_srtp_keyinfo(SSL *, const struct srtp_crypto_suite **,
   uint8_t *, size_t, uint8_t *, size_t, struct rtpp_log *);
@@ -180,6 +181,7 @@ DEFINE_SMETHODS(rtpp_dtls_conn,
     .srtp_recv = &rtpp_dtls_conn_srtp_recv,
     .setmode = &rtpp_dtls_conn_setmode,
     .godead = &rtpp_dtls_conn_godead,
+    .getstate = &rtpp_dtls_conn_getstate,
 );
 
 static void
@@ -273,6 +275,26 @@ rtpp_dtls_conn_pickmode(enum rtpp_dtls_mode peer_mode)
         abort();
     }
     /* Not Reached */
+}
+
+/* Report readiness only after fingerprint verification and both SRTP contexts. */
+static const char *
+rtpp_dtls_conn_getstate(struct rtpp_dtls_conn *self)
+{
+    struct rtpp_dtls_conn_priv *pvt;
+    enum rdc_state state;
+    static const char * const names[] = {
+        [RDC_INIT] = "init",
+        [RDC_CONNECTING] = "connecting",
+        [RDC_UP] = "up",
+        [RDC_DEAD] = "dead"
+    };
+
+    PUB2PVT(self, pvt);
+    pthread_mutex_lock(&pvt->state_lock);
+    state = pvt->state;
+    pthread_mutex_unlock(&pvt->state_lock);
+    return (names[state]);
 }
 
 static enum rtpp_dtls_mode

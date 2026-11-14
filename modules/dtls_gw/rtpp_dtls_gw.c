@@ -269,7 +269,7 @@ rtpp_dtls_gw_setup_sender(struct rtpp_module_priv *pvt,
     return (0);
 }
 
-enum rdg_cmd {RDG_CMD_A, RDG_CMD_P, RDG_CMD_S, RDG_CMD_D, RDG_CMD_U};
+enum rdg_cmd {RDG_CMD_A, RDG_CMD_P, RDG_CMD_S, RDG_CMD_D, RDG_CMD_U, RDG_CMD_Q};
 
 static int
 rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
@@ -306,6 +306,13 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
             goto invalmode;
         rdfs.peer_mode = RTPP_DTLS_PASSIVE;
         rdg_cmd = RDG_CMD_P;
+        break;
+
+    case 'q':
+    case 'Q':
+        if (argc != 1)
+            goto invalmode;
+        rdg_cmd = RDG_CMD_Q;
         break;
 
     case 's':
@@ -349,6 +356,7 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
         rdfs.ssrc = (argc == 4) ? &argv[3] : NULL;
         rdfsp = &rdfs;
         /* Fallthrough */
+    case RDG_CMD_Q:
     case RDG_CMD_D:
         dtls_strmp = ctxp->env->strmp_in;
         break;
@@ -366,6 +374,15 @@ rtpp_dtls_gw_handle_command(struct rtpp_module_priv *pvt,
     int lookup_res = CALL_SMETHOD(dtls_strmp->pproc_manager, lookup, pvt, &dtls_in_poi);
     if (lookup_res != 0) {
         rtps_c = dtls_in_poi.arg;
+    }
+
+    /* A query must not allocate a connection or alter its mode/fingerprint. */
+    if (rdg_cmd == RDG_CMD_Q) {
+        strlcpy(ctxp->resp->buf_t, lookup_res == 0 ? "none" :
+          CALL_SMETHOD(rtps_c->dtls_conn, getstate), sizeof(ctxp->resp->buf_t));
+        if (lookup_res == 0)
+            return (0);
+        goto out;
     }
 
     if (rdg_cmd == RDG_CMD_D || rdg_cmd == RDG_CMD_U) {
