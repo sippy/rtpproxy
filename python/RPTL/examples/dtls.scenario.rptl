@@ -48,7 +48,9 @@ gena: R %%CALLID_A%%_ipv6 %%FT%% %%TT%% -> str_compare(RES_OK)
 geno: R %%CALLID_O%% %%FT%% %%TT%% -> str_compare(RES_OK)
 geno: R %%CALLID_O%%_ipv6 %%FT%% %%TT%% -> str_compare(RES_OK)
 
-.sleep: 0.1
+# Wait for verified SRTP keys at both ends, not a fixed handshake delay.
+.eval: none up none up up up none none -> DTLS_EXPECTED
+.until: DTLS_READY do dtls.ready.rptl every 0.05 10
 
 .echo: Starting streaming...
 geno: P%%NTIMES%% %%CALLID_O%% %%PROMPT_NAME%% %%CODEC%% %%FT%% %%TT%% -> str_compare(RES_OK)
@@ -88,7 +90,8 @@ fwd: L6 %%CALLID_F%%_ipv6 ::1 %%PORTO_IPv6%% %%FT%% %%TT%% && M4:1 A %%DTLS_DIGA
 .eval: %%DTLS_PARAMS_AB%% -> str_split( , DTLS_MODE, DTLS_DIGALG, DTLS_DIGSUM)
 gena: U6c%%CODEC%% %%CALLID_A%%_ipv6 ::1 %%PORT2_IPv6%% %%FT%% && M4:1 P %%DTLS_DIGALG%% %%DTLS_DIGSUM%% -> validate_port(_)
 
-.sleep: 0.1
+.eval: up up up up up up up up -> DTLS_EXPECTED
+.until: DTLS_READY do dtls.ready.rptl every 0.05 10
 
 .echo: Starting streaming...
 geno: P%%NTIMES%% %%CALLID_O%% %%PROMPT_NAME%% %%CODEC%% %%FT%% %%TT%% -> str_compare(RES_OK)

@@ -1,0 +1,11 @@
+# Q selects the incoming stream for the named tag: reverse tags for the peer.
+# Check every endpoint: one peer being ready does not imply the other is.
+fwd: Q %%CALLID_F%% %%FT%% %%TT%% npkts_ina && M4:1 Q -> str_split(&&, _, F4A_STATE)
+fwd: Q %%CALLID_F%% %%TT%% %%FT%% npkts_ina && M4:1 Q -> str_split(&&, _, F4O_STATE)
+fwd: Q %%CALLID_F%%_ipv6 %%FT%% %%TT%% npkts_ina && M4:1 Q -> str_split(&&, _, F6A_STATE)
+fwd: Q %%CALLID_F%%_ipv6 %%TT%% %%FT%% npkts_ina && M4:1 Q -> str_split(&&, _, F6O_STATE)
+geno: Q %%CALLID_O%% %%FT%% %%TT%% npkts_ina && M4:1 Q -> str_split(&&, _, O4_STATE)
+geno: Q %%CALLID_O%%_ipv6 %%FT%% %%TT%% npkts_ina && M4:1 Q -> str_split(&&, _, O6_STATE)
+gena: Q %%CALLID_A%% %%FT%% %%TT%% npkts_ina && M4:1 Q -> str_split(&&, _, A4_STATE)
+gena: Q %%CALLID_A%%_ipv6 %%FT%% %%TT%% npkts_ina && M4:1 Q -> str_split(&&, _, A6_STATE)
+.eval: %%F4A_STATE%% %%F4O_STATE%% %%F6A_STATE%% %%F6O_STATE%% %%O4_STATE%% %%O6_STATE%% %%A4_STATE%% %%A6_STATE%% -> str_equal(DTLS_EXPECTED, DTLS_READY)

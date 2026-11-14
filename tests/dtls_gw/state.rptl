@@ -1,0 +1,36 @@
+# Query absent, unconfigured, connecting and rejected endpoints without
+# sending media. The missing-fingerprint gate must remain closed.
+.eval: dtls_state -> STATE_CALLID
+.eval: none -> STATE_NONE
+.eval: init -> STATE_INIT
+.eval: connecting init -> STATE_PENDING
+.eval: up dead -> STATE_REJECTED
+.eval: -1 -> STATE_ERROR
+.eval: actpass -> STATE_ACTPASS
+fwd: U %%STATE_CALLID%% 0.0.0.0 0 from_tag_1 -> validate_port(_)
+fwd: L %%STATE_CALLID%% 0.0.0.0 0 from_tag_1 to_tag_1 -> validate_port(_)
+fwd: Q %%STATE_CALLID%% to_tag_1 from_tag_1 npkts_ina && M4:1 Q -> str_split(&&, _, STATE)
+.eval: %%STATE%% -> str_compare(STATE_NONE)
+fwd: U %%STATE_CALLID%% 0.0.0.0 0 from_tag_1 && M4:1 S -> str_split(&&, STATE_PORTF, DTLS_PARAMS)
+.eval: %%DTLS_PARAMS%% -> str_split( , STATE_MODE, STATE_ALG, STATE_FP)
+fwd: Q %%STATE_CALLID%% to_tag_1 from_tag_1 npkts_ina && M4:1 q -> str_split(&&, _, STATE)
+.eval: %%STATE%% -> str_compare(STATE_INIT)
+fwd: Q %%STATE_CALLID%% to_tag_1 from_tag_1 npkts_ina && M4:1 Q bad args -> str_split(&&, _, STATE)
+.eval: %%STATE%% -> str_compare(STATE_ERROR)
+fwd: Q %%STATE_CALLID%% from_tag_1 to_tag_1 npkts_ina && M4:1 S -> str_split(&&, _, DTLS_PARAMS)
+.eval: %%DTLS_PARAMS%% -> str_split( , STATE_MODE, STATE_ALG, STATE_FP)
+.eval: %%STATE_MODE%% -> str_compare(STATE_ACTPASS)
+# GenO is active, Fwd has no fingerprint and must not answer yet.
+geno: U %%STATE_CALLID%% 127.0.0.1 %%STATE_PORTF%% from_tag_1 -> validate_port(STATE_PORTO)
+geno: L %%STATE_CALLID%% 0.0.0.0 0 from_tag_1 to_tag_1 && M4:1 S -> str_split(&&, _, DTLS_PARAMS)
+.eval: %%DTLS_PARAMS%% -> str_split( , _, STATE_OALG, STATE_OFP)
+geno: U %%STATE_CALLID%% 127.0.0.1 %%STATE_PORTF%% from_tag_1 && M4:1 P %%STATE_ALG%% %%STATE_FP%% -> validate_port(_)
+geno: Q %%STATE_CALLID%% from_tag_1 to_tag_1 npkts_ina && M4:1 Q -> str_split(&&, _, STATE_O)
+fwd: Q %%STATE_CALLID%% to_tag_1 from_tag_1 npkts_ina && M4:1 Q -> str_split(&&, _, STATE_F)
+.eval: %%STATE_O%% %%STATE_F%% -> str_compare(STATE_PENDING)
+# Supply an intentionally wrong peer fingerprint: Fwd must report dead,
+# never up. Querying it earlier must not have keyed or reconfigured it.
+fwd: L %%STATE_CALLID%% 127.0.0.1 %%STATE_PORTO%% from_tag_1 to_tag_1 && M4:1 A %%STATE_OALG%% 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00 -> validate_port(_)
+.until: STATE_DONE do state.check.rptl every 0.05 10
+fwd: D %%STATE_CALLID%% from_tag_1 to_tag_1 -> str_compare(RES_OK)
+geno: D %%STATE_CALLID%% from_tag_1 to_tag_1 -> str_compare(RES_OK)

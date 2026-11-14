@@ -1,0 +1,3 @@
+geno: Q %%STATE_CALLID%% from_tag_1 to_tag_1 npkts_ina && M4:1 Q -> str_split(&&, _, STATE_O)
+fwd: Q %%STATE_CALLID%% to_tag_1 from_tag_1 npkts_ina && M4:1 Q -> str_split(&&, _, STATE_F)
+.eval: %%STATE_O%% %%STATE_F%% -> str_equal(STATE_REJECTED, STATE_DONE)
