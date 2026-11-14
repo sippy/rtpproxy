@@ -1,0 +1,23 @@
+#!/bin/sh
+
+BASEDIR="${BASEDIR:-$(dirname -- $0)/..}"
+BASEDIR="$(readlink -f -- $BASEDIR)"
+. "${BASEDIR}/functions"
+
+{ ${RPTL_INT} -s "${BASEDIR}/dtls_gw/fingerprint.rptl" \
+ -D RTPPROXY_BIN="`strip_wrapper "${RTPPROXY}"`" \
+ -D DSO="${TOP_BUILDDIR}/modules/dtls_gw/.libs/rtpp_dtls_gw_debug.so" \
+ -D PROBE_SCRIPT="${BASEDIR}/dtls_gw/preauth_probe.py" \
+ 2>&1 > dtls_fingerprint.vars
+  echo ${?} > dtls_fingerprint.rptl.rc
+} | tee dtls_fingerprint.rlog
+RPTL_RC=`cat dtls_fingerprint.rptl.rc`
+
+for logfile in dtls_fingerprint.?.rlog
+do
+  if [ -e "${logfile}" ]
+  then
+    cat "${logfile}" >> dtls_fingerprint.rlog
+  fi
+done
+report_rc ${RPTL_RC} "DTLS peer-fingerprint security regression"

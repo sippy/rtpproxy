@@ -1,0 +1,31 @@
+# Exercise S before A with a real self-signed DTLS peer, on the wire.
+.eval: dtls_preauth_%%PA_U%% -> PA_CALLID
+.eval: PREAUTH_CLIENTHELLOS_IGNORED -> PA_IGNORED
+.eval: AUTHORIZED -> PA_AUTHORIZED
+.eval: connecting init -> PA_BLOCKED
+.eval: up up -> PA_READY
+fwd: %%PA_U%% %%PA_CALLID%% %%PA_HOST%% 0 from_tag_1 && M4:1 S -> str_split(&&, PA_PORTF, PA_FP)
+.eval: %%PA_FP%% -> str_split( , _, PA_FALG, PA_FSUM)
+.pyspawn: %%PROBE_SCRIPT%% %%PA_HOST%% %%PA_PORTF%% -> preauth_probe
+.readline: preauth_probe 5 -> validate_port(PA_RELAY)
+fwd: %%PA_L%% %%PA_CALLID%% %%PA_HOST%% %%PA_RELAY%% from_tag_1 to_tag_1 -> validate_port(_)
+geno: %%PA_U%% %%PA_CALLID%% %%PA_HOST%% %%PA_RELAY%% from_tag_1 -> validate_port(_)
+geno: %%PA_L%% %%PA_CALLID%% %%PA_HOST%% 0 from_tag_1 to_tag_1 && M4:1 S -> str_split(&&, _, PA_FP)
+.eval: %%PA_FP%% -> str_split( , _, PA_OALG, PA_OSUM)
+geno: %%PA_U%% %%PA_CALLID%% %%PA_HOST%% %%PA_RELAY%% from_tag_1 && M4:1 P %%PA_FALG%% %%PA_FSUM%% -> validate_port(_)
+# Do not check init immediately after signaling: wait for actual retries.
+# The relay fails on ANY server response, even a handshake that later fails.
+.readline: preauth_probe 10 -> str_compare(PA_IGNORED)
+geno: Q %%PA_CALLID%% from_tag_1 to_tag_1 npkts_ina && M4:1 Q -> str_split(&&, _, PA_O)
+fwd: Q %%PA_CALLID%% to_tag_1 from_tag_1 npkts_ina && M4:1 Q -> str_split(&&, _, PA_F)
+.eval: %%PA_O%% %%PA_F%% -> str_compare(PA_BLOCKED)
+.kill: preauth_probe USR1
+.readline: preauth_probe 5 -> str_compare(PA_AUTHORIZED)
+# The SAME peer must recover on retransmission with the matching fingerprint.
+fwd: %%PA_L%% %%PA_CALLID%% %%PA_HOST%% %%PA_RELAY%% from_tag_1 to_tag_1 && M4:1 A %%PA_OALG%% %%PA_OSUM%% -> validate_port(_)
+.until: PA_DONE do preauth.check.rptl every 0.05 10
+.kill: preauth_probe TERM
+.wait: preauth_probe 5
+fwd: D %%PA_CALLID%% from_tag_1 to_tag_1 -> str_compare(RES_OK)
+geno: D %%PA_CALLID%% from_tag_1 to_tag_1 -> str_compare(RES_OK)
+.echo: OK: DTLS before fingerprint blocked, then matching peer recovered (%%PA_U%%)

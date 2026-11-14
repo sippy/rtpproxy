@@ -1,0 +1,3 @@
+fwd: Q %%OS_CALLID%% to_tag_1 from_tag_1 npkts_ina && M4:1 Q -> str_split(&&, _, OS_F_STATE)
+geno: Q %%OS_CALLID%% from_tag_1 to_tag_1 npkts_ina && M4:1 Q -> str_split(&&, _, OS_O_STATE)
+.eval: %%OS_F_STATE%% %%OS_O_STATE%% -> str_equal(OS_DTLS_EXPECTED, OS_DTLS_READY)

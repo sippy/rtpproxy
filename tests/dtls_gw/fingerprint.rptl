@@ -1,0 +1,18 @@
+.eval: -T30 -p /dev/null --bridge_symmetric -d dbug -l 0.0.0.0 -6 /:: --dso %%DSO%% -> RTPPROXY_ARGS
+.eval: dtls_fingerprint.f.rlog -> RTPPROXY_STDERR
+socket fwd: stdio: %%RTPPROXY_ARGS%% -i
+.eval: dtls_fingerprint.o.rlog -> RTPPROXY_STDERR
+socket geno: stdio: %%RTPPROXY_ARGS%%
+.eval: 0 -> RES_OK
+.eval: U -> PA_U
+.eval: L -> PA_L
+.eval: 127.0.0.1 -> PA_HOST
+.include: preauth.rptl
+.eval: U6 -> PA_U
+.eval: L6 -> PA_L
+.eval: ::1 -> PA_HOST
+.include: preauth.rptl
+# A configured but mismatching peer must still fail certificate verification.
+.include: state.rptl
+.close: geno
+.close: fwd
