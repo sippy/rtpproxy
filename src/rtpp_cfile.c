@@ -103,6 +103,11 @@ rtpp_cfile_process(const struct rtpp_cfg *csp)
         ecode = -1;
         goto e3;
     }
+    if (ucl_object_type(conf_root) != UCL_OBJECT) {
+        RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Config root must be an object");
+        ecode = -1;
+        goto e3;
+    }
 
     it_conf = ucl_object_iterate_new(conf_root);
     if (it_conf == NULL) {
@@ -112,6 +117,8 @@ rtpp_cfile_process(const struct rtpp_cfg *csp)
     }
     while ((obj_file = ucl_object_iterate_safe(it_conf, true)) != NULL) {
         cf_key = ucl_object_key(obj_file);
+        if (cf_key == NULL)
+            continue;
         RTPP_LOG(csp->glog, RTPP_LOG_DBUG, "Entry: %s", cf_key);
         if (strcasecmp(cf_key, "modules") == 0) {
 #if ENABLE_MODULE_IF
@@ -163,12 +170,22 @@ parse_modules(const struct rtpp_cfg *csp, const ucl_object_t *wop)
     const char *cp, *mp;
     struct rtpp_module_if *mif;
 
+    if (ucl_object_type(wop) != UCL_OBJECT) {
+        RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Error: 'modules' section must be an object");
+        return (-1);
+    }
     it_conf = ucl_object_iterate_new(wop);
     if (it_conf == NULL)
         return (-1);
     ecode = 0;
     while ((obj_file = ucl_object_iterate_safe(it_conf, true)) != NULL) {
         cf_key = ucl_object_key(obj_file);
+        if (cf_key == NULL || ucl_object_type(obj_file) != UCL_OBJECT) {
+            RTPP_LOG(csp->glog, RTPP_LOG_ERR, "Error: module '%s' configuration must be an object",
+              cf_key != NULL ? cf_key : "(null)");
+            ecode = -1;
+            goto e0;
+        }
         RTPP_LOG(csp->glog, RTPP_LOG_DBUG, "\tmodule: %s", cf_key);
         obj_key = ucl_object_find_key(obj_file, "load");
         if (obj_key == NULL) {
@@ -259,6 +276,10 @@ conf_helper_mapper(struct rtpp_log *log, const ucl_object_t *obj, const conf_hel
         return (false);
     while ((cur = ucl_object_iterate_safe(it, true)) != NULL && ret) {
         key = ucl_object_key(cur);
+        if (key == NULL) {
+            ret = false;
+            break;
+        }
         found = false;
         for (i = 0; map[i].conf_key; i++) {
             if (strcasecmp(map[i].conf_key, key) != 0)
