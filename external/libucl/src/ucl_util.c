@@ -643,7 +643,7 @@ void ucl_parser_free(struct ucl_parser *parser)
 	}
 	LL_FOREACH_SAFE(parser->trash_objs, tr, trtmp)
 	{
-		ucl_object_free_internal(tr, false, ucl_object_dtor_free);
+		ucl_object_free_internal(tr, false, ucl_object_dtor_unref);
 	}
 
 	if (parser->err != NULL && parser->err != parser->_err_buf) {

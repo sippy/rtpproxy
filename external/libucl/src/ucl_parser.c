@@ -2705,7 +2705,19 @@ ucl_state_machine(struct ucl_parser *parser)
 				macro_args = ucl_parse_macro_arguments(parser, chunk);
 				p = chunk->pos;
 				if (macro_args) {
-					SKIP_SPACES_COMMENTS(parser, chunk, p);
+					while (p < chunk->end) {
+						if (!ucl_test_character(*p, UCL_CHARACTER_WHITESPACE_UNSAFE)) {
+							if (chunk->remain >= 2 && ucl_lex_is_comment(p[0], p[1])) {
+								if (!ucl_skip_comments(parser)) {
+									ucl_object_unref(macro_args);
+									return false;
+								}
+								p = chunk->pos;
+							}
+							break;
+						}
+						ucl_chunk_skipc(chunk, p);
+					}
 				}
 			}
 			else {
@@ -2713,6 +2725,9 @@ ucl_state_machine(struct ucl_parser *parser)
 			}
 			if (!ucl_parse_macro_value(parser, chunk, macro,
 									   &macro_start, &macro_len)) {
+				if (macro_args) {
+					ucl_object_unref(macro_args);
+				}
 				parser->prev_state = parser->state;
 				parser->state = UCL_STATE_ERROR;
 				return false;
