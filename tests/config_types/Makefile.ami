@@ -1,0 +1,3 @@
+config_types_EXTRA_DIST = config_types
+TESTS += config_types/confval1
+EXTRA_DIST += ${config_types_EXTRA_DIST}

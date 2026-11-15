@@ -8,6 +8,7 @@ include $(srcdir)/recording/Makefile.ami
 include $(srcdir)/makeann/Makefile.ami
 include $(srcdir)/unittests/Makefile.ami
 include $(srcdir)/libucl/Makefile.ami
+include $(srcdir)/config_types/Makefile.ami
 include $(srcdir)/libexecinfo/Makefile.ami
 include $(srcdir)/acct_rtcp_hep/Makefile.ami
 include $(srcdir)/acct_csv/Makefile.ami

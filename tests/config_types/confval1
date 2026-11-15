@@ -1,0 +1,21 @@
+#!/bin/sh
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+# Configurations whose root, "modules" section or module section is not an
+# object used to crash the parser (NULL key passed to strcasecmp()). They must
+# be rejected with an error, not by crashing.
+for cfile in nonobj_root_array nonobj_modules_array nonobj_modules_scalar \
+  nonobj_module_array nonobj_module_scalar nonobj_module_elem
+do
+  cf="config_types/${cfile}.conf"
+  log="config_types/${cfile}.log"
+  ${RTPPROXY} -f --config ${cf} -s stdio: < /dev/null > "${log}" 2>&1
+  RC=${?}
+  # A crash shows up as a signal exit (>= 128), or as a sanitizer's deadly
+  # signal report with exit status 1 in sanitizer-instrumented builds.
+  [ ${RC} -ne 0 -a ${RC} -lt 128 ] && ! grep -q 'DEADLYSIGNAL\|Segmentation fault' "${log}"
+  report "non-object configuration rejected: ${cf} (rc=${RC})"
+  rm -f "${log}"
+done
