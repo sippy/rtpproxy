@@ -38,6 +38,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <openssl/rand.h>
+
 #include "config_pp.h"
 
 #include "rtpp_types.h"
@@ -291,6 +293,27 @@ udp_local_get(const struct udp_sock *us, struct sa *local)
     return (0);
 }
 
+/*
+ * RFC 8445 section 5.3: ufrag needs at least 24 and pwd at least 128 bits
+ * of randomness. The charset has 64 entries, so each byte gives 6 bits.
+ */
+static int
+ice_random_string(char *buffer, int length)
+{
+    static const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                  "abcdefghijklmnopqrstuvwxyz"
+                                  "0123456789"
+                                  "+/";
+    unsigned char *rb = (unsigned char *)buffer;
+
+    if (RAND_bytes(rb, length) != 1)
+        return (-1);
+    for (int i = 0; i < length; i++)
+        buffer[i] = charset[rb[i] % (sizeof(charset) - 1)];
+    buffer[length] = '\0';
+    return (0);
+}
+
 static struct ice_lite_agent_cfg *
 ice_lite_data_ctor(int lufrag_len, int lpwd_len, struct rtpp_minfo *mself)
 {
@@ -307,9 +330,11 @@ ice_lite_data_ctor(int lufrag_len, int lpwd_len, struct rtpp_minfo *mself)
     if (lufrag.s == NULL || lpwd.s == NULL)
         goto e1;
     lufrag.len = lufrag_len;
-    generate_random_string(lufrag.s, lufrag.len);
+    if (ice_random_string(lufrag.s, lufrag.len) != 0)
+        goto e1;
     lpwd.len = lpwd_len;
-    generate_random_string(lpwd.s, lpwd.len);
+    if (ice_random_string(lpwd.s, lpwd.len) != 0)
+        goto e1;
     if (icem_alloc(&ila_c->icem, ICE_MODE_LITE, ICE_ROLE_CONTROLLED, IPPROTO_UDP, 0,
       tiebrk, lufrag.s, lpwd.s, NULL, NULL) != 0)
         goto e1;

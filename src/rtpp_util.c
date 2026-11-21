@@ -597,19 +597,3 @@ rtpp_strsplit(char *ibuf, char *mbuf, size_t dlen, size_t blen)
                 cp += 1;
         }
 }
-
-void
-generate_random_string(char *buffer, int length)
-{
-    const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                           "abcdefghijklmnopqrstuvwxyz"
-                           "0123456789"
-                           "+/";
-    int charset_size = sizeof(charset) - 1;
-
-    for (int i = 0; i < length; i++) {
-        int key = random() % charset_size;
-        buffer[i] = charset[key];
-    }
-    buffer[length] = '\0';
-}
