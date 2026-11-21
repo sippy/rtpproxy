@@ -31,7 +31,7 @@
 rtpproxy \- RTP (Real\-time Transport Protocol) Proxy Server
 .SH "SYNOPSIS"
 .HP \w'\fBrtpproxy\fR\ 'u
-\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-V\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-l\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-6\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-\-maxpps\fR\ \fIpps\fR\fI[,rtcp_pps]\fR] [\fB\-\-maxpsize\fR\ \fIsize\fR\fI[,rtcp_size]\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-L\fR\ \fInofile_limit\fR] [\fB\-A\fR\ \fIadvaddr1\fR\fI[/advaddr2]\fR] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-w\fR\ \fIsock_mode\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR\fI[:log_facility]\fR] [\fB\-W\fR\ \fIsetup_ttl\fR] [\fB\-\-force_asymmetric\fR] [\fB\-b\fR] [\fB\-c\fR\ \fIfifo|rr\fR] [\fB\-\-nice\fR\ \fIlevel\fR] [\fB\-D\fR] [\fB\-\-no_redirect\fR] [\fB\-\-config\fR\ \fIconfig_file\fR] [\fB\-\-dso\fR\ \fImodule\fR...] [\fB\-\-bridge_symmetric\fR] [\fB\-\-no_resolve\fR] [\fB\-\-record_fname_encode\fR]
+\fBrtpproxy\fR [\fB\-?\fR] [\fB\-2\fR] [\fB\-f\fR] [\fB\-v\fR] [\fB\-V\fR] [\fB\-R\fR] [\fB\-l\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-l\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-6\fR\ \fIaddr1\fR\fI[/addr2]\fR...] [\fB\-6\fR\ \fI[label@]\fR\fIaddress\fR\fI[=advertized_address]\fR...] [\fB\-s\fR\ \fIctrl_socket\fR] [\fB\-t\fR\ \fItos\fR] [\fB\-p\fR\ \fIpidfile\fR] [\fB\-T\fR\ \fImax_ttl\fR] [\fB\-\-maxpps\fR\ \fIpps\fR\fI[,rtcp_pps]\fR] [\fB\-\-maxpsize\fR\ \fIsize\fR\fI[,rtcp_size]\fR] [\fB\-r\fR\ \fIrdir\fR\ [\fB\-S\fR\ \fIsdir\fR]] [\fB\-L\fR\ \fInofile_limit\fR] [\fB\-A\fR\ \fIadvaddr1\fR\fI[/advaddr2]\fR] [\fB\-m\fR\ \fImin_port\fR] [\fB\-M\fR\ \fImax_port\fR] [\fB\-u\fR\ \fIuname\fR\fI[:gname]\fR] [\fB\-w\fR\ \fIsock_mode\fR] [\fB\-F\fR] [\fB\-i\fR] [\fB\-n\fR\ \fItimeout_socket\fR] [\fB\-P\fR] [\fB\-a\fR] [\fB\-d\fR\ \fIlog_level\fR\fI[:log_facility]\fR] [\fB\-W\fR\ \fIsetup_ttl\fR] [\fB\-\-force_asymmetric\fR] [\fB\-b\fR] [\fB\-c\fR\ \fIfifo|rr\fR] [\fB\-\-nice\fR\ \fIlevel\fR] [\fB\-D\fR] [\fB\-\-no_redirect\fR] [\fB\-\-config\fR\ \fIconfig_file\fR] [\fB\-\-dso\fR\ \fImodule\fR...] [\fB\-\-bridge_symmetric\fR] [\fB\-\-no_resolve\fR] [\fB\-\-record_callid_hash\fR\ \fImethod\fR]
 .HP \w'\fBrtpproxy\fR\ 'u
 \fBrtpproxy\fR \fB\-C\fR
 .SH "DESCRIPTION"
@@ -503,26 +503,43 @@ In the bridging mode, do not treat all sessions as asymmetric, which is the defa
 Only accept numeric IP addresses, in the command line arguments and in the control commands, instead of resolving host names\&.
 .RE
 .PP
-\fB\-\-record_fname_encode\fR
+\fB\-\-record_callid_hash\fR \fImethod\fR
 .RS 4
-When the recording file name is built from the Call\-ID and from\-tag (the
+Selects how the Call\-ID is put into the recording file name when the name is built from the Call\-ID and from\-tag (the
 \fBR\fR
-command and the
+and
+\fBRs\fR
+commands and the
 \fB\-a\fR
-option), percent\-encode the
-"/"
-and
-"%"
-characters as
-"%2F"
-and
-"%25"
-instead of refusing to record calls whose Call\-ID or from\-tag contains
-"/", which is a legal character in SIP\&. The original value can be recovered by decoding the
-"%XX"
-sequences\&. File names given explicitly with the
+option)\&. File names given explicitly with the
 \fBC\fR
-command are not affected\&.
+command are not affected\&. The from\-tag is always used as is\&.
+\fImethod\fR
+is one of:
+.PP
+raw
+.RS 4
+Use the Call\-ID as is (the default)\&. Calls whose Call\-ID contains "/" are not recorded\&.
+.RE
+.PP
+sha256
+.RS 4
+Use the SHA\-256 digest of the Call\-ID, written as 64 lowercase hex characters\&. This is the recommended method for its security properties\&. A recording can be found from a known Call\-ID by computing the same digest, for example with
+\fBprintf \*(Aq%s\*(Aq "$CALLID" | sha256sum\fR\&. Available only if
+\fBrtpproxy\fR
+has been built with OpenSSL\&.
+.RE
+.PP
+b64url
+.RS 4
+Use the Call\-ID encoded with the URL\-safe base64 alphabet (RFC 4648, section 5) without padding\&. Use it when the Call\-ID has to be recovered from the file name, for example to index existing recordings\&. The resulting file names are case\-sensitive\&.
+.RE
+.sp
+If
+\fImethod\fR
+is unknown or is not available in this build,
+\fBrtpproxy\fR
+reports an error and exits\&.
 .RE
 .SH "PRINCIPLES OF OPERATION"
 .PP

@@ -37,7 +37,14 @@ run_recording() {
   report_rc ${RPTL_RC} "running basic.${stest}.rptl RPTL script"
 }
 
-SUB_TESTS="${SUB_TESTS:-"files singlefile singlefile_c stopall files_stophalf singlefile_stophalf remote remote_p badpath badpath_enc"}"
+# The sha256 method of --record_callid_hash is only available if rtpproxy
+# has been built with OpenSSL (HAVE_LIBCRYPTO is set by the test harness).
+if [ "${HAVE_LIBCRYPTO}" = 1 ]
+then
+  SUB_TESTS_SHA256="badpath_sha256"
+fi
+
+SUB_TESTS="${SUB_TESTS:-"files singlefile singlefile_c stopall files_stophalf singlefile_stophalf remote remote_p badpath badpath_b64 ${SUB_TESTS_SHA256}"}"
 
 for stest in ${SUB_TESTS}
 do

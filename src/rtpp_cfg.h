@@ -108,8 +108,9 @@ struct rtpp_cfg {
     const char *sdir;
     int record_pcap;                /* Record in the PCAP format? */
     int record_all;                 /* Record everything */
-    int record_fname_enc;           /* Percent-encode '/' and '%' in file names
-                                       built from Call-ID and from-tag */
+    int record_callid_hash;         /* How the Call-ID goes into recording
+                                       file names, RTPP_RCID_*, see
+                                       rtpp_record_util.h */
 
     int rrtcp;                      /* Whether or not to relay RTCP? */
     struct rtpp_log *glog;

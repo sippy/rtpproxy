@@ -52,6 +52,7 @@
 
 #include "config.h"
 
+
 #include "rtpp_types.h"
 #include "rtp.h"
 #include "rtpp_time.h"
@@ -67,6 +68,7 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_network.h"
 #include "rtpp_record.h"
+#include "rtpp_record_util.h"
 #include "rtpp_record_fin.h"
 #include "rtpp_record_adhoc.h"
 #include "rtpp_record_private.h"
@@ -164,44 +166,6 @@ ropen_remote_ctor_pa(const struct rtpp_cfg *cfg, struct rtpp_record_channel *rrc
     return (0);
 }
 
-/*
- * Copy slen bytes of src (a Call-ID or a from-tag, which are not
- * NUL-terminated) into dst as a NUL-terminated file name component. With
- * encode set, '/' and '%' are percent-encoded as "%2F" and "%25", so the
- * result never contains '/' and the original value can be recovered by
- * decoding "%XX". Returns the length of the result, or -1 if it does not
- * fit into dlen bytes.
- */
-static int
-rtpp_record_fname_cpy(char *dst, size_t dlen, const char *src, size_t slen,
-  int encode)
-{
-    size_t i, j;
-    const char *esc;
-
-    if (dlen == 0)
-        return (-1);
-    for (i = j = 0; i < slen; i++) {
-        esc = NULL;
-        if (encode && src[i] == '/')
-            esc = "%2F";
-        else if (encode && src[i] == '%')
-            esc = "%25";
-        if (esc != NULL) {
-            if (dlen - j < 4)
-                return (-1);
-            memcpy(dst + j, esc, 3);
-            j += 3;
-        } else {
-            if (dlen - j < 2)
-                return (-1);
-            dst[j++] = src[i];
-        }
-    }
-    dst[j] = '\0';
-    return ((int)j);
-}
-
 struct rtpp_record *
 rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap,
   struct rtpp_session *sp, const char *rname, int orig, int record_type)
@@ -211,7 +175,8 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
     int rval, remote;
     size_t len;
     pcap_hdr_t pcap_hdr;
-    char cid[PATH_MAX + 1], tag[PATH_MAX + 1];
+    char fname[PATH_MAX + 1];
+    const char *emsg;
 
     remote = (rname != NULL && strncmp("udp:", rname, 4) == 0) ? 1 : 0;
 
@@ -250,20 +215,11 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
         goto e2;
     }
 
-    if (rname == NULL) {
-        if (rtpp_record_fname_cpy(cid, sizeof(cid), sp->call_id->s,
-          sp->call_id->len, cfsp->record_fname_enc) < 0 ||
-          rtpp_record_fname_cpy(tag, sizeof(tag), sp->from_tag_nmn->s,
-          sp->from_tag_nmn->len, cfsp->record_fname_enc) < 0) {
-            RTPP_LOG(sp->log, RTPP_LOG_ERR, "recording file name is too long");
-            goto e2;
-        }
-        if (strchr(cid, '/') != NULL || strchr(tag, '/') != NULL) {
-            RTPP_LOG(sp->log, RTPP_LOG_ERR, "call-id or from-tag contains '/', "
-              "refusing to use it in the recording file name (see "
-              "--record_fname_encode)");
-            goto e2;
-        }
+    if (rname == NULL && rtpp_record_callid_fname(fname, sizeof(fname),
+      sp->call_id->s, sp->call_id->len, sp->from_tag_nmn->s,
+      sp->from_tag_nmn->len, cfsp->record_callid_hash, &emsg) < 0) {
+        RTPP_LOG(sp->log, RTPP_LOG_ERR, "%s", emsg);
+        goto e2;
     }
 
     if (cfsp->record_pcap != 0) {
@@ -288,8 +244,8 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
         sdir = cfsp->sdir;
         rrc->needspool = 1;
         if (rname == NULL) {
-            len = snprintf(rrc->rpath, sizeof(rrc->rpath), "%s/%s=%s%s%s",
-              cfsp->rdir, cid, tag, suffix1, suffix2);
+            len = snprintf(rrc->rpath, sizeof(rrc->rpath), "%s/%s%s%s",
+              cfsp->rdir, fname, suffix1, suffix2);
         } else {
             len = snprintf(rrc->rpath, sizeof(rrc->rpath), "%s/%s%s",
               cfsp->rdir, rname, suffix2);
@@ -300,8 +256,8 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
         }
     }
     if (rname == NULL) {
-        len = snprintf(rrc->spath, sizeof(rrc->spath), "%s/%s=%s%s%s",
-          sdir, cid, tag, suffix1, suffix2);
+        len = snprintf(rrc->spath, sizeof(rrc->spath), "%s/%s%s%s",
+          sdir, fname, suffix1, suffix2);
     } else {
         len = snprintf(rrc->spath, sizeof(rrc->spath), "%s/%s%s", sdir, rname,
           suffix2);
