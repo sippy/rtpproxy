@@ -299,6 +299,27 @@ else
   fi
 fi
 
+# libcrypto (OpenSSL), for --record_callid_hash sha256
+AC_CHECK_HEADER(openssl/evp.h, found_libcrypto=yes)
+if test "$found_libcrypto" = yes
+then
+  save_LIBS="${LIBS}"
+  LIBS="${LIBS} ${LIB_CRYPTO}"
+  AC_MSG_CHECKING([for EVP_Digest in libcrypto])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([
+      #include <openssl/evp.h>
+    ], [
+      return EVP_Digest("", 0, NULL, NULL, EVP_sha256(), NULL);
+    ])], [
+   AC_MSG_RESULT([yes])
+   found_evp_digest=yes
+   AC_DEFINE([HAVE_LIBCRYPTO], 1, [Define if you have libcrypto (OpenSSL) installed])
+  ], [
+   AC_MSG_RESULT([no])
+  ])
+  LIBS="${save_LIBS}"
+fi
+
 # libelperiodic
 AC_CHECK_HEADER(elperiodic.h, found_libelperiodic=yes)
 if test "$found_libelperiodic" = yes
@@ -494,6 +515,7 @@ AM_CONDITIONAL(BUILD_MODULES, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(ENABLE_MODULE_IF, [test "${ENABLE_MODULE_IF}" = 1])
 AM_CONDITIONAL(BUILD_ELPERIODIC, [test "${EXTERNAL_ELPERIODIC}" != 1])
 AM_CONDITIONAL(BUILD_CRYPTO, [test "${LIBS_SRTP}" != ""])
+AM_CONDITIONAL(HAVE_LIBCRYPTO, [test "x${found_evp_digest}" = xyes])
 AM_CONDITIONAL(BUILD_LOG_STAND, [test "${LIBS_SIPLOG}" = ""])
 AM_CONDITIONAL(BUILD_UDP_CONTENTION, [test "${ENABLE_UDP_CONTENTION}" = 1])
 AM_CONDITIONAL(BUILD_OBJCK, [test "${ENABLE_OBJCK}" = 1])

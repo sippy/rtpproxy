@@ -38,6 +38,9 @@ TESTS_ENVIRONMENT = \
         BASEDIR=${abs_srcdir} ; export BASEDIR ; \
         BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
         TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
+if HAVE_LIBCRYPTO
+TESTS_ENVIRONMENT += HAVE_LIBCRYPTO=1 ; export HAVE_LIBCRYPTO ;
+endif
 CLEANFILES += *.core test-suite.log
 
 # Keep live output and serial execution, and repeat failures at the end.
