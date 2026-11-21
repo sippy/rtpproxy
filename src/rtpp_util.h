@@ -65,7 +65,6 @@ enum atoi_rval rtpp_parse_rtp_rtcp_val(const char *, int *, int *, int);
 enum atoi_rval strtol_saferange(const char *, long *, long, long,
   const char **) RTPP_EXPORT;
 void rtpp_strsplit(char *, char *, size_t, size_t);
-void generate_random_string(char *, int) RTPP_EXPORT;
 
 /* Some handy/compat macros */
 #if !defined(INFTIM)
