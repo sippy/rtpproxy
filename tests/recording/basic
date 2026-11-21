@@ -39,9 +39,14 @@ run_recording() {
 
 # The sha256 method of --record_callid_hash is only available if rtpproxy
 # has been built with OpenSSL (HAVE_LIBCRYPTO is set by the test harness).
+# Without it, the method must be refused with an explicit error.
 if [ "${HAVE_LIBCRYPTO}" = 1 ]
 then
   SUB_TESTS_SHA256="badpath_sha256"
+else
+  RTPP_GLITCH_ACT="" ${RTPPROXY} --record_callid_hash sha256 -V 2>&1 | \
+   grep -q 'rtpproxy has been built without OpenSSL'
+  report "--record_callid_hash sha256 is refused in a build without OpenSSL"
 fi
 
 SUB_TESTS="${SUB_TESTS:-"files singlefile singlefile_c stopall files_stophalf singlefile_stophalf remote remote_p badpath badpath_b64 ${SUB_TESTS_SHA256}"}"

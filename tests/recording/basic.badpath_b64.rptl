@@ -14,9 +14,9 @@
 .eval: %%RECORD_SPL_DIR%%/%%CALLID%%=from_tag_1 -> REC_BASE
 .eval: %%RECORD_SPL_DIR%%/%%CALLID_S%%=from_tag_1 -> REC_BASE_S
 
-.eval: import sys, base64; print(base64.urlsafe_b64encode(sys.argv[1].encode()).decode().rstrip("=")) -> B64
-.exec: %%PYINT%% -c '%%B64%%' '%%CALLID%%' -> CALLID_ENC
-.exec: %%PYINT%% -c '%%B64%%' '%%CALLID_S%%' -> CALLID_S_ENC
+.eval: import sys, base64; print(base64.urlsafe_b64encode(sys.argv[1].encode()).decode().rstrip("=")) -> ENC
+.exec: %%PYINT%% -c '%%ENC%%' '%%CALLID%%' -> CALLID_ENC
+.exec: %%PYINT%% -c '%%ENC%%' '%%CALLID_S%%' -> CALLID_S_ENC
 .eval: %%RECORD_SPL_DIR%%/%%CALLID_ENC%%=from_tag_1 -> ENC_BASE
 .eval: %%RECORD_SPL_DIR%%/%%CALLID_S_ENC%%=from_tag_1 -> ENC_BASE_S
 
@@ -56,3 +56,48 @@ rtpp: Rs %%CALLID_LONG%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
 .exec: for f in %%REC_BASE%%.* %%REC_BASE_S%%*; do test ! -e "$f" || exit 1; done
 .exec: ls %%ENC_BASE%%.* %%ENC_BASE_S%%* > /dev/null
 .exec: rm -f %%ENC_BASE%%.* %%ENC_BASE_S%%*
+
+# With a spool directory (-S) the files are created there and moved into
+# the recording directory when closed, both under the encoded name.
+.eval: ../%%WORK_BASE%%.spool.r. -> CALLID_SR
+.eval: ../%%WORK_BASE%%.spool.rs.x -> CALLID_SRS
+.exec: %%PYINT%% -c '%%ENC%%' '%%CALLID_SR%%' -> CALLID_SR_ENC
+.exec: %%PYINT%% -c '%%ENC%%' '%%CALLID_SRS%%' -> CALLID_SRS_ENC
+.exec: rm -f %%RECORD_DIR%%/%%CALLID_SR_ENC%%=* %%RECORD_DIR%%/%%CALLID_SRS_ENC%%=* %%RECORD_SPL_DIR%%/%%CALLID_SR_ENC%%=* %%RECORD_SPL_DIR%%/%%CALLID_SRS_ENC%%=*
+
+.eval: -d dbug -T60 -W60 -P -r %%RECORD_DIR%% -S %%RECORD_SPL_DIR%% --record_callid_hash b64url -> RTPPROXY_ARGS
+socket rtpp: stdio: %%RTPPROXY_ARGS%% -> %%WORK_BASE%%.S.rout
+
+rtpp: U %%CALLID_SR%% 127.0.0.1 12345 from_tag_1 -> validate_port(_)
+rtpp: L %%CALLID_SR%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: R %%CALLID_SR%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+
+rtpp: U %%CALLID_SRS%% 127.0.0.1 12345 from_tag_1 -> validate_port(_)
+rtpp: L %%CALLID_SRS%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: Rs %%CALLID_SRS%% to_tag_1 from_tag_1 -> str_compare(RES_OK)
+
+rtpp: U %%CALLID_T%%.S 127.0.0.1 12345 ../from_tag_1 -> validate_port(_)
+rtpp: L %%CALLID_T%%.S 127.0.0.1 54321 ../from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: Rs %%CALLID_T%%.S to_tag_1 ../from_tag_1 -> str_compare(RES_E50)
+
+.close: rtpp
+.exec: ls %%RECORD_DIR%%/%%CALLID_SR_ENC%%=from_tag_1.* %%RECORD_DIR%%/%%CALLID_SRS_ENC%%=from_tag_1* > /dev/null
+.exec: for f in %%RECORD_SPL_DIR%%/%%CALLID_SR_ENC%%=* %%RECORD_SPL_DIR%%/%%CALLID_SRS_ENC%%=*; do test ! -e "$f" || exit 1; done
+.exec: rm -f %%RECORD_DIR%%/%%CALLID_SR_ENC%%=* %%RECORD_DIR%%/%%CALLID_SRS_ENC%%=*
+
+# Record-all mode (-a) builds the names the same way. A session whose
+# from-tag contains '/' is still set up, just not recorded.
+.eval: ../%%WORK_BASE%%.all -> CALLID_A
+.exec: %%PYINT%% -c '%%ENC%%' '%%CALLID_A%%' -> CALLID_A_ENC
+.exec: rm -f %%RECORD_SPL_DIR%%/%%CALLID_A_ENC%%=*
+
+.eval: -d dbug -T60 -W60 -P -a -r %%RECORD_SPL_DIR%% --record_callid_hash b64url -> RTPPROXY_ARGS
+socket rtpp: stdio: %%RTPPROXY_ARGS%% -> %%WORK_BASE%%.a.rout
+
+rtpp: U %%CALLID_A%% 127.0.0.1 12345 from_tag_1 -> validate_port(_)
+rtpp: L %%CALLID_A%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: U %%CALLID_A%%.tag 127.0.0.1 12345 ../from_tag_1 -> validate_port(_)
+
+.close: rtpp
+.exec: ls %%RECORD_SPL_DIR%%/%%CALLID_A_ENC%%=from_tag_1* > /dev/null
+.exec: rm -f %%RECORD_SPL_DIR%%/%%CALLID_A_ENC%%=*

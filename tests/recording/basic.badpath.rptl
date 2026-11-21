@@ -31,6 +31,12 @@ rtpp: L %%CALLID%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(PORT_O)
 rtpp: R %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
 rtpp: Rs %%CALLID%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
 
+# '/' in the from-tag is refused as well.
+rtpp: U %%CALLID_SHORT%%.tag 127.0.0.1 12345 ../from_tag_1 -> validate_port(_)
+rtpp: L %%CALLID_SHORT%%.tag 127.0.0.1 54321 ../from_tag_1 to_tag_1 -> validate_port(_)
+rtpp: R %%CALLID_SHORT%%.tag to_tag_1 ../from_tag_1 -> str_compare(RES_E50)
+rtpp: Rs %%CALLID_SHORT%%.tag to_tag_1 ../from_tag_1 -> str_compare(RES_E50)
+
 rtpp: U %%CALLID_LONG%% 127.0.0.1 12345 from_tag_1 -> validate_port(_)
 rtpp: L %%CALLID_LONG%% 127.0.0.1 54321 from_tag_1 to_tag_1 -> validate_port(_)
 rtpp: R %%CALLID_LONG%% to_tag_1 from_tag_1 -> str_compare(RES_E50)
