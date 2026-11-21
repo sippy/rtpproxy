@@ -242,7 +242,7 @@ decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf,
         if (ibytes < 33) {
             return (-1);
         }
-        for (obytes = 0; ibytes > 0 && obytes <= obytes_max - 320; ibytes -= 33) {
+        for (obytes = 0; ibytes >= 33 && obytes <= obytes_max - 320; ibytes -= 33) {
             gsm_decode(dp->ctx_gsm, ibuf, obuf);
             ibuf += 33;
             obuf += 160;
