@@ -16,6 +16,7 @@ libucl_la_SOURCES = $(UCL_SDIR)/ucl_emitter_streamline.c \
   $(UCL_SDIR)/ucl_parser.c \
   $(UCL_SDIR)/ucl_schema.c \
   $(UCL_SDIR)/ucl_sexp.c \
+  $(UCL_SDIR)/ucl_cbor.c \
   $(UCL_SDIR)/ucl_util.c
 CFLAGS_libucl_common = -Wno-pointer-sign -std=c11 -DHAVE_CONFIG_H -D_BSD_SOURCE \
   -I$(UCL_DIR)/include \
