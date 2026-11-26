@@ -293,23 +293,34 @@ udp_local_get(const struct udp_sock *us, struct sa *local)
     return (0);
 }
 
+static inline uint8_t
+encode6(unsigned x)
+{
+    x &= 63u;
+    unsigned k = x & 31u;
+
+    if (k == 0)
+        return x ? '+' : '/';
+
+    if (k <= 26)
+        return x | ('A' - 1);
+
+    return 0x30u | ((~x & 7u) << 1) | (x >> 5);
+}
+
 /*
  * RFC 8445 section 5.3: ufrag needs at least 24 and pwd at least 128 bits
- * of randomness. The charset has 64 entries, so each byte gives 6 bits.
+ * of randomness. Each byte gives 6 bits via encode6().
  */
 static int
 ice_random_string(char *buffer, int length)
 {
-    static const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                                  "abcdefghijklmnopqrstuvwxyz"
-                                  "0123456789"
-                                  "+/";
     unsigned char *rb = (unsigned char *)buffer;
 
     if (RAND_bytes(rb, length) != 1)
         return (-1);
     for (int i = 0; i < length; i++)
-        buffer[i] = charset[rb[i] % (sizeof(charset) - 1)];
+        buffer[i] = encode6(rb[i]);
     buffer[length] = '\0';
     return (0);
 }
