@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# A GSM packet whose payload is not a multiple of 33 bytes has to be decoded
+# up to the last whole frame, the trailing remainder has to be ignored.
+#
+# corrupted_gsm is call1_gsm with an extra byte appended to some of the
+# packets (34 byte payload), so the decoded audio has to match that of the
+# original recording exactly. Before the fix the decoder went on past the end
+# of the packet, producing garbage and reading out of bounds.
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+for rname in call1_gsm corrupted_gsm
+do
+  wfile="gsm_partial.${rname}.raw"
+  rm -f "${wfile}"
+  ${EXTRACTAUDIO} -F raw -D pcm_16 "${BASEDIR}/extractaudio/${rname}" \
+   "${wfile}" 2>"${wfile}.rlog" >"${wfile}.tout"
+  report "${EXTRACTAUDIO} ${rname} -> ${wfile}"
+  test -s "${wfile}"
+  report "checking that ${wfile} is not empty"
+done
+
+cmp gsm_partial.call1_gsm.raw gsm_partial.corrupted_gsm.raw
+report "checking that corrupted_gsm decodes the same as call1_gsm"
