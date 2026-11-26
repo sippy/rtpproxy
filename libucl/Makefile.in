@@ -125,6 +125,7 @@ am_libucl_la_OBJECTS =  \
 	$(UCL_SDIR)/libucl_la-ucl_parser.lo \
 	$(UCL_SDIR)/libucl_la-ucl_schema.lo \
 	$(UCL_SDIR)/libucl_la-ucl_sexp.lo \
+	$(UCL_SDIR)/libucl_la-ucl_cbor.lo \
 	$(UCL_SDIR)/libucl_la-ucl_util.lo
 libucl_la_OBJECTS = $(am_libucl_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -143,6 +144,7 @@ am__objects_1 = $(UCL_SDIR)/libucl_debug_la-ucl_emitter_streamline.lo \
 	$(UCL_SDIR)/libucl_debug_la-ucl_parser.lo \
 	$(UCL_SDIR)/libucl_debug_la-ucl_schema.lo \
 	$(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo \
+	$(UCL_SDIR)/libucl_debug_la-ucl_cbor.lo \
 	$(UCL_SDIR)/libucl_debug_la-ucl_util.lo
 am_libucl_debug_la_OBJECTS = $(am__objects_1)
 libucl_debug_la_OBJECTS = $(am_libucl_debug_la_OBJECTS)
@@ -197,6 +199,7 @@ am__depfiles_remade =  \
 	$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Po \
 	$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Po \
 	$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_cbor.Plo \
 	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo \
 	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo \
 	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo \
@@ -206,6 +209,7 @@ am__depfiles_remade =  \
 	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Plo \
 	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo \
 	$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Plo \
+	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_cbor.Plo \
 	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Plo \
 	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo \
 	$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo \
@@ -500,6 +504,7 @@ libucl_la_SOURCES = $(UCL_SDIR)/ucl_emitter_streamline.c \
   $(UCL_SDIR)/ucl_parser.c \
   $(UCL_SDIR)/ucl_schema.c \
   $(UCL_SDIR)/ucl_sexp.c \
+  $(UCL_SDIR)/ucl_cbor.c \
   $(UCL_SDIR)/ucl_util.c
 
 CFLAGS_libucl_common = -Wno-pointer-sign -std=c11 -DHAVE_CONFIG_H -D_BSD_SOURCE \
@@ -597,6 +602,8 @@ $(UCL_SDIR)/libucl_la-ucl_schema.lo: $(UCL_SDIR)/$(am__dirstamp) \
 	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
 $(UCL_SDIR)/libucl_la-ucl_sexp.lo: $(UCL_SDIR)/$(am__dirstamp) \
 	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_la-ucl_cbor.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
 $(UCL_SDIR)/libucl_la-ucl_util.lo: $(UCL_SDIR)/$(am__dirstamp) \
 	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
 
@@ -623,6 +630,8 @@ $(UCL_SDIR)/libucl_debug_la-ucl_schema.lo:  \
 	$(UCL_SDIR)/$(am__dirstamp) \
 	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
 $(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo: $(UCL_SDIR)/$(am__dirstamp) \
+	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
+$(UCL_SDIR)/libucl_debug_la-ucl_cbor.lo: $(UCL_SDIR)/$(am__dirstamp) \
 	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
 $(UCL_SDIR)/libucl_debug_la-ucl_util.lo: $(UCL_SDIR)/$(am__dirstamp) \
 	$(UCL_SDIR)/$(DEPDIR)/$(am__dirstamp)
@@ -706,6 +715,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_cbor.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo@am__quote@ # am--include-marker
@@ -715,6 +725,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_cbor.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@$(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo@am__quote@ # am--include-marker
@@ -813,6 +824,13 @@ $(UCL_SDIR)/libucl_la-ucl_sexp.lo: $(UCL_SDIR)/ucl_sexp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_sexp.lo `test -f '$(UCL_SDIR)/ucl_sexp.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_sexp.c
 
+$(UCL_SDIR)/libucl_la-ucl_cbor.lo: $(UCL_SDIR)/ucl_cbor.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_cbor.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_cbor.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_cbor.lo `test -f '$(UCL_SDIR)/ucl_cbor.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_cbor.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_cbor.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_cbor.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_cbor.c' object='$(UCL_SDIR)/libucl_la-ucl_cbor.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_la-ucl_cbor.lo `test -f '$(UCL_SDIR)/ucl_cbor.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_cbor.c
+
 $(UCL_SDIR)/libucl_la-ucl_util.lo: $(UCL_SDIR)/ucl_util.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libucl_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_la-ucl_util.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_util.Tpo -c -o $(UCL_SDIR)/libucl_la-ucl_util.lo `test -f '$(UCL_SDIR)/ucl_util.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_util.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_util.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_util.Plo
@@ -875,6 +893,13 @@ $(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo: $(UCL_SDIR)/ucl_sexp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_sexp.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_sexp.lo `test -f '$(UCL_SDIR)/ucl_sexp.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_sexp.c
+
+$(UCL_SDIR)/libucl_debug_la-ucl_cbor.lo: $(UCL_SDIR)/ucl_cbor.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_cbor.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_cbor.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_cbor.lo `test -f '$(UCL_SDIR)/ucl_cbor.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_cbor.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_cbor.Tpo $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_cbor.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(UCL_SDIR)/ucl_cbor.c' object='$(UCL_SDIR)/libucl_debug_la-ucl_cbor.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -c -o $(UCL_SDIR)/libucl_debug_la-ucl_cbor.lo `test -f '$(UCL_SDIR)/ucl_cbor.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_cbor.c
 
 $(UCL_SDIR)/libucl_debug_la-ucl_util.lo: $(UCL_SDIR)/ucl_util.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libucl_debug_la_CPPFLAGS) $(CPPFLAGS) $(libucl_debug_la_CFLAGS) $(CFLAGS) -MT $(UCL_SDIR)/libucl_debug_la-ucl_util.lo -MD -MP -MF $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Tpo -c -o $(UCL_SDIR)/libucl_debug_la-ucl_util.lo `test -f '$(UCL_SDIR)/ucl_util.c' || echo '$(srcdir)/'`$(UCL_SDIR)/ucl_util.c
@@ -1202,6 +1227,7 @@ distclean: distclean-am
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_cbor.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo
@@ -1211,6 +1237,7 @@ distclean: distclean-am
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_cbor.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo
@@ -1277,6 +1304,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_threads.Po
 	-rm -f $(MAINSRCDIR)/$(DEPDIR)/libucl_test-rtpp_ucl.Po
 	-rm -f $(RTPP_AUTOSRC_DIR)/$(DEPDIR)/libucl_test-rtpp_refcnt_fin.Po
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_cbor.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_streamline.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_emitter_utils.Plo
@@ -1286,6 +1314,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_schema.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_sexp.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_debug_la-ucl_util.Plo
+	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_cbor.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_streamline.Plo
 	-rm -f $(UCL_SDIR)/$(DEPDIR)/libucl_la-ucl_emitter_utils.Plo
