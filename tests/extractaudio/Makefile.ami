@@ -6,8 +6,9 @@ extractaudio_CLEANFILES = *.mono.*.wav *.stereo.*.wav *.mono.*.wav.tout \
   *.stereo.*.raw *.stereo.*.raw.tout *.nbcheck.*.raw.txt \
   *.encopts.*.ogg *.encopts.*.ogg.tout *.encopts.*.ogg.rlog \
   encopts.probe.ogg badargs.clevel.wav badargs.out.ogg \
-  gsm_partial.*.raw gsm_partial.*.raw.tout gsm_partial.*.raw.rlog
+  gsm_partial.*.raw gsm_partial.*.raw.tout gsm_partial.*.raw.rlog \
+  g729_partial.*.raw g729_partial.*.raw.tout g729_partial.*.raw.rlog
 TESTS += extractaudio/badargs extractaudio/extractaudio1 extractaudio/scan \
-  extractaudio/encopts extractaudio/gsm_partial
+  extractaudio/encopts extractaudio/gsm_partial extractaudio/g729_partial
 CLEANFILES += ${extractaudio_CLEANFILES}
 EXTRA_DIST += ${extractaudio_EXTRA_DIST}

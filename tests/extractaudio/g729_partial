@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# G.729 payload is a sequence of 10 byte speech frames optionally followed by
+# a single 2 byte SID frame. Anything else left at the end of the packet has to
+# be ignored, and a SID frame has to produce exactly one 10 ms (80 samples)
+# frame of audio.
+#
+# corrupted_g729 is call1_g729 with 1 and 5 extra bytes appended to some of
+# the packets (21 and 25 byte payloads), so the decoded audio has to match that
+# of the original recording exactly. sid_g729 has a 2 byte SID frame appended
+# to every 7th packet (75 per direction), which has to add 75 * 80 samples to
+# the audio. Before the fix the former recording was decoded with a lot of the
+# packets dropped, the latter with the whole SID packets decoded as 2 byte
+# frames.
+
+BASEDIR="`dirname "${0}"`/.."
+. "${BASEDIR}/functions"
+
+for rname in call1_g729 corrupted_g729 sid_g729
+do
+  wfile="g729_partial.${rname}.raw"
+  rm -f "${wfile}"
+  ${EXTRACTAUDIO} -F raw -D pcm_16 "${BASEDIR}/extractaudio/${rname}" \
+   "${wfile}" 2>"${wfile}.rlog" >"${wfile}.tout"
+  report "${EXTRACTAUDIO} ${rname} -> ${wfile}"
+  test -s "${wfile}"
+  report "checking that ${wfile} is not empty"
+done
+
+cmp g729_partial.call1_g729.raw g729_partial.corrupted_g729.raw
+report "checking that corrupted_g729 decodes the same as call1_g729"
+
+osize=`wc -c < g729_partial.call1_g729.raw`
+nsize=`wc -c < g729_partial.sid_g729.raw`
+test "`expr ${nsize} - ${osize}`" -eq `expr 75 \* 80 \* 2`
+report "checking that sid_g729 decodes into 75 SID frames more than call1_g729"
