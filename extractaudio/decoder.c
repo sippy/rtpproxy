@@ -154,6 +154,35 @@ decoder_get(struct decoder_stream *dp)
     return *(dp->obp - 1);
 }
 
+#ifdef ENABLE_G729
+#define G729_SID_SIZE 2
+
+/*
+ * Pick the speech frame size for the payload of ibytes bytes: the first one
+ * that makes it a whole number of frames, optionally followed by a SID frame.
+ * G.729/A frames are 10 bytes; libg729 also decodes Annex D (8 bytes) and
+ * Annex E (15 bytes) ones, which bcg729 does not support. If none fits fall
+ * back to G.729/A, so that the partial frame at the end gets ignored.
+ */
+static unsigned int
+g729_frame_size(unsigned int ibytes)
+{
+    static const unsigned int fsizes[] = {10,
+#ifndef ENABLE_BCG729
+      8, 15
+#endif
+    };
+    unsigned int i, rem;
+
+    for (i = 0; i < sizeof(fsizes) / sizeof(fsizes[0]); i++) {
+        rem = ibytes % fsizes[i];
+        if (ibytes >= fsizes[i] && (rem == 0 || rem == G729_SID_SIZE))
+            return fsizes[i];
+    }
+    return fsizes[0];
+}
+#endif
+
 int
 decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf,
   unsigned int ibytes, unsigned int obytes_max)
@@ -181,26 +210,25 @@ decode_frame(struct decoder_stream *dp, int16_t *obuf, unsigned char *ibuf,
 
 #ifdef ENABLE_G729
     case RTP_G729: {
-        int fsize;
+        unsigned int fsize;
         void *bp;
 
-        /* fwrite(ibuf, ibytes, 1, dp->f); */
-        /* fflush(dp->f); */
-        if (ibytes % 10 == 0)
-            fsize = 10;
-        else if (ibytes % 8 == 0)
-            fsize = 8;
-        else if (ibytes % 15 == 0)
-            fsize = 15;
-        else if (ibytes % 2 == 0)
-            fsize = 2;
-        else
-            return -1;
         if (dp->g729_ctx == NULL)
             dp->g729_ctx = G729_DINIT();
         if (dp->g729_ctx == NULL)
             return -1;
-        for (obytes = 0; ibytes > 0 && obytes <= obytes_max - 160; ibytes -= fsize) {
+        /*
+         * Payload is a sequence of speech frames optionally followed by a
+         * single 2 byte SID frame (RFC 3551, G.729 Annex B), which is also
+         * how rtp_calc_samples() counts it. Ignore anything else left.
+         */
+        fsize = g729_frame_size(ibytes);
+        for (obytes = 0; obytes <= obytes_max - 160; ibytes -= fsize) {
+            if (ibytes < fsize) {
+                if (ibytes != G729_SID_SIZE)
+                    break;
+                fsize = G729_SID_SIZE;
+            }
             bp = G729_DECODE(dp->g729_ctx, ibuf, fsize);
             ibuf += fsize;
             memcpy(obuf, bp, 160);
