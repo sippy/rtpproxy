@@ -175,6 +175,7 @@ host_triplet = @host@
 @BUILD_CRYPTO_TRUE@@ENABLE_BASIC_TESTS_TRUE@am__append_10 = dtls_gw/basic dtls_gw/fingerprint
 @BUILD_CRYPTO_TRUE@am__append_11 = ${dtls_gw_CLEANFILES}
 @BUILD_CRYPTO_TRUE@am__append_12 = ${dtls_gw_EXTRA_DIST}
+@HAVE_LIBCRYPTO_TRUE@am__append_13 = HAVE_LIBCRYPTO=1 ; export HAVE_LIBCRYPTO ;
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
@@ -476,11 +477,10 @@ EXTRA_DIST = $(am__append_3) $(am__append_5) $(am__append_9) \
 @BUILD_CRYPTO_TRUE@dtls_gw_EXTRA_DIST = dtls_gw
 @BUILD_CRYPTO_TRUE@dtls_gw_CLEANFILES = dtls_gw.* dtls_fingerprint.*
 # NB: AM_TESTS_ENVIRONMENT not available until automake 1.12
-TESTS_ENVIRONMENT = \
-        BASEDIR=${abs_srcdir} ; export BASEDIR ; \
-        BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
-        TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ;
-
+TESTS_ENVIRONMENT = BASEDIR=${abs_srcdir} ; export BASEDIR ; \
+	BUILDDIR=${abs_builddir} ; export BUILDDIR ; \
+	TOP_BUILDDIR=${abs_top_builddir} ; export TOP_BUILDDIR ; \
+	$(am__append_13)
 all: all-am
 
 .SUFFIXES:

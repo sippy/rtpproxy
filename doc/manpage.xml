@@ -186,6 +186,7 @@
       <arg choice="opt"><option>--bridge_symmetric</option></arg>
 
       <arg choice="opt"><option>--no_resolve</option></arg>
+      <arg choice="opt"><option>--record_callid_hash</option> <replaceable>method</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
@@ -817,6 +818,62 @@
           <para>Only accept numeric IP addresses, in the command line
           arguments and in the control commands, instead of resolving host
           names.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--record_callid_hash</option>
+        <replaceable>method</replaceable></term>
+
+        <listitem>
+          <para>Selects how the Call-ID is put into the recording file name
+          when the name is built from the Call-ID and from-tag (the
+          <command>R</command> and <command>Rs</command> commands and the
+          <option>-a</option> option). File names given explicitly with the
+          <command>C</command> command are not affected. The from-tag is
+          always used as is. <replaceable>method</replaceable> is one
+          of:</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><literal>raw</literal></term>
+
+              <listitem>
+                <para>Use the Call-ID as is (the default). Calls whose
+                Call-ID contains <quote>/</quote> are not recorded.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>sha256</literal></term>
+
+              <listitem>
+                <para>Use the SHA-256 digest of the Call-ID, written as 64
+                lowercase hex characters. This is the recommended method
+                for its security properties. A recording can be found from
+                a known Call-ID by computing the same digest, for example
+                with <command>printf '%s' "$CALLID" | sha256sum</command>.
+                Available only if <command>rtpproxy</command> has been
+                built with OpenSSL.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>b64url</literal></term>
+
+              <listitem>
+                <para>Use the Call-ID encoded with the URL-safe base64
+                alphabet (RFC 4648, section 5) without padding. Use it when
+                the Call-ID has to be recovered from the file name, for
+                example to index existing recordings. The resulting file
+                names are case-sensitive.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+
+          <para>If <replaceable>method</replaceable> is unknown or is not
+          available in this build, <command>rtpproxy</command> reports an
+          error and exits.</para>
         </listitem>
       </varlistentry>
     </variablelist>

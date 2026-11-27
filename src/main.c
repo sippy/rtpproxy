@@ -115,6 +115,7 @@
 #include "rtpp_debug.h"
 #include "rtpp_locking.h"
 #include "rtpp_nofile.h"
+#include "rtpp_record_util.h"
 #include "advanced/pproc_manager.h"
 #include "ucl.h"
 #include "rtpp_ucl.h"
@@ -152,7 +153,8 @@ usage(void)
       "[-n timeout_socket]\n\t  [-d log_level[:log_facility]] [-p pid_file]\n"
       "\t  [-c fifo|rr] [-A addr1[/addr2] [-W setup_ttl]\n"
       "\t  [--maxpps pps[,rtcp_pps]] [--maxpsize size[,rtcp_size]]\n"
-      "\trtpproxy -V\n");
+      "\t  [--record_callid_hash %s]\n"
+      "\trtpproxy -V\n", rtpp_record_callid_hash_usage);
 }
 
 static struct rtpp_cfg *_sig_cf;
@@ -266,6 +268,7 @@ ehandler(void)
 #define LOPT_NO_REDIR 263
 #define LOPT_MAXPPS   264
 #define LOPT_MAXPSIZE 265
+#define LOPT_RCID_HASH 266
 
 const static struct option longopts[] = {
     { "dso", required_argument, NULL, LOPT_DSO },
@@ -278,6 +281,7 @@ const static struct option longopts[] = {
     { "no_redirect", no_argument, NULL, LOPT_NO_REDIR },
     { "maxpps", required_argument, NULL, LOPT_MAXPPS },
     { "maxpsize", required_argument, NULL, LOPT_MAXPSIZE },
+    { "record_callid_hash", required_argument, NULL, LOPT_RCID_HASH },
     { NULL,  0,                 NULL, 0 }
 };
 
@@ -517,6 +521,12 @@ init_config(struct rtpp_cfg *cfsp, int argc, const char * const *argv)
             default:
                 IC_ERRX(1, "%s: maxpsize argument is invalid", optarg);
             }
+            break;
+
+        case LOPT_RCID_HASH:
+            if (rtpp_record_callid_hash_parse(optarg,
+              &cfsp->record_callid_hash, &errmsg) != 0)
+                IC_ERRX(1, "%s: %s", optarg, errmsg);
             break;
 
         case 'c':

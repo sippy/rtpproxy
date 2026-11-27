@@ -52,6 +52,7 @@
 
 #include "config.h"
 
+
 #include "rtpp_types.h"
 #include "rtp.h"
 #include "rtpp_time.h"
@@ -67,6 +68,7 @@
 #include "rtpp_mallocs.h"
 #include "rtpp_network.h"
 #include "rtpp_record.h"
+#include "rtpp_record_util.h"
 #include "rtpp_record_fin.h"
 #include "rtpp_record_adhoc.h"
 #include "rtpp_record_private.h"
@@ -173,6 +175,8 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
     int rval, remote;
     size_t len;
     pcap_hdr_t pcap_hdr;
+    char fname[PATH_MAX + 1];
+    const char *emsg;
 
     remote = (rname != NULL && strncmp("udp:", rname, 4) == 0) ? 1 : 0;
 
@@ -211,10 +215,10 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
         goto e2;
     }
 
-    if (rname == NULL && (memchr(sp->call_id->s, '/', sp->call_id->len) != NULL ||
-      memchr(sp->from_tag_nmn->s, '/', sp->from_tag_nmn->len) != NULL)) {
-        RTPP_LOG(sp->log, RTPP_LOG_ERR, "call-id or from-tag contains '/', "
-          "refusing to use it in the recording file name");
+    if (rname == NULL && rtpp_record_callid_fname(fname, sizeof(fname),
+      sp->call_id->s, sp->call_id->len, sp->from_tag_nmn->s,
+      sp->from_tag_nmn->len, cfsp->record_callid_hash, &emsg) < 0) {
+        RTPP_LOG(sp->log, RTPP_LOG_ERR, "%s", emsg);
         goto e2;
     }
 
@@ -240,9 +244,8 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
         sdir = cfsp->sdir;
         rrc->needspool = 1;
         if (rname == NULL) {
-            len = snprintf(rrc->rpath, sizeof(rrc->rpath), "%s/%.*s=%.*s%s%s",
-              cfsp->rdir, (int)sp->call_id->len, sp->call_id->s,
-              (int)sp->from_tag_nmn->len, sp->from_tag_nmn->s, suffix1, suffix2);
+            len = snprintf(rrc->rpath, sizeof(rrc->rpath), "%s/%s%s%s",
+              cfsp->rdir, fname, suffix1, suffix2);
         } else {
             len = snprintf(rrc->rpath, sizeof(rrc->rpath), "%s/%s%s",
               cfsp->rdir, rname, suffix2);
@@ -253,9 +256,8 @@ rtpp_record_ctor(const struct rtpp_cfg *cfsp, const struct remote_copy_args *rap
         }
     }
     if (rname == NULL) {
-        len = snprintf(rrc->spath, sizeof(rrc->spath), "%s/%.*s=%.*s%s%s",
-          sdir, (int)sp->call_id->len, sp->call_id->s,
-          (int)sp->from_tag_nmn->len, sp->from_tag_nmn->s, suffix1, suffix2);
+        len = snprintf(rrc->spath, sizeof(rrc->spath), "%s/%s%s%s",
+          sdir, fname, suffix1, suffix2);
     } else {
         len = snprintf(rrc->spath, sizeof(rrc->spath), "%s/%s%s", sdir, rname,
           suffix2);
